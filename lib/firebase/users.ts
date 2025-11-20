@@ -5,6 +5,7 @@ import { User } from "./types";
 const usersCollection = "users";
 
 export async function createUser(uid: string, userData: Omit<User, "uid">): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const userRef = doc(db, usersCollection, uid);
   await setDoc(userRef, {
     ...userData,
@@ -13,6 +14,7 @@ export async function createUser(uid: string, userData: Omit<User, "uid">): Prom
 }
 
 export async function getUser(uid: string): Promise<User | null> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const userRef = doc(db, usersCollection, uid);
   const userSnap = await getDoc(userRef);
   
@@ -23,6 +25,7 @@ export async function getUser(uid: string): Promise<User | null> {
 }
 
 export async function updateUser(uid: string, updates: Partial<User>): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const userRef = doc(db, usersCollection, uid);
   await updateDoc(userRef, updates);
 }

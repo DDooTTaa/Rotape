@@ -26,7 +26,18 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# 운영자 키 (운영자 모드 로그인 시 사용)
+NEXT_PUBLIC_ADMIN_KEY=admin1234
+
+# 운영자 이메일 (선택사항, 기본값: admin@rotape.com)
+NEXT_PUBLIC_ADMIN_EMAIL=admin@rotape.com
 ```
+
+**참고**: 
+- 운영자 키는 기본값이 `admin1234`입니다. 프로덕션 환경에서는 반드시 변경하세요.
+- 운영자 모드를 선택하면 운영자 키만으로 로그인할 수 있습니다 (소셜 로그인 불필요).
+- Firebase Console에서 "이메일/비밀번호" 로그인을 활성화해야 합니다.
 
 ## 설치 및 실행
 

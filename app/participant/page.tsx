@@ -22,7 +22,7 @@ export default function ParticipantLanding() {
   ];
 
   return (
-    <div className="min-h-screen bg-deep-green text-foreground">
+    <div className="min-h-screen bg-white text-foreground">
       {/* 헤더 */}
       <header className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold text-center text-primary">Rotape</h1>
@@ -36,7 +36,7 @@ export default function ParticipantLanding() {
           <p className="text-xl mb-8 text-gray-300">
             새로운 만남의 기회를 로테이션 방식으로 경험해보세요
           </p>
-          <div className="bg-primary/20 rounded-lg p-6 mb-8">
+          <div className="bg-gray-100 rounded-lg p-6 mb-8">
             <h3 className="text-2xl font-semibold mb-4 text-primary">참가 안내</h3>
             <ul className="text-left space-y-2 max-w-md mx-auto">
               <li>• 연령: 만 20세 이상 40세 미만</li>
@@ -46,7 +46,7 @@ export default function ParticipantLanding() {
           </div>
           <Link
             href="/participant/auth"
-            className="inline-block bg-primary text-deep-green px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition"
+            className="inline-block bg-primary text-white px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition"
           >
             지금 신청하기
           </Link>
@@ -59,7 +59,7 @@ export default function ParticipantLanding() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-64 bg-primary/20 rounded-lg p-4"
+                className="flex-shrink-0 w-64 bg-gray-100 rounded-lg p-4"
               >
                 <p className="text-sm mb-2">참가자 {i}</p>
                 <p className="text-sm">
@@ -77,7 +77,7 @@ export default function ParticipantLanding() {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-primary/10 rounded-lg overflow-hidden"
+                className="bg-gray-50 rounded-lg overflow-hidden"
               >
                 <button
                   onClick={() => setFaqOpen(faqOpen === index ? null : index)}
@@ -87,7 +87,7 @@ export default function ParticipantLanding() {
                   <span>{faqOpen === index ? "−" : "+"}</span>
                 </button>
                 {faqOpen === index && (
-                  <div className="px-6 py-4 bg-primary/5">{faq.answer}</div>
+                  <div className="px-6 py-4 bg-gray-50">{faq.answer}</div>
                 )}
               </div>
             ))}
