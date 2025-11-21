@@ -321,10 +321,11 @@ export default function Home() {
     setShowTerms(false);
     
     // 약관 동의 후 자동으로 로그인 처리
-    if (!auth || !auth.currentUser) return;
+    if (!auth) return;
     
     try {
       const user = auth.currentUser;
+      if (!user) return;
       if (user) {
         const userData = await getUser(user.uid);
         if (userData) {
