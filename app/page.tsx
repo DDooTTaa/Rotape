@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signInWithPopup, GoogleAuthProvider, OAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/firebase/users";
@@ -114,68 +114,6 @@ export default function Home() {
     }
   };
 
-  const handleAppleLogin = async () => {
-    if (!auth) {
-      alert(
-        "Firebase 인증 서비스를 사용할 수 없습니다.\n\n" +
-        "다음을 확인해주세요:\n" +
-        "1. .env.local 파일이 프로젝트 루트에 있는지\n" +
-        "2. Firebase 환경 변수가 올바르게 설정되었는지\n" +
-        "3. 개발 서버를 재시작했는지\n\n" +
-        "자세한 설정 방법은 FIREBASE_SETUP.md 파일을 참고하세요."
-      );
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const provider = new OAuthProvider("apple.com");
-      const result = await signInWithPopup(auth!, provider);
-      const user = result.user;
-
-      // 기존 사용자 확인
-      const existingUser = await getUser(user.uid);
-      
-      if (existingUser) {
-        // 기존 사용자
-        if (existingUser.isAdmin) {
-          router.push("/admin");
-        } else {
-          // 모든 사용자를 행사 리스트로 이동
-          router.push("/participant/events");
-        }
-        setLoading(false);
-        return;
-      }
-
-      const userData = {
-        name: user.displayName || "",
-        gender: "M" as const,
-        birthday: "",
-        age: 0,
-        createdAt: new Date(),
-        isAdmin: false,
-      };
-
-      try {
-        await createUser(user.uid, userData);
-      } catch (error) {
-        console.log("사용자 생성 실패:", error);
-      }
-
-      if (!termsAccepted) {
-        setShowTerms(true);
-        setLoading(false);
-        return;
-      }
-
-      router.push("/participant/events");
-    } catch (error) {
-      console.error("로그인 실패:", error);
-      alert("로그인에 실패했습니다.");
-      setLoading(false);
-    }
-  };
 
   const handleAcceptTerms = async () => {
     setTermsAccepted(true);
@@ -273,14 +211,6 @@ export default function Home() {
                 Google로 로그인
               </>
             )}
-          </button>
-          
-          <button
-            onClick={handleAppleLogin}
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-gray-900 to-black text-white px-6 py-4 rounded-xl font-semibold hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50"
-          >
-            {loading ? "로그인 중..." : "Apple로 로그인"}
           </button>
         </div>
         
