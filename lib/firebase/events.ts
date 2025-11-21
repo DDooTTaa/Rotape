@@ -5,7 +5,8 @@ import { Event } from "./types";
 const eventsCollection = "events";
 
 export async function createEvent(eventData: Omit<Event, "eventId">): Promise<string> {
-  const eventRef = doc(collection(db!, eventsCollection));
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  const eventRef = doc(collection(db, eventsCollection));
   await setDoc(eventRef, {
     ...eventData,
     createdAt: new Date(),

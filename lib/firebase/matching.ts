@@ -6,6 +6,7 @@ const likesCollection = "likes";
 const matchesCollection = "matches";
 
 export async function submitLike(uid: string, eventId: string, likeData: Omit<Like, "uid" | "eventId" | "createdAt">): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const likeRef = doc(db, likesCollection, `${uid}_${eventId}`);
   await setDoc(likeRef, {
     ...likeData,
@@ -16,6 +17,7 @@ export async function submitLike(uid: string, eventId: string, likeData: Omit<Li
 }
 
 export async function getLike(uid: string, eventId: string): Promise<Like | null> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const likeRef = doc(db, likesCollection, `${uid}_${eventId}`);
   const likeSnap = await getDoc(likeRef);
   
@@ -26,12 +28,14 @@ export async function getLike(uid: string, eventId: string): Promise<Like | null
 }
 
 export async function getAllLikesForEvent(eventId: string): Promise<Like[]> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, likesCollection), where("eventId", "==", eventId));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as Like);
 }
 
 export async function createMatch(eventId: string, matchData: Omit<Match, "eventId" | "createdAt">): Promise<string> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const matchRef = doc(collection(db, matchesCollection));
   await setDoc(matchRef, {
     ...matchData,
@@ -42,6 +46,7 @@ export async function createMatch(eventId: string, matchData: Omit<Match, "event
 }
 
 export async function getMatchesForEvent(eventId: string): Promise<Match[]> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, matchesCollection), where("eventId", "==", eventId));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as Match);

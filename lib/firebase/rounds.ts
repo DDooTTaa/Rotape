@@ -5,6 +5,7 @@ import { Round } from "./types";
 const roundsCollection = "rounds";
 
 export async function createRound(roundData: Round): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const roundRef = doc(db, roundsCollection, `${roundData.eventId}_${roundData.roundNumber}`);
   await setDoc(roundRef, {
     ...roundData,
@@ -13,6 +14,7 @@ export async function createRound(roundData: Round): Promise<void> {
 }
 
 export async function getRound(eventId: string, roundNumber: number): Promise<Round | null> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const roundRef = doc(db, roundsCollection, `${eventId}_${roundNumber}`);
   const roundSnap = await getDoc(roundRef);
   
@@ -23,12 +25,14 @@ export async function getRound(eventId: string, roundNumber: number): Promise<Ro
 }
 
 export async function getRoundsByEvent(eventId: string): Promise<Round[]> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, roundsCollection), where("eventId", "==", eventId));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as Round);
 }
 
 export async function endRound(eventId: string, roundNumber: number): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const roundRef = doc(db, roundsCollection, `${eventId}_${roundNumber}`);
   await setDoc(roundRef, { endTime: new Date() }, { merge: true });
 }
