@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
 // Navigation을 클라이언트에서만 동적으로 로드
-const Navigation = dynamic(() => import("@/components/Navigation"), {
+const Navigation = dynamicImport(() => import("@/components/Navigation"), {
   ssr: false,
 });
 
