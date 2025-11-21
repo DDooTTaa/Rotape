@@ -199,6 +199,15 @@ export default function Navigation() {
         </div>
       </nav>
 
+      {/* 모바일 TopBar (상단) */}
+      <nav className="md:hidden fixed top-0 left-0 right-0 bg-white border-b-2 border-primary z-50 shadow-md">
+        <div className="flex items-center justify-center h-14 px-4">
+          <Link href={isAdmin ? "/admin" : "/participant/events"} className="flex items-center">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">Rotape</span>
+          </Link>
+        </div>
+      </nav>
+
       {/* 모바일 네비게이션 (하단) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-primary z-50 shadow-lg">
         <div className="flex items-center justify-around h-16">
@@ -233,8 +242,8 @@ export default function Navigation() {
       {/* 데스크톱 네비게이션 공간 확보 */}
       <div className="hidden md:block h-16"></div>
 
-      {/* 모바일 네비게이션 공간 확보 */}
-      <div className="md:hidden h-16"></div>
+      {/* 모바일 TopBar 공간 확보 */}
+      <div className="md:hidden h-14"></div>
     </>
   );
 }

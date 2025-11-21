@@ -117,7 +117,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen text-gray-800 py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">행사 리스트</h1>

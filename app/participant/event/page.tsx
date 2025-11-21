@@ -55,7 +55,7 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-white text-gray-800 pt-4 pb-8 md:py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">행사 대시보드</h1>
