@@ -14,8 +14,8 @@ export const dynamic = 'force-dynamic';
 export default function ApplicationsPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();
-  const [applications, setApplications] = useState<(Application & { user?: User })[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User })[]>([]);
+  const [applications, setApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
@@ -73,27 +73,29 @@ export default function ApplicationsPage() {
     setFilteredApplications(filtered);
   };
 
-  const handleApprove = async (uid: string) => {
+  const handleApprove = async (app: Application & { docId?: string }) => {
     if (!confirm("이 지원자를 승인하시겠습니까?")) return;
     try {
-      await updateApplicationStatus(uid, "approved");
+      const docId = app.docId || app.uid; // docId가 있으면 사용, 없으면 uid 사용
+      await updateApplicationStatus(docId, "approved");
       await loadApplications();
       alert("승인되었습니다.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("승인 실패:", error);
-      alert("승인에 실패했습니다.");
+      alert(`승인에 실패했습니다: ${error?.message || error}`);
     }
   };
 
-  const handleReject = async (uid: string) => {
+  const handleReject = async (app: Application & { docId?: string }) => {
     if (!confirm("이 지원자를 거절하시겠습니까?")) return;
     try {
-      await updateApplicationStatus(uid, "rejected");
+      const docId = app.docId || app.uid; // docId가 있으면 사용, 없으면 uid 사용
+      await updateApplicationStatus(docId, "rejected");
       await loadApplications();
       alert("거절되었습니다.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("거절 실패:", error);
-      alert("거절에 실패했습니다.");
+      alert(`거절에 실패했습니다: ${error?.message || error}`);
     }
   };
 
@@ -184,7 +186,7 @@ export default function ApplicationsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleApprove(app.uid);
+                          handleApprove(app);
                         }}
                         className="bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
                       >
@@ -193,7 +195,7 @@ export default function ApplicationsPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleReject(app.uid);
+                          handleReject(app);
                         }}
                         className="bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
                       >
@@ -274,7 +276,7 @@ export default function ApplicationsPage() {
                   <>
                     <button
                       onClick={() => {
-                        handleApprove(selectedApp.uid);
+                        handleApprove(selectedApp);
                         setSelectedApp(null);
                       }}
                       className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
@@ -283,7 +285,7 @@ export default function ApplicationsPage() {
                     </button>
                     <button
                       onClick={() => {
-                        handleReject(selectedApp.uid);
+                        handleReject(selectedApp);
                         setSelectedApp(null);
                       }}
                       className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"

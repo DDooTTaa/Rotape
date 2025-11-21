@@ -117,12 +117,30 @@
 
 ## 4. Firebase 설정 업데이트
 
-### 4.1 인증된 도메인 추가
+### 4.1 인증된 도메인 추가 ⚠️ 필수
 
-1. Firebase Console → Authentication → Settings
-2. "Authorized domains" 섹션에서 Vercel 도메인 추가:
-   - `your-project.vercel.app`
-   - 커스텀 도메인 사용 시 해당 도메인도 추가
+**중요**: `auth/unauthorized-domain` 에러를 방지하기 위해 반드시 설정해야 합니다.
+
+1. **Firebase Console 접속**
+   - [https://console.firebase.google.com/](https://console.firebase.google.com/) 접속
+   - 프로젝트 선택
+
+2. **Authentication 설정**
+   - 왼쪽 메뉴 → **"Authentication"** 클릭
+   - 상단 탭 → **"Settings"** (또는 "설정") 클릭
+
+3. **Authorized domains 추가**
+   - 페이지 하단의 **"Authorized domains"** 섹션 찾기
+   - **"Add domain"** 버튼 클릭
+   - Vercel 배포 도메인 입력 (예: `your-project.vercel.app`)
+   - **"Add"** 버튼 클릭
+
+4. **추가해야 할 도메인**
+   - ✅ Vercel 기본 도메인: `your-project.vercel.app`
+   - ✅ 커스텀 도메인 (사용하는 경우)
+   - ✅ 프리뷰 배포 도메인 (필요한 경우)
+
+**자세한 내용**: `FIREBASE_AUTHORIZED_DOMAINS.md` 참고
 
 ### 4.2 Firestore 보안 규칙 확인
 

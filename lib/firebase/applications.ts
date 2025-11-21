@@ -51,17 +51,36 @@ export async function getUserApplications(uid: string): Promise<Application[]> {
   return applications;
 }
 
-export async function updateApplicationStatus(uid: string, status: ApplicationStatus): Promise<void> {
+export async function updateApplicationStatus(docId: string, status: ApplicationStatus): Promise<void> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
-  const applicationRef = doc(db, applicationsCollection, uid);
+  const applicationRef = doc(db, applicationsCollection, docId);
+  const docSnap = await getDoc(applicationRef);
+  
+  if (!docSnap.exists()) {
+    throw new Error(`문서를 찾을 수 없습니다: ${docId}`);
+  }
+  
   await updateDoc(applicationRef, { status });
 }
 
-export async function getAllApplications(): Promise<Application[]> {
+// 하위 호환성을 위한 함수 (uid만 사용하는 경우)
+export async function updateApplicationStatusByUid(uid: string, status: ApplicationStatus, eventId?: string): Promise<void> {
+  const docId = eventId ? `${uid}_${eventId}` : uid;
+  return updateApplicationStatus(docId, status);
+}
+
+export async function getAllApplications(): Promise<(Application & { docId: string })[]> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, applicationsCollection));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Application));
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { 
+      uid: data.uid || doc.id.split('_')[0], // uid가 없으면 docId에서 추출
+      docId: doc.id, // 실제 문서 ID 저장
+      ...data 
+    } as Application & { docId: string };
+  });
 }
 
 export async function getApplicationsByStatus(status: ApplicationStatus): Promise<Application[]> {

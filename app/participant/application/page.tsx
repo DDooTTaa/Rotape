@@ -123,48 +123,84 @@ function ApplicationFormContent() {
     setLoading(true);
 
     try {
+      console.log("지원서 제출 시작...");
+      
       // 사진 업로드
+      console.log("사진 업로드 시작...");
       const photoUrls: string[] = [];
-      for (let i = 0; i < formData.photos.length; i++) {
-        const url = await uploadPhoto(user.uid, formData.photos[i], i);
-        photoUrls.push(url);
+      try {
+        for (let i = 0; i < formData.photos.length; i++) {
+          console.log(`사진 ${i + 1} 업로드 중...`);
+          const url = await uploadPhoto(user.uid, formData.photos[i], i);
+          photoUrls.push(url);
+          console.log(`사진 ${i + 1} 업로드 완료:`, url);
+        }
+        console.log("모든 사진 업로드 완료");
+      } catch (photoError: any) {
+        console.error("사진 업로드 실패:", photoError);
+        throw new Error(`사진 업로드 실패: ${photoError?.message || photoError}`);
       }
 
       // 사용자 정보 업데이트
-      const { updateUser } = await import("@/lib/firebase/users");
-      await updateUser(user.uid, {
-        name: formData.name,
-        gender: formData.gender,
-        birthday: formData.birthYear,
-        age: calculateAge(formData.birthYear),
-      });
+      console.log("사용자 정보 업데이트 시작...");
+      try {
+        const { updateUser } = await import("@/lib/firebase/users");
+        await updateUser(user.uid, {
+          name: formData.name,
+          gender: formData.gender,
+          birthday: formData.birthYear,
+          age: calculateAge(formData.birthYear),
+        });
+        console.log("사용자 정보 업데이트 완료");
+      } catch (userError: any) {
+        console.error("사용자 정보 업데이트 실패:", userError);
+        throw new Error(`사용자 정보 업데이트 실패: ${userError?.message || userError}`);
+      }
 
       // 지원서 제출 (eventId가 있으면 행사별 지원서로 생성)
-      await createApplication(
-        user.uid,
-        {
-          height: parseInt(formData.height),
-          job: formData.job,
-          intro: formData.intro,
-          idealType: formData.idealType,
-          loveStyle: formData.loveStyle,
-          loveLanguage: formData.loveLanguage,
-          photos: photoUrls,
-        },
-        eventId || undefined
-      );
+      console.log("지원서 제출 시작...");
+      try {
+        await createApplication(
+          user.uid,
+          {
+            height: parseInt(formData.height),
+            job: formData.job,
+            intro: formData.intro,
+            idealType: formData.idealType,
+            loveStyle: formData.loveStyle,
+            loveLanguage: formData.loveLanguage,
+            photos: photoUrls,
+          },
+          eventId || undefined
+        );
+        console.log("지원서 제출 완료");
+      } catch (appError: any) {
+        console.error("지원서 제출 실패:", appError);
+        throw new Error(`지원서 제출 실패: ${appError?.message || appError}`);
+      }
 
+      console.log("모든 프로세스 완료");
       router.push("/participant/events");
     } catch (error: any) {
       console.error("지원서 제출 실패:", error);
       console.error("에러 코드:", error?.code);
       console.error("에러 메시지:", error?.message);
+      console.error("전체 에러:", error);
       
       let errorMessage = "지원서 제출에 실패했습니다.";
-      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
-        errorMessage = "권한이 없습니다. Firebase 보안 규칙을 확인해주세요.";
+      
+      if (error?.message?.includes("사진 업로드 실패")) {
+        errorMessage = `사진 업로드에 실패했습니다.\n${error.message}`;
+      } else if (error?.message?.includes("사용자 정보 업데이트 실패")) {
+        errorMessage = `사용자 정보 업데이트에 실패했습니다.\n${error.message}`;
+      } else if (error?.message?.includes("지원서 제출 실패")) {
+        errorMessage = `지원서 제출에 실패했습니다.\n${error.message}`;
+      } else if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+        errorMessage = "권한이 없습니다. Firebase 보안 규칙을 확인해주세요.\n브라우저 콘솔을 확인하세요.";
       } else if (error?.message?.includes("Cross-Origin")) {
         errorMessage = "인증 오류가 발생했습니다. 페이지를 새로고침하고 다시 시도해주세요.";
+      } else if (error?.message) {
+        errorMessage = `오류: ${error.message}\n브라우저 콘솔(F12)을 확인하세요.`;
       }
       
       alert(errorMessage);
