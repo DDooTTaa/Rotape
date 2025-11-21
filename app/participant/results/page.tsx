@@ -11,7 +11,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function ResultsPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [match, setMatch] = useState<Match | null>(null);
   const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);

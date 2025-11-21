@@ -87,7 +87,7 @@ const adminNavItems: NavItem[] = [
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 

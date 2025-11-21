@@ -10,7 +10,7 @@ import { Application, User } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
 export default function ApplicationsPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [applications, setApplications] = useState<(Application & { user?: User })[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User })[]>([]);
@@ -97,7 +97,7 @@ export default function ApplicationsPage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await signOut(auth!);
       router.push("/");
     } catch (error) {
       console.error("로그아웃 실패:", error);

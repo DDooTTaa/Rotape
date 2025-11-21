@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function EventPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentRound, setCurrentRound] = useState(1);

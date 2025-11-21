@@ -11,7 +11,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function ApprovedPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [event, setEvent] = useState<Event | null>(null);

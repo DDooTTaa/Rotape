@@ -10,7 +10,7 @@ import { Round, Profile } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
 export default function RotationPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);

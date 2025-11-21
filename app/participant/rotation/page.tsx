@@ -11,7 +11,7 @@ import { Profile } from "@/lib/firebase/types";
 
 export default function RotationPage() {
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function EventsPage() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth!);
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [applications, setApplications] = useState<Record<string, Application | null>>({});
