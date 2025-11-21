@@ -45,7 +45,7 @@ export default function AdminPage() {
     <div className="min-h-screen text-foreground py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">운영자 대시보드</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">행사 관리</h1>
           <Link
             href="/admin/event"
             className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
@@ -96,23 +96,6 @@ export default function AdminPage() {
               ))}
             </div>
           )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <Link
-            href="/admin/applications"
-            className="card-elegant card-hover p-6"
-          >
-            <h2 className="text-xl font-semibold mb-2 text-primary">전체 지원자 관리</h2>
-            <p className="text-gray-700">모든 지원서 검토 및 승인</p>
-          </Link>
-          <Link
-            href="/admin/matching"
-            className="card-elegant card-hover p-6"
-          >
-            <h2 className="text-xl font-semibold mb-2 text-primary">매칭 결과</h2>
-            <p className="text-gray-700">매칭 결과 확인</p>
-          </Link>
         </div>
       </div>
     </div>
