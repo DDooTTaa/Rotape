@@ -46,6 +46,10 @@ npm install
 npm run dev
 ```
 
+## 배포
+
+Vercel을 사용한 배포 방법은 [VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md) 파일을 참고하세요.
+
 ## 주요 기능
 
 ### 참가자용
