@@ -157,7 +157,18 @@ export default function Navigation() {
   }
 
   const navItems = isAdmin ? adminNavItems : participantNavItems;
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    // 정확히 일치하는 경우
+    if (pathname === href) return true;
+    // 하위 경로인 경우 (예: /admin/event/123)
+    if (pathname.startsWith(href + "/")) {
+      // 대시보드(/admin)는 정확히 일치할 때만 활성화
+      if (href === "/admin") return false;
+      // 다른 메뉴는 하위 경로도 활성화
+      return true;
+    }
+    return false;
+  };
 
   const handleLogout = async () => {
     try {
