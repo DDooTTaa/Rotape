@@ -41,7 +41,7 @@ export default function ApprovedPage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await signOut(auth!);
       router.push("/");
     } catch (error) {
       console.error("로그아웃 실패:", error);

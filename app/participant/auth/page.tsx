@@ -20,7 +20,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth!, provider);
       const user = result.user;
 
       // 기존 사용자 확인
@@ -78,7 +78,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       const provider = new OAuthProvider("apple.com");
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth!, provider);
       const user = result.user;
 
       // 기존 사용자 확인

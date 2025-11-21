@@ -31,7 +31,7 @@ export default function Home() {
     setIsFirebaseReady(true);
     
     // 이미 로그인된 사용자 확인
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth!, async (user) => {
       if (user) {
         try {
           const userData = await getUser(user.uid);
@@ -78,7 +78,7 @@ export default function Home() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth!, provider);
       const user = result.user;
 
       // 기존 사용자 확인
@@ -164,7 +164,7 @@ export default function Home() {
     setLoading(true);
     try {
       const provider = new OAuthProvider("apple.com");
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth!, provider);
       const user = result.user;
 
       // 기존 사용자 확인
@@ -253,7 +253,7 @@ export default function Home() {
       
       // 먼저 로그인 시도
       try {
-        const result = await signInWithEmailAndPassword(auth, email, adminKey);
+        const result = await signInWithEmailAndPassword(auth!, email, adminKey);
         const user = result.user;
 
         // 인증 상태가 완전히 반영될 때까지 잠시 대기
@@ -283,7 +283,7 @@ export default function Home() {
         // 계정이 없으면 생성
         if (error.code === "auth/user-not-found" || error.code === "auth/invalid-credential") {
           try {
-            const result = await createUserWithEmailAndPassword(auth, email, adminKey);
+            const result = await createUserWithEmailAndPassword(auth!, email, adminKey);
             const user = result.user;
 
             // 인증 상태가 완전히 반영될 때까지 잠시 대기
