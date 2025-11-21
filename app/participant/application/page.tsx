@@ -33,6 +33,7 @@ function ApplicationFormContent() {
     loveLanguage: [] as string[],
     photos: [] as File[],
   });
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   useEffect(() => {
     const eventIdParam = searchParams.get("eventId");
@@ -65,6 +66,15 @@ function ApplicationFormContent() {
       const newPhotos = [...formData.photos];
       newPhotos[index] = file;
       setFormData({ ...formData, photos: newPhotos });
+      
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newPreviews = [...photoPreviews];
+        newPreviews[index] = reader.result as string;
+        setPhotoPreviews(newPreviews);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -113,12 +123,6 @@ function ApplicationFormContent() {
       return;
     }
 
-    // 키 체크 (남성 170 미만 시 안내)
-    if (formData.gender === "M" && parseInt(formData.height) < 170) {
-      if (!confirm("키가 170cm 미만입니다. 계속 진행하시겠습니까?")) {
-        return;
-      }
-    }
 
     setLoading(true);
 
@@ -303,9 +307,6 @@ function ApplicationFormContent() {
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             />
-            {formData.gender === "M" && formData.height && parseInt(formData.height) < 170 && (
-              <p className="text-sm mt-1 text-yellow-600">키가 170cm 미만입니다.</p>
-            )}
           </div>
 
           {/* 직업 */}
@@ -325,7 +326,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">사진 업로드 (3장 필수)</label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
-                <div key={index} className="border-2 border-dashed border-primary rounded-lg p-4 bg-gray-50">
+                <div key={index} className="border-2 border-dashed border-primary rounded-lg bg-gray-50 relative overflow-hidden">
                   <input
                     type="file"
                     accept="image/*"
@@ -333,16 +334,28 @@ function ApplicationFormContent() {
                     className="hidden"
                     id={`photo-${index}`}
                   />
-                  <label
-                    htmlFor={`photo-${index}`}
-                    className="block text-center cursor-pointer"
-                  >
-                    {formData.photos[index] ? (
-                      <span className="text-sm text-primary font-semibold">✓ 업로드됨</span>
-                    ) : (
+                  {photoPreviews[index] ? (
+                    <div className="relative w-full aspect-square">
+                      <img
+                        src={photoPreviews[index]}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <label
+                        htmlFor={`photo-${index}`}
+                        className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                      >
+                        <span className="text-white text-sm font-semibold">변경</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor={`photo-${index}`}
+                      className="block w-full aspect-square flex items-center justify-center cursor-pointer"
+                    >
                       <span className="text-sm text-gray-600">+ 사진 추가</span>
-                    )}
-                  </label>
+                    </label>
+                  )}
                 </div>
               ))}
             </div>
