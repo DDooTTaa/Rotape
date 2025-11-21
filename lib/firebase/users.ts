@@ -41,6 +41,25 @@ export async function getUser(uid: string): Promise<User | null> {
 export async function updateUser(uid: string, updates: Partial<User>): Promise<void> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const userRef = doc(db, usersCollection, uid);
-  await updateDoc(userRef, updates);
+  
+  // 문서가 존재하는지 확인
+  const userSnap = await getDoc(userRef);
+  
+  if (userSnap.exists()) {
+    // 문서가 존재하면 업데이트
+    await updateDoc(userRef, updates);
+  } else {
+    // 문서가 없으면 생성 (기본값 포함)
+    await setDoc(userRef, {
+      uid,
+      name: updates.name || "",
+      gender: updates.gender || "M",
+      birthday: updates.birthday || "",
+      age: updates.age || 0,
+      isAdmin: false,
+      createdAt: new Date(),
+      ...updates,
+    });
+  }
 }
 

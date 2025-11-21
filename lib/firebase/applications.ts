@@ -6,16 +6,27 @@ const applicationsCollection = "applications";
 
 export async function createApplication(uid: string, applicationData: Omit<Application, "uid" | "status" | "createdAt">, eventId?: string): Promise<void> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
-  // eventId가 있으면 {uid}_{eventId} 형태로, 없으면 uid만 사용
-  const docId = eventId ? `${uid}_${eventId}` : uid;
-  const applicationRef = doc(db, applicationsCollection, docId);
-  await setDoc(applicationRef, {
-    uid, // uid 필드를 명시적으로 저장
-    ...applicationData,
-    eventId: eventId || undefined,
-    status: "pending" as ApplicationStatus,
-    createdAt: new Date(),
-  });
+  
+  try {
+    // eventId가 있으면 {uid}_{eventId} 형태로, 없으면 uid만 사용
+    const docId = eventId ? `${uid}_${eventId}` : uid;
+    const applicationRef = doc(db, applicationsCollection, docId);
+    
+    await setDoc(applicationRef, {
+      uid, // uid 필드를 명시적으로 저장
+      ...applicationData,
+      eventId: eventId || undefined,
+      status: "pending" as ApplicationStatus,
+      createdAt: new Date(),
+    }, { merge: false }); // merge: false로 명시적으로 새 문서 생성
+    
+    console.log("지원서 생성 성공:", docId);
+  } catch (error: any) {
+    console.error("createApplication 오류:", error);
+    console.error("오류 코드:", error?.code);
+    console.error("오류 메시지:", error?.message);
+    throw error;
+  }
 }
 
 export async function getApplication(uid: string, eventId?: string): Promise<Application | null> {
