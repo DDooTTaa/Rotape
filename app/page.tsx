@@ -332,7 +332,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-foreground flex items-center justify-center px-4">
+    <div className="min-h-screen text-foreground flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">

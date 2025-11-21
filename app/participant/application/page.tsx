@@ -221,7 +221,7 @@ function ApplicationFormContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 py-8 px-4">
+    <div className="min-h-screen text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <div>
