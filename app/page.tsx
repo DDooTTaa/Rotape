@@ -324,20 +324,19 @@ export default function Home() {
     if (!auth) return;
     
     try {
+      if (!auth.currentUser) return;
+      
       const user = auth.currentUser;
-      if (!user) return;
-      if (user) {
-        const userData = await getUser(user.uid);
-        if (userData) {
-          if (userData.isAdmin) {
-            router.push("/admin");
+      const userData = await getUser(user.uid);
+      if (userData) {
+        if (userData.isAdmin) {
+          router.push("/admin");
+        } else {
+          // 사용자 정보가 완전한지 확인
+          if (userData.birthday && userData.age > 0) {
+            router.push("/participant/events");
           } else {
-            // 사용자 정보가 완전한지 확인
-            if (userData.birthday && userData.age > 0) {
-              router.push("/participant/events");
-            } else {
-              router.push("/participant/application");
-            }
+            router.push("/participant/application");
           }
         }
       }
