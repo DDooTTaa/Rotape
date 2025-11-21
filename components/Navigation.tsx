@@ -90,16 +90,20 @@ export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
   
-  // 서버 사이드 렌더링 방지
-  if (typeof window === 'undefined' || !auth) {
-    return null;
-  }
-  
+  // Hooks는 항상 같은 순서로 호출되어야 하므로 early return 전에 호출
+  // auth가 없을 때는 null을 전달하되, useAuthState는 Auth 타입을 요구하므로
+  // auth가 있을 때만 호출하도록 처리
   const [user] = useAuthState(auth!);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 서버 사이드 렌더링 방지
+    if (typeof window === 'undefined' || !auth) {
+      setLoading(false);
+      return;
+    }
+
     const checkUserRole = async () => {
       if (user) {
         try {
@@ -116,6 +120,11 @@ export default function Navigation() {
 
     checkUserRole();
   }, [user]);
+
+  // 서버 사이드 렌더링 방지
+  if (typeof window === 'undefined' || !auth) {
+    return null;
+  }
 
   // 로그인 페이지나 메인 페이지에서는 네비게이션 숨김
   if (pathname === "/" || pathname === "/participant/auth" || loading || !user) {
