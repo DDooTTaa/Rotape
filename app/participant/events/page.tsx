@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getAllEvents } from "@/lib/firebase/events";
-import { getApplicationByEvent, getApplication, createApplication } from "@/lib/firebase/applications";
-import { getUser } from "@/lib/firebase/users";
+import { getApplicationByEvent } from "@/lib/firebase/applications";
 import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
@@ -56,56 +55,8 @@ export default function EventsPage() {
       return;
     }
 
-    setApplyingEventId(eventId);
-    try {
-      // 사용자 정보 가져오기
-      const userData = await getUser(user.uid);
-      if (!userData) {
-        alert("사용자 정보를 찾을 수 없습니다. 먼저 내 정보를 입력해주세요.");
-        router.push("/participant/application");
-        return;
-      }
-
-      // 기존 지원서 가져오기 (eventId 없이)
-      const existingApplication = await getApplication(user.uid);
-
-      if (!existingApplication) {
-        // 기존 지원서가 없으면 지원서 작성 페이지로 이동
-        const shouldGoToForm = confirm(
-          "아직 작성한 지원서가 없습니다.\n지원서를 작성하시겠습니까?"
-        );
-        if (shouldGoToForm) {
-          router.push(`/participant/application?eventId=${eventId}`);
-        }
-        setApplyingEventId(null);
-        return;
-      }
-
-      // 기존 지원서 정보로 새 행사에 지원서 생성
-      await createApplication(
-        user.uid,
-        {
-          height: existingApplication.height,
-          job: existingApplication.job,
-          intro: existingApplication.intro,
-          idealType: existingApplication.idealType,
-          loveStyle: existingApplication.loveStyle,
-          loveLanguage: existingApplication.loveLanguage,
-          photos: existingApplication.photos,
-        },
-        eventId
-      );
-
-      alert("행사 신청이 완료되었습니다!");
-      
-      // 지원서 목록 새로고침
-      await loadData();
-    } catch (error) {
-      console.error("행사 신청 실패:", error);
-      alert("행사 신청에 실패했습니다. 다시 시도해주세요.");
-    } finally {
-      setApplyingEventId(null);
-    }
+    // 무조건 지원서 작성 페이지로 이동
+    router.push(`/participant/application?eventId=${eventId}`);
   };
 
   if (loading) {
