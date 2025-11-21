@@ -98,17 +98,28 @@ export default function Navigation() {
     setMounted(true);
     
     // 서버 사이드 렌더링 방지
-    if (typeof window === 'undefined' || !auth) {
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
+    // auth가 없으면 early return
+    if (!auth) {
       setLoading(false);
       return;
     }
 
     // auth 상태 변경 감지
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Auth state 변경 감지 실패:", error);
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
