@@ -321,7 +321,7 @@ export default function Home() {
     setShowTerms(false);
     
     // 약관 동의 후 자동으로 로그인 처리
-    if (!auth) return;
+    if (!auth || !auth.currentUser) return;
     
     try {
       const user = auth.currentUser;

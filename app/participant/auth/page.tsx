@@ -133,7 +133,7 @@ export default function AuthPage() {
     setShowTerms(false);
     
     // 현재 사용자 확인
-    if (auth?.currentUser) {
+    if (auth && auth.currentUser) {
       const existingUser = await getUser(auth.currentUser.uid);
       if (existingUser) {
         // 기존 사용자는 행사 리스트로
