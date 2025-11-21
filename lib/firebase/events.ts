@@ -14,6 +14,7 @@ export async function createEvent(eventData: Omit<Event, "eventId">): Promise<st
 }
 
 export async function getEvent(eventId: string): Promise<Event | null> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const eventRef = doc(db, eventsCollection, eventId);
   const eventSnap = await getDoc(eventRef);
   
@@ -24,6 +25,7 @@ export async function getEvent(eventId: string): Promise<Event | null> {
 }
 
 export async function getAllEvents(): Promise<Event[]> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, eventsCollection), orderBy("createdAt", "desc"));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({ eventId: doc.id, ...doc.data() } as Event));

@@ -15,6 +15,7 @@ export interface User {
 
 export interface Application {
   uid: string;
+  eventId?: string; // 행사 ID (선택사항, 행사별 지원 시 사용)
   height: number;
   job: string;
   intro: string;

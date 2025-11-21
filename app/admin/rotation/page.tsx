@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getRoundsByEvent, createRound, endRound } from "@/lib/firebase/rounds";
 import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { Round, Profile } from "@/lib/firebase/types";
+import { useRouter } from "next/navigation";
 
 export default function RotationPage() {
   const [user] = useAuthState(auth);
+  const router = useRouter();
   const [rounds, setRounds] = useState<Round[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentRound, setCurrentRound] = useState(1);
@@ -67,13 +70,31 @@ export default function RotationPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-deep-green text-foreground py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">로테이션 진행</h1>
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다.");
+    }
+  };
 
-        <div className="bg-primary/20 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">현재 라운드</h2>
+  return (
+    <div className="min-h-screen bg-white text-foreground py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">로테이션 진행</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+          >
+            로그아웃
+          </button>
+        </div>
+
+        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
+          <h2 className="text-2xl font-semibold mb-4 text-primary">현재 라운드</h2>
           <p className="text-3xl font-bold mb-4">라운드 {currentRound}</p>
           <div className="flex gap-4">
             <button
@@ -93,8 +114,8 @@ export default function RotationPage() {
           </div>
         </div>
 
-        <div className="bg-primary/20 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4">참가자 배정</h2>
+        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
+          <h2 className="text-2xl font-semibold mb-4 text-primary">참가자 배정</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold mb-2">남성 (10명)</h3>
@@ -106,7 +127,7 @@ export default function RotationPage() {
                   })
                   .slice(0, 10)
                   .map((profile) => (
-                    <div key={profile.uid} className="bg-deep-green rounded p-2">
+                    <div key={profile.uid} className="bg-white border border-primary/30 rounded p-2">
                       {profile.displayName}
                     </div>
                   ))}
@@ -121,7 +142,7 @@ export default function RotationPage() {
                   })
                   .slice(10, 20)
                   .map((profile) => (
-                    <div key={profile.uid} className="bg-deep-green rounded p-2">
+                    <div key={profile.uid} className="bg-white border border-primary/30 rounded p-2">
                       {profile.displayName}
                     </div>
                   ))}
@@ -130,13 +151,13 @@ export default function RotationPage() {
           </div>
         </div>
 
-        <div className="bg-primary/20 rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">라운드 히스토리</h2>
+        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-primary">라운드 히스토리</h2>
           <div className="space-y-2">
             {rounds.map((round) => (
-              <div key={`${round.eventId}_${round.roundNumber}`} className="bg-deep-green rounded p-4">
+              <div key={`${round.eventId}_${round.roundNumber}`} className="bg-white border border-primary/30 rounded p-4">
                 <p className="font-semibold">라운드 {round.roundNumber}</p>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-gray-700">
                   시작: {new Date(round.startTime).toLocaleString("ko-KR")}
                   {round.endTime && ` | 종료: ${new Date(round.endTime).toLocaleString("ko-KR")}`}
                 </p>

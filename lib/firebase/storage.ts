@@ -2,6 +2,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./config";
 
 export async function uploadPhoto(uid: string, file: File, index: number): Promise<string> {
+  if (!storage) throw new Error("Firebase Storage가 초기화되지 않았습니다.");
   const storageRef = ref(storage, `profilePhotos/${uid}/${index}_${file.name}`);
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);

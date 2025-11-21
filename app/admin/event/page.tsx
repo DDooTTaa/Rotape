@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { createEvent, getAllEvents } from "@/lib/firebase/events";
 import { getApplicationsByStatus } from "@/lib/firebase/applications";
@@ -9,9 +10,11 @@ import { createProfile } from "@/lib/firebase/profiles";
 import { generateQRCode, dataURLtoBlob } from "@/lib/utils/qrcode";
 import { uploadQRCode } from "@/lib/firebase/storage";
 import { Event, Application } from "@/lib/firebase/types";
+import { useRouter } from "next/navigation";
 
 export default function EventPage() {
   const [user] = useAuthState(auth);
+  const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -109,10 +112,28 @@ export default function EventPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다.");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-deep-green text-foreground py-8 px-4">
+    <div className="min-h-screen bg-white text-foreground py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">행사 설정</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">행사 설정</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+          >
+            로그아웃
+          </button>
+        </div>
 
         <form onSubmit={handleCreateEvent} className="space-y-6">
           <div>
@@ -122,7 +143,7 @@ export default function EventPage() {
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -133,7 +154,7 @@ export default function EventPage() {
               required
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -144,7 +165,7 @@ export default function EventPage() {
               required
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -154,7 +175,7 @@ export default function EventPage() {
               type="text"
               value={formData.intro}
               onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
               placeholder="예: 14:00"
             />
           </div>
@@ -165,7 +186,7 @@ export default function EventPage() {
               type="text"
               value={formData.part1}
               onChange={(e) => setFormData({ ...formData, part1: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
               placeholder="예: 14:30"
             />
           </div>
@@ -176,7 +197,7 @@ export default function EventPage() {
               type="text"
               value={formData.break}
               onChange={(e) => setFormData({ ...formData, break: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
               placeholder="예: 16:00"
             />
           </div>
@@ -187,7 +208,7 @@ export default function EventPage() {
               type="text"
               value={formData.part2}
               onChange={(e) => setFormData({ ...formData, part2: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
               placeholder="예: 16:15"
             />
           </div>
@@ -201,14 +222,14 @@ export default function EventPage() {
               max="30"
               value={formData.maxParticipants}
               onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-deep-green px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
+            className="w-full bg-primary text-white px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? "생성 중..." : "행사 생성"}
           </button>
@@ -219,7 +240,7 @@ export default function EventPage() {
           <h2 className="text-2xl font-bold mb-4">기존 행사</h2>
           <div className="space-y-4">
             {events.map((event) => (
-              <div key={event.eventId} className="bg-primary/20 rounded-lg p-4">
+              <div key={event.eventId} className="bg-gray-100 border-2 border-primary rounded-lg p-4">
                 <h3 className="font-semibold text-lg">{event.title}</h3>
                 <p className="text-sm text-gray-300">
                   {new Date(event.date).toLocaleString("ko-KR")} | {event.location}

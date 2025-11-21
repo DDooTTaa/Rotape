@@ -1,0 +1,202 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase/config";
+import { getAllEvents } from "@/lib/firebase/events";
+import { getApplicationByEvent, getApplication, createApplication } from "@/lib/firebase/applications";
+import { getUser } from "@/lib/firebase/users";
+import { Event, Application } from "@/lib/firebase/types";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function EventsPage() {
+  const [user] = useAuthState(auth);
+  const router = useRouter();
+  const [events, setEvents] = useState<Event[]>([]);
+  const [applications, setApplications] = useState<Record<string, Application | null>>({});
+  const [loading, setLoading] = useState(true);
+  const [applyingEventId, setApplyingEventId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user]);
+
+  const loadData = async () => {
+    if (!user) return;
+    try {
+      const eventsData = await getAllEvents();
+      setEvents(eventsData);
+
+      // 각 행사에 대한 지원서 상태 확인
+      const apps: Record<string, Application | null> = {};
+      for (const event of eventsData) {
+        try {
+          const app = await getApplicationByEvent(user.uid, event.eventId);
+          apps[event.eventId] = app;
+        } catch (error) {
+          apps[event.eventId] = null;
+        }
+      }
+      setApplications(apps);
+    } catch (error) {
+      console.error("데이터 로드 실패:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleApply = async (eventId: string) => {
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    setApplyingEventId(eventId);
+    try {
+      // 사용자 정보 가져오기
+      const userData = await getUser(user.uid);
+      if (!userData) {
+        alert("사용자 정보를 찾을 수 없습니다. 먼저 내 정보를 입력해주세요.");
+        router.push("/participant/application");
+        return;
+      }
+
+      // 기존 지원서 가져오기 (eventId 없이)
+      const existingApplication = await getApplication(user.uid);
+
+      if (!existingApplication) {
+        // 기존 지원서가 없으면 지원서 작성 페이지로 이동
+        const shouldGoToForm = confirm(
+          "아직 작성한 지원서가 없습니다.\n지원서를 작성하시겠습니까?"
+        );
+        if (shouldGoToForm) {
+          router.push(`/participant/application?eventId=${eventId}`);
+        }
+        setApplyingEventId(null);
+        return;
+      }
+
+      // 기존 지원서 정보로 새 행사에 지원서 생성
+      await createApplication(
+        user.uid,
+        {
+          height: existingApplication.height,
+          job: existingApplication.job,
+          intro: existingApplication.intro,
+          idealType: existingApplication.idealType,
+          loveStyle: existingApplication.loveStyle,
+          loveLanguage: existingApplication.loveLanguage,
+          photos: existingApplication.photos,
+        },
+        eventId
+      );
+
+      alert("행사 신청이 완료되었습니다!");
+      
+      // 지원서 목록 새로고침
+      await loadData();
+    } catch (error) {
+      console.error("행사 신청 실패:", error);
+      alert("행사 신청에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setApplyingEventId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">행사 리스트</h1>
+        </div>
+
+        {events.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 text-lg">현재 진행 중인 행사가 없습니다.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => {
+              const application = applications[event.eventId];
+              const status = application?.status;
+
+              return (
+                <div
+                  key={event.eventId}
+                  className="bg-gray-100 border-2 border-primary rounded-lg p-6 hover:shadow-lg transition"
+                >
+                  <h2 className="text-2xl font-bold mb-4 text-primary">{event.title}</h2>
+                  <div className="space-y-2 mb-4">
+                    <p className="text-gray-700">
+                      <span className="font-semibold">일시:</span>{" "}
+                      {new Date(event.date).toLocaleString("ko-KR")}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-semibold">장소:</span> {event.location}
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명
+                    </p>
+                  </div>
+
+                  {status === "pending" && (
+                    <div className="mb-4">
+                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        심사 중
+                      </span>
+                    </div>
+                  )}
+
+                  {status === "approved" && (
+                    <div className="mb-4">
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        승인됨
+                      </span>
+                      <Link
+                        href="/participant/approved"
+                        className="block mt-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition text-center"
+                      >
+                        상세 보기
+                      </Link>
+                    </div>
+                  )}
+
+                  {status === "rejected" && (
+                    <div className="mb-4">
+                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        거절됨
+                      </span>
+                    </div>
+                  )}
+
+                  {!status && (
+                    <button
+                      onClick={() => handleApply(event.eventId)}
+                      disabled={applyingEventId === event.eventId}
+                      className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {applyingEventId === event.eventId ? "신청 중..." : "행사 신청하기"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

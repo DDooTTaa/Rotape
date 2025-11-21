@@ -39,7 +39,12 @@ export default function Home() {
             if (userData.isAdmin) {
               router.push("/admin");
             } else {
-              router.push("/participant");
+              // 사용자 정보가 완전한지 확인 (birthday와 age가 있는지)
+              if (userData.birthday && userData.age > 0) {
+                router.push("/participant/events");
+              } else {
+                router.push("/participant/application");
+              }
             }
           }
         } catch (error) {
@@ -85,7 +90,16 @@ export default function Home() {
           await updateUser(user.uid, { isAdmin: true });
           router.push("/admin");
         } else {
-          router.push(existingUser.isAdmin ? "/admin" : "/participant");
+          if (existingUser.isAdmin) {
+            router.push("/admin");
+          } else {
+            // 사용자 정보가 완전한지 확인
+            if (existingUser.birthday && existingUser.age > 0) {
+              router.push("/participant/events");
+            } else {
+              router.push("/participant/application");
+            }
+          }
         }
         setLoading(false);
         return;
@@ -162,7 +176,16 @@ export default function Home() {
           await updateUser(user.uid, { isAdmin: true });
           router.push("/admin");
         } else {
-          router.push(existingUser.isAdmin ? "/admin" : "/participant");
+          if (existingUser.isAdmin) {
+            router.push("/admin");
+          } else {
+            // 사용자 정보가 완전한지 확인
+            if (existingUser.birthday && existingUser.age > 0) {
+              router.push("/participant/events");
+            } else {
+              router.push("/participant/application");
+            }
+          }
         }
         setLoading(false);
         return;
@@ -233,6 +256,9 @@ export default function Home() {
         const result = await signInWithEmailAndPassword(auth, email, adminKey);
         const user = result.user;
 
+        // 인증 상태가 완전히 반영될 때까지 잠시 대기
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // 기존 사용자 확인 및 업데이트
         const existingUser = await getUser(user.uid);
         if (existingUser) {
@@ -259,6 +285,9 @@ export default function Home() {
           try {
             const result = await createUserWithEmailAndPassword(auth, email, adminKey);
             const user = result.user;
+
+            // 인증 상태가 완전히 반영될 때까지 잠시 대기
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             const userData = {
               name: "운영자",
@@ -302,7 +331,12 @@ export default function Home() {
           if (userData.isAdmin) {
             router.push("/admin");
           } else {
-            router.push("/participant/application");
+            // 사용자 정보가 완전한지 확인
+            if (userData.birthday && userData.age > 0) {
+              router.push("/participant/events");
+            } else {
+              router.push("/participant/application");
+            }
           }
         }
       }
@@ -398,7 +432,7 @@ export default function Home() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full bg-white text-gray-900 px-6 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 border-2 border-primary flex items-center justify-center gap-3"
+              className="w-full bg-white text-gray-900 px-6 py-4 rounded-lg font-semibold hover:bg-primary hover:text-white transition disabled:opacity-50 border-2 border-primary flex items-center justify-center gap-3"
             >
               {loading ? (
                 "로그인 중..."

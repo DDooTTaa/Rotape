@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase/config";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function ProfileViewPage() {
+  const router = useRouter();
   const [qrScanned, setQrScanned] = useState(false);
   const [profile, setProfile] = useState<any>(null);
 
@@ -13,23 +17,41 @@ export default function ProfileViewPage() {
     // 스캔된 데이터로 프로필 조회
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다.");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-deep-green text-foreground py-8 px-4">
+    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">프로필 조회</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">프로필 조회</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+          >
+            로그아웃
+          </button>
+        </div>
 
         {!qrScanned ? (
           <div className="text-center">
-            <p className="mb-4">QR 코드를 스캔하여 상대방 프로필을 확인하세요.</p>
+            <p className="mb-4 text-gray-700">QR 코드를 스캔하여 상대방 프로필을 확인하세요.</p>
             <button
               onClick={handleQRScan}
-              className="bg-primary text-deep-green px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+              className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
             >
               QR 스캔 시작
             </button>
           </div>
         ) : (
-          <div className="bg-primary/20 rounded-lg p-6">
+          <div className="bg-gray-100 border-2 border-primary rounded-lg p-6">
             {profile ? (
               <>
                 {profile.photos?.[0] && (
@@ -43,12 +65,12 @@ export default function ProfileViewPage() {
                     />
                   </div>
                 )}
-                <p className="text-xl font-semibold mb-2">{profile.displayName}</p>
-                <p className="mb-2">직업: {profile.job}</p>
-                <p className="mb-4">소개: {profile.intro}</p>
+                <p className="text-xl font-semibold mb-2 text-gray-800">{profile.displayName}</p>
+                <p className="mb-2 text-gray-800">직업: {profile.job}</p>
+                <p className="mb-4 text-gray-800">소개: {profile.intro}</p>
               </>
             ) : (
-              <p>프로필을 찾을 수 없습니다.</p>
+              <p className="text-gray-700">프로필을 찾을 수 없습니다.</p>
             )}
           </div>
         )}

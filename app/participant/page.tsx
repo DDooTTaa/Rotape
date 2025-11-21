@@ -1,10 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase/config";
+import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
 
 export default function ParticipantLanding() {
+  const router = useRouter();
+  const [user] = useAuthState(auth);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      checkUserAndRedirect();
+    }
+  }, [user]);
+
+  const checkUserAndRedirect = async () => {
+    if (!user) return;
+    try {
+      const userData = await getUser(user.uid);
+      if (userData) {
+        // 사용자 정보가 완전한지 확인
+        if (userData.birthday && userData.age > 0) {
+          router.push("/participant/events");
+        } else {
+          router.push("/participant/application");
+        }
+      }
+    } catch (error) {
+      console.error("사용자 데이터 로드 실패:", error);
+    }
+  };
 
   const faqs = [
     {
@@ -33,10 +62,10 @@ export default function ParticipantLanding() {
         {/* 서비스 소개 */}
         <section className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">로테이션 소개팅</h2>
-          <p className="text-xl mb-8 text-gray-300">
+          <p className="text-xl mb-8 text-gray-700">
             새로운 만남의 기회를 로테이션 방식으로 경험해보세요
           </p>
-          <div className="bg-gray-100 rounded-lg p-6 mb-8">
+          <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-8">
             <h3 className="text-2xl font-semibold mb-4 text-primary">참가 안내</h3>
             <ul className="text-left space-y-2 max-w-md mx-auto">
               <li>• 연령: 만 20세 이상 40세 미만</li>
@@ -59,10 +88,10 @@ export default function ParticipantLanding() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-64 bg-gray-100 rounded-lg p-4"
+                className="flex-shrink-0 w-64 bg-gray-100 border-2 border-primary rounded-lg p-4"
               >
-                <p className="text-sm mb-2">참가자 {i}</p>
-                <p className="text-sm">
+                <p className="text-sm mb-2 text-gray-800">참가자 {i}</p>
+                <p className="text-sm text-gray-700">
                   "정말 즐거운 시간이었어요! 좋은 만남이 있었습니다."
                 </p>
               </div>
@@ -77,17 +106,17 @@ export default function ParticipantLanding() {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="bg-gray-50 rounded-lg overflow-hidden"
+                className="bg-gray-100 border-2 border-primary rounded-lg overflow-hidden"
               >
                 <button
                   onClick={() => setFaqOpen(faqOpen === index ? null : index)}
-                  className="w-full px-6 py-4 text-left font-semibold flex justify-between items-center"
+                  className="w-full px-6 py-4 text-left font-semibold flex justify-between items-center text-gray-800"
                 >
                   <span>{faq.question}</span>
                   <span>{faqOpen === index ? "−" : "+"}</span>
                 </button>
                 {faqOpen === index && (
-                  <div className="px-6 py-4 bg-gray-50">{faq.answer}</div>
+                  <div className="px-6 py-4 bg-gray-50 text-gray-700">{faq.answer}</div>
                 )}
               </div>
             ))}

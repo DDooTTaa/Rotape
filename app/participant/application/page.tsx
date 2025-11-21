@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { createApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
+import { getEvent } from "@/lib/firebase/events";
 
 const loveLanguages = ["행동", "선물", "언어", "시간", "스킨십"];
 
-export default function ApplicationPage() {
+function ApplicationFormContent() {
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const searchParams = useSearchParams();
+  const [user] = useAuthState(auth!);
   const [loading, setLoading] = useState(false);
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [eventTitle, setEventTitle] = useState<string>("");
   
   const [formData, setFormData] = useState({
     name: "",
@@ -26,6 +31,25 @@ export default function ApplicationPage() {
     loveLanguage: [] as string[],
     photos: [] as File[],
   });
+
+  useEffect(() => {
+    const eventIdParam = searchParams.get("eventId");
+    if (eventIdParam) {
+      setEventId(eventIdParam);
+      loadEventInfo(eventIdParam);
+    }
+  }, [searchParams]);
+
+  const loadEventInfo = async (id: string) => {
+    try {
+      const event = await getEvent(id);
+      if (event) {
+        setEventTitle(event.title);
+      }
+    } catch (error) {
+      console.error("행사 정보 로드 실패:", error);
+    }
+  };
 
   const calculateAge = (birthYear: string): number => {
     if (!birthYear) return 0;
@@ -53,6 +77,20 @@ export default function ApplicationPage() {
         ...formData,
         loveLanguage: [...formData.loveLanguage, lang],
       });
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!auth) {
+      alert("인증 서비스를 사용할 수 없습니다.");
+      return;
+    }
+    try {
+      await signOut(auth);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다.");
     }
   };
 
@@ -90,37 +128,73 @@ export default function ApplicationPage() {
         photoUrls.push(url);
       }
 
-      // 지원서 제출
-      await createApplication(user.uid, {
-        height: parseInt(formData.height),
-        job: formData.job,
-        intro: formData.intro,
-        idealType: formData.idealType,
-        loveStyle: formData.loveStyle,
-        loveLanguage: formData.loveLanguage,
-        photos: photoUrls,
+      // 사용자 정보 업데이트
+      const { updateUser } = await import("@/lib/firebase/users");
+      await updateUser(user.uid, {
+        name: formData.name,
+        gender: formData.gender,
+        birthday: formData.birthYear,
+        age: calculateAge(formData.birthYear),
       });
 
-      router.push("/participant/pending");
-    } catch (error) {
+      // 지원서 제출 (eventId가 있으면 행사별 지원서로 생성)
+      await createApplication(
+        user.uid,
+        {
+          height: parseInt(formData.height),
+          job: formData.job,
+          intro: formData.intro,
+          idealType: formData.idealType,
+          loveStyle: formData.loveStyle,
+          loveLanguage: formData.loveLanguage,
+          photos: photoUrls,
+        },
+        eventId || undefined
+      );
+
+      router.push("/participant/events");
+    } catch (error: any) {
       console.error("지원서 제출 실패:", error);
-      alert("지원서 제출에 실패했습니다.");
+      console.error("에러 코드:", error?.code);
+      console.error("에러 메시지:", error?.message);
+      
+      let errorMessage = "지원서 제출에 실패했습니다.";
+      if (error?.code === "permission-denied" || error?.message?.includes("permission")) {
+        errorMessage = "권한이 없습니다. Firebase 보안 규칙을 확인해주세요.";
+      } else if (error?.message?.includes("Cross-Origin")) {
+        errorMessage = "인증 오류가 발생했습니다. 페이지를 새로고침하고 다시 시도해주세요.";
+      }
+      
+      alert(errorMessage);
       setLoading(false);
     }
   };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-deep-green text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
         <p>로그인이 필요합니다.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-deep-green text-foreground py-8 px-4">
+    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">지원서 작성</h1>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">지원서 작성</h1>
+            {eventTitle && (
+              <p className="text-lg text-primary mt-2">행사: {eventTitle}</p>
+            )}
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+          >
+            로그아웃
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 이름 */}
@@ -131,7 +205,7 @@ export default function ApplicationPage() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -172,10 +246,10 @@ export default function ApplicationPage() {
               max="2004"
               value={formData.birthYear}
               onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             />
             {formData.birthYear && (
-              <p className="text-sm mt-1 text-gray-300">나이: {calculateAge(formData.birthYear)}세</p>
+              <p className="text-sm mt-1 text-gray-600">나이: {calculateAge(formData.birthYear)}세</p>
             )}
           </div>
 
@@ -189,10 +263,10 @@ export default function ApplicationPage() {
               max="220"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             />
             {formData.gender === "M" && formData.height && parseInt(formData.height) < 170 && (
-              <p className="text-sm mt-1 text-yellow-400">키가 170cm 미만입니다.</p>
+              <p className="text-sm mt-1 text-yellow-600">키가 170cm 미만입니다.</p>
             )}
           </div>
 
@@ -204,7 +278,7 @@ export default function ApplicationPage() {
               required
               value={formData.job}
               onChange={(e) => setFormData({ ...formData, job: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
@@ -213,7 +287,7 @@ export default function ApplicationPage() {
             <label className="block mb-2 font-semibold">사진 업로드 (3장 필수)</label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
-                <div key={index} className="border-2 border-dashed border-primary/30 rounded-lg p-4">
+                <div key={index} className="border-2 border-dashed border-primary rounded-lg p-4 bg-gray-50">
                   <input
                     type="file"
                     accept="image/*"
@@ -226,9 +300,9 @@ export default function ApplicationPage() {
                     className="block text-center cursor-pointer"
                   >
                     {formData.photos[index] ? (
-                      <span className="text-sm text-primary">✓ 업로드됨</span>
+                      <span className="text-sm text-primary font-semibold">✓ 업로드됨</span>
                     ) : (
-                      <span className="text-sm">+ 사진 추가</span>
+                      <span className="text-sm text-gray-600">+ 사진 추가</span>
                     )}
                   </label>
                 </div>
@@ -243,7 +317,7 @@ export default function ApplicationPage() {
               required
               value={formData.intro}
               onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
               rows={2}
             />
           </div>
@@ -255,7 +329,7 @@ export default function ApplicationPage() {
               required
               value={formData.idealType}
               onChange={(e) => setFormData({ ...formData, idealType: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
               rows={2}
             />
           </div>
@@ -267,7 +341,7 @@ export default function ApplicationPage() {
               required
               value={formData.loveStyle}
               onChange={(e) => setFormData({ ...formData, loveStyle: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-primary/20 text-foreground border border-primary/30"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
               rows={2}
             />
           </div>
@@ -286,14 +360,14 @@ export default function ApplicationPage() {
                   />
                   {lang}
                   {formData.loveLanguage.includes(lang) && (
-                    <span className="ml-2 text-primary">
+                    <span className="ml-2 text-primary font-semibold">
                       ({formData.loveLanguage.indexOf(lang) + 1}순위)
                     </span>
                   )}
                 </label>
               ))}
             </div>
-            <p className="text-sm mt-2 text-gray-300">
+            <p className="text-sm mt-2 text-gray-600">
               선택된 순서대로 순위가 결정됩니다. (5개 모두 선택 필요)
             </p>
           </div>
@@ -301,13 +375,25 @@ export default function ApplicationPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-deep-green px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
+            className="w-full bg-primary text-white px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? "제출 중..." : "제출하기"}
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ApplicationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <ApplicationFormContent />
+    </Suspense>
   );
 }
 

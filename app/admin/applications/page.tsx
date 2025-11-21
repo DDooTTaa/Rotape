@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getAllApplications, updateApplicationStatus } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
 import { Application, User } from "@/lib/firebase/types";
+import { useRouter } from "next/navigation";
 
 export default function ApplicationsPage() {
   const [user] = useAuthState(auth);
+  const router = useRouter();
   const [applications, setApplications] = useState<(Application & { user?: User })[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,33 +95,51 @@ export default function ApplicationsPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다.");
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-deep-green text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-white text-foreground flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-deep-green text-foreground py-8 px-4">
+    <div className="min-h-screen bg-white text-foreground py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">지원자 리스트</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">지원자 리스트</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+          >
+            로그아웃
+          </button>
+        </div>
 
         {/* 필터 */}
-        <div className="bg-primary/20 rounded-lg p-4 mb-6">
+        <div className="bg-gray-100 border-2 border-primary rounded-lg p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="이름/직업 검색"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="px-4 py-2 rounded-lg bg-deep-green text-foreground border border-primary/30"
+              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
             />
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
-              className="px-4 py-2 rounded-lg bg-deep-green text-foreground border border-primary/30"
+              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
             >
               <option value="all">전체 상태</option>
               <option value="pending">심사 중</option>
@@ -128,7 +149,7 @@ export default function ApplicationsPage() {
             <select
               value={filters.gender}
               onChange={(e) => setFilters({ ...filters, gender: e.target.value as any })}
-              className="px-4 py-2 rounded-lg bg-deep-green text-foreground border border-primary/30"
+              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
             >
               <option value="all">전체 성별</option>
               <option value="M">남성</option>
@@ -142,16 +163,16 @@ export default function ApplicationsPage() {
           {filteredApplications.map((app) => (
             <div
               key={app.uid}
-              className="bg-primary/20 rounded-lg p-4 cursor-pointer hover:bg-primary/30 transition"
+              className="bg-gray-100 border-2 border-primary rounded-lg p-4 cursor-pointer hover:bg-primary group transition"
               onClick={() => setSelectedApp(app)}
             >
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-semibold">{app.user?.name || "이름 없음"}</p>
-                  <p className="text-sm text-gray-300">
+                  <p className="font-semibold group-hover:text-white transition">{app.user?.name || "이름 없음"}</p>
+                  <p className="text-sm text-gray-700 group-hover:text-white transition">
                     {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
                   </p>
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-gray-600 group-hover:text-white mt-1 transition">
                     상태: {app.status === "pending" ? "심사 중" : app.status === "approved" ? "승인됨" : "거절됨"}
                   </p>
                 </div>
@@ -191,7 +212,7 @@ export default function ApplicationsPage() {
             onClick={() => setSelectedApp(null)}
           >
             <div
-              className="bg-deep-green rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white border-2 border-primary rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-2xl font-bold mb-4">지원서 상세</h2>
