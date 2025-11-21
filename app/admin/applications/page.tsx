@@ -36,16 +36,28 @@ export default function ApplicationsPage() {
 
   const loadApplications = async () => {
     try {
+      console.log("지원서 로드 시작...");
       const apps = await getAllApplications();
+      console.log("조회된 지원서 개수:", apps.length);
+      console.log("지원서 데이터:", apps);
+      
       const appsWithUsers = await Promise.all(
         apps.map(async (app) => {
-          const userData = await getUser(app.uid);
-          return { ...app, user: userData || undefined };
+          try {
+            const userData = await getUser(app.uid);
+            console.log(`사용자 ${app.uid} 정보:`, userData);
+            return { ...app, user: userData || undefined };
+          } catch (userError) {
+            console.error(`사용자 ${app.uid} 정보 로드 실패:`, userError);
+            return { ...app, user: undefined };
+          }
         })
       );
+      console.log("최종 지원서 목록:", appsWithUsers);
       setApplications(appsWithUsers);
     } catch (error) {
       console.error("지원서 로드 실패:", error);
+      alert("지원서를 불러오는 중 오류가 발생했습니다. 브라우저 콘솔을 확인해주세요.");
     } finally {
       setLoading(false);
     }
@@ -164,12 +176,19 @@ export default function ApplicationsPage() {
 
         {/* 지원자 목록 */}
         <div className="space-y-4">
-          {filteredApplications.map((app) => (
-            <div
-              key={app.uid}
-              className="bg-gray-100 border-2 border-primary rounded-lg p-4 cursor-pointer hover:bg-primary group transition"
-              onClick={() => setSelectedApp(app)}
-            >
+          {filteredApplications.length === 0 ? (
+            <div className="text-center py-8 text-gray-600">
+              {applications.length === 0 
+                ? "지원서가 없습니다." 
+                : "필터 조건에 맞는 지원서가 없습니다."}
+            </div>
+          ) : (
+            filteredApplications.map((app) => (
+              <div
+                key={app.docId || app.uid}
+                className="bg-gray-100 border-2 border-primary rounded-lg p-4 cursor-pointer hover:bg-primary group transition"
+                onClick={() => setSelectedApp(app)}
+              >
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-semibold group-hover:text-white transition">{app.user?.name || "이름 없음"}</p>
@@ -206,7 +225,8 @@ export default function ApplicationsPage() {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* 상세 정보 모달 */}
@@ -261,12 +281,38 @@ export default function ApplicationsPage() {
                   <p className="font-semibold">사진</p>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     {selectedApp.photos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={photo}
-                        alt={`Photo ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
+                      <div key={index} className="relative group">
+                        <img
+                          src={photo}
+                          alt={`Photo ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(photo, '_blank');
+                            }}
+                            className="bg-white text-gray-800 px-3 py-1 rounded text-sm font-semibold hover:bg-gray-200 transition"
+                          >
+                            크게 보기
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const link = document.createElement('a');
+                              link.href = photo;
+                              link.download = `photo_${index + 1}.jpg`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                            className="bg-primary text-white px-3 py-1 rounded text-sm font-semibold hover:opacity-90 transition"
+                          >
+                            다운로드
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

@@ -12,13 +12,20 @@ export async function createApplication(uid: string, applicationData: Omit<Appli
     const docId = eventId ? `${uid}_${eventId}` : uid;
     const applicationRef = doc(db, applicationsCollection, docId);
     
-    await setDoc(applicationRef, {
+    // Firestore는 undefined 값을 저장할 수 없으므로, eventId가 있을 때만 포함
+    const applicationDoc: any = {
       uid, // uid 필드를 명시적으로 저장
       ...applicationData,
-      eventId: eventId || undefined,
       status: "pending" as ApplicationStatus,
       createdAt: new Date(),
-    }, { merge: false }); // merge: false로 명시적으로 새 문서 생성
+    };
+    
+    // eventId가 있을 때만 필드에 추가 (undefined를 저장하지 않음)
+    if (eventId) {
+      applicationDoc.eventId = eventId;
+    }
+    
+    await setDoc(applicationRef, applicationDoc, { merge: false }); // merge: false로 명시적으로 새 문서 생성
     
     console.log("지원서 생성 성공:", docId);
   } catch (error: any) {

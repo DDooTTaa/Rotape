@@ -41,12 +41,8 @@ export default function Home() {
             if (userData.isAdmin) {
               router.push("/admin");
             } else {
-              // 사용자 정보가 완전한지 확인 (birthday와 age가 있는지)
-              if (userData.birthday && userData.age > 0) {
-                router.push("/participant/events");
-              } else {
-                router.push("/participant/application");
-              }
+              // 모든 사용자를 행사 리스트로 이동
+              router.push("/participant/events");
             }
           }
         } catch (error) {
@@ -95,12 +91,8 @@ export default function Home() {
           if (existingUser.isAdmin) {
             router.push("/admin");
           } else {
-            // 사용자 정보가 완전한지 확인
-            if (existingUser.birthday && existingUser.age > 0) {
-              router.push("/participant/events");
-            } else {
-              router.push("/participant/application");
-            }
+            // 모든 사용자를 행사 리스트로 이동
+            router.push("/participant/events");
           }
         }
         setLoading(false);
@@ -135,7 +127,7 @@ export default function Home() {
       if (userData.isAdmin) {
         router.push("/admin");
       } else {
-        router.push("/participant/application");
+        router.push("/participant/events");
       }
     } catch (error) {
       console.error("로그인 실패:", error);
@@ -181,12 +173,8 @@ export default function Home() {
           if (existingUser.isAdmin) {
             router.push("/admin");
           } else {
-            // 사용자 정보가 완전한지 확인
-            if (existingUser.birthday && existingUser.age > 0) {
-              router.push("/participant/events");
-            } else {
-              router.push("/participant/application");
-            }
+            // 모든 사용자를 행사 리스트로 이동
+            router.push("/participant/events");
           }
         }
         setLoading(false);
@@ -217,7 +205,7 @@ export default function Home() {
       if (userData.isAdmin) {
         router.push("/admin");
       } else {
-        router.push("/participant/application");
+        router.push("/participant/events");
       }
     } catch (error) {
       console.error("로그인 실패:", error);
@@ -334,12 +322,8 @@ export default function Home() {
         if (userData.isAdmin) {
           router.push("/admin");
         } else {
-          // 사용자 정보가 완전한지 확인
-          if (userData.birthday && userData.age > 0) {
-            router.push("/participant/events");
-          } else {
-            router.push("/participant/application");
-          }
+          // 모든 사용자를 행사 리스트로 이동
+          router.push("/participant/events");
         }
       }
     } catch (error) {

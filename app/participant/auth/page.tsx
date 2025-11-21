@@ -52,8 +52,8 @@ export default function AuthPage() {
           return;
         }
 
-        // 신규 사용자는 내 정보 기입 페이지로
-        router.push("/participant/application");
+        // 신규 사용자도 행사 리스트로 이동
+        router.push("/participant/events");
       } else {
         // 기존 사용자 - 약관 동의 확인
         if (!termsAccepted) {
@@ -110,8 +110,8 @@ export default function AuthPage() {
           return;
         }
 
-        // 신규 사용자는 내 정보 기입 페이지로
-        router.push("/participant/application");
+        // 신규 사용자도 행사 리스트로 이동
+        router.push("/participant/events");
       } else {
         // 기존 사용자 - 약관 동의 확인
         if (!termsAccepted) {
@@ -134,25 +134,8 @@ export default function AuthPage() {
     setTermsAccepted(true);
     setShowTerms(false);
     
-    // 현재 사용자 확인
-    if (!auth) {
-      router.push("/participant/application");
-      return;
-    }
-    
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      const existingUser = await getUser(currentUser.uid);
-      if (existingUser) {
-        // 기존 사용자는 행사 리스트로
-        router.push("/participant/events");
-      } else {
-        // 신규 사용자는 내 정보 기입 페이지로
-        router.push("/participant/application");
-      }
-    } else {
-      router.push("/participant/application");
-    }
+    // 모든 사용자를 행사 리스트로 이동
+    router.push("/participant/events");
   };
 
   return (

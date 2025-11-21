@@ -8,7 +8,6 @@ import { getApplicationByEvent, getApplication, createApplication } from "@/lib/
 import { getUser } from "@/lib/firebase/users";
 import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
@@ -166,12 +165,6 @@ export default function EventsPage() {
                       <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
                         승인됨
                       </span>
-                      <Link
-                        href="/participant/approved"
-                        className="block mt-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition text-center"
-                      >
-                        상세 보기
-                      </Link>
                     </div>
                   )}
 
