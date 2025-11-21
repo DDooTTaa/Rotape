@@ -108,14 +108,14 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">마이페이지</h1>
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">마이페이지</h1>
         </div>
 
         {/* 사용자 정보 */}
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
+        <div className="card-elegant p-6 mb-6">
           <h2 className="text-2xl font-bold mb-4">내 정보</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -138,7 +138,7 @@ export default function MyProfilePage() {
         </div>
 
         {/* 지원서 목록 */}
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6">
+        <div className="card-elegant p-6">
           <h2 className="text-2xl font-bold mb-4">내 지원서</h2>
           {applications.length === 0 ? (
             <p className="text-gray-600">작성한 지원서가 없습니다.</p>
@@ -148,7 +148,7 @@ export default function MyProfilePage() {
                 <div
                   key={index}
                   onClick={() => setSelectedApp(app)}
-                  className="bg-white border-2 border-primary/30 rounded-lg p-4 cursor-pointer hover:border-primary transition group"
+                  className="bg-white border-2 border-primary/30 rounded-xl p-4 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-300 group card-hover"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

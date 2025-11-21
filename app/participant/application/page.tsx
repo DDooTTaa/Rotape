@@ -221,18 +221,18 @@ function ApplicationFormContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-bold">지원서 작성</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 작성</h1>
             {eventTitle && (
-              <p className="text-lg text-primary mt-2">행사: {eventTitle}</p>
+              <p className="text-lg text-primary mt-2 font-semibold">행사: {eventTitle}</p>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+            className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
           >
             로그아웃
           </button>
@@ -247,7 +247,7 @@ function ApplicationFormContent() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             />
           </div>
 
@@ -288,7 +288,7 @@ function ApplicationFormContent() {
               max="2004"
               value={formData.birthYear}
               onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             />
             {formData.birthYear && (
               <p className="text-sm mt-1 text-gray-600">나이: {calculateAge(formData.birthYear)}세</p>
@@ -305,7 +305,7 @@ function ApplicationFormContent() {
               max="220"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             />
           </div>
 
@@ -317,7 +317,7 @@ function ApplicationFormContent() {
               required
               value={formData.job}
               onChange={(e) => setFormData({ ...formData, job: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             />
           </div>
 
@@ -326,7 +326,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">사진 업로드 (3장 필수)</label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
-                <div key={index} className="border-2 border-dashed border-primary rounded-lg bg-gray-50 relative overflow-hidden">
+                <div key={index} className="border-2 border-dashed border-primary rounded-xl bg-gray-50 relative overflow-hidden hover:border-primary/60 transition-all duration-300">
                   <input
                     type="file"
                     accept="image/*"
@@ -368,7 +368,7 @@ function ApplicationFormContent() {
               required
               value={formData.intro}
               onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
               rows={2}
             />
           </div>
@@ -380,7 +380,7 @@ function ApplicationFormContent() {
               required
               value={formData.idealType}
               onChange={(e) => setFormData({ ...formData, idealType: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
               rows={2}
             />
           </div>
@@ -392,7 +392,7 @@ function ApplicationFormContent() {
               required
               value={formData.loveStyle}
               onChange={(e) => setFormData({ ...formData, loveStyle: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
               rows={2}
             />
           </div>
@@ -426,7 +426,7 @@ function ApplicationFormContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
           >
             {loading ? "제출 중..." : "제출하기"}
           </button>

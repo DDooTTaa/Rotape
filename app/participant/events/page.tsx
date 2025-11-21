@@ -117,10 +117,10 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-gray-800 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">행사 리스트</h1>
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">행사 리스트</h1>
         </div>
 
         {events.length === 0 ? (
@@ -136,9 +136,9 @@ export default function EventsPage() {
               return (
                 <div
                   key={event.eventId}
-                  className="bg-gray-100 border-2 border-primary rounded-lg p-6 hover:shadow-lg transition"
+                  className="card-elegant card-hover p-6"
                 >
-                  <h2 className="text-2xl font-bold mb-4 text-primary">{event.title}</h2>
+                  <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">{event.title}</h2>
                   <div className="space-y-2 mb-4">
                     <p className="text-gray-700">
                       <span className="font-semibold">일시:</span>{" "}
@@ -154,7 +154,7 @@ export default function EventsPage() {
 
                   {status === "pending" && (
                     <div className="mb-4">
-                      <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 px-4 py-2 rounded-full text-sm font-semibold shadow-md">
                         심사 중
                       </span>
                     </div>
@@ -162,7 +162,7 @@ export default function EventsPage() {
 
                   {status === "approved" && (
                     <div className="mb-4">
-                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-gradient-to-r from-green-100 to-green-50 text-green-800 px-4 py-2 rounded-full text-sm font-semibold shadow-md">
                         승인됨
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export default function EventsPage() {
 
                   {status === "rejected" && (
                     <div className="mb-4">
-                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-gradient-to-r from-red-100 to-red-50 text-red-800 px-4 py-2 rounded-full text-sm font-semibold shadow-md">
                         거절됨
                       </span>
                     </div>
@@ -180,7 +180,7 @@ export default function EventsPage() {
                     <button
                       onClick={() => handleApply(event.eventId)}
                       disabled={applyingEventId === event.eventId}
-                      className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+                      className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
                     >
                       {applyingEventId === event.eventId ? "신청 중..." : "행사 신청하기"}
                     </button>

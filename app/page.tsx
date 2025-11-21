@@ -332,11 +332,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-foreground flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-foreground flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">Rotape</h1>
-          <p className="text-gray-300">로테이션 소개팅 서비스</p>
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
+            Rotape
+          </h1>
+          <p className="text-gray-600 text-lg">로테이션 소개팅 서비스</p>
         </div>
 
         {/* Firebase 설정 안내 */}
@@ -387,7 +389,7 @@ export default function Home() {
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
                 placeholder={`기본값: ${ADMIN_EMAIL}`}
-                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border border-primary/30 mb-4"
+                className="w-full px-4 py-3 rounded-xl bg-white text-foreground border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300 mb-4"
               />
             </div>
             <div>
@@ -402,13 +404,13 @@ export default function Home() {
                     handleAdminKeyLogin();
                   }
                 }}
-                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border border-primary/30"
+                className="w-full px-4 py-3 rounded-xl bg-white text-foreground border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
               />
             </div>
             <button
               onClick={handleAdminKeyLogin}
               disabled={loading || !adminKey}
-              className="w-full bg-primary text-white px-6 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50"
             >
               {loading ? "로그인 중..." : "운영자로 로그인"}
             </button>
@@ -418,7 +420,7 @@ export default function Home() {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full bg-white text-gray-900 px-6 py-4 rounded-lg font-semibold hover:bg-primary hover:text-white transition disabled:opacity-50 border-2 border-primary flex items-center justify-center gap-3"
+              className="w-full bg-white text-gray-900 px-6 py-4 rounded-xl font-semibold hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] hover:text-white transition-all duration-300 disabled:opacity-50 border-2 border-primary shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
             >
               {loading ? (
                 "로그인 중..."
@@ -455,7 +457,7 @@ export default function Home() {
             <button
               onClick={handleAppleLogin}
               disabled={loading}
-              className="w-full bg-black text-white px-6 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-gray-900 to-black text-white px-6 py-4 rounded-xl font-semibold hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50"
             >
               {loading ? "로그인 중..." : "Apple로 로그인"}
             </button>
@@ -463,9 +465,9 @@ export default function Home() {
         )}
 
         {showTerms && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-            <div className="bg-white border border-primary/20 rounded-lg p-6 max-w-md w-full shadow-lg">
-              <h2 className="text-2xl font-bold mb-4">약관 동의</h2>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+            <div className="bg-white border-2 border-primary/20 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+              <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">약관 동의</h2>
               <div className="max-h-64 overflow-y-auto mb-4 text-sm space-y-2">
                 <p>서비스 이용약관에 동의해주세요.</p>
                 <p>개인정보 처리방침에 동의해주세요.</p>
@@ -473,13 +475,13 @@ export default function Home() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setShowTerms(false)}
-                  className="flex-1 bg-gray-600 px-4 py-2 rounded-lg"
+                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleAcceptTerms}
-                  className="flex-1 bg-primary text-white px-4 py-2 rounded-lg font-semibold"
+                  className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                 >
                   동의
                 </button>

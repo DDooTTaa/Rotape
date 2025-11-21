@@ -130,32 +130,32 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-foreground py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 text-foreground py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">지원자 리스트</h1>
+        <div className="flex justify-between items-center mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원자 리스트</h1>
           <button
             onClick={handleLogout}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
+            className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
           >
             로그아웃
           </button>
         </div>
 
         {/* 필터 */}
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-4 mb-6">
+        <div className="card-elegant p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="이름/직업 검색"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             />
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
-              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             >
               <option value="all">전체 상태</option>
               <option value="pending">심사 중</option>
@@ -165,7 +165,7 @@ export default function ApplicationsPage() {
             <select
               value={filters.gender}
               onChange={(e) => setFilters({ ...filters, gender: e.target.value as any })}
-              className="px-4 py-2 rounded-lg bg-white text-foreground border-2 border-primary/30 focus:border-primary"
+              className="input-elegant"
             >
               <option value="all">전체 성별</option>
               <option value="M">남성</option>
@@ -186,7 +186,7 @@ export default function ApplicationsPage() {
             filteredApplications.map((app) => (
               <div
                 key={app.docId || app.uid}
-                className="bg-gray-100 border-2 border-primary rounded-lg p-4 cursor-pointer hover:bg-primary group transition"
+                className="card-elegant card-hover p-6 cursor-pointer hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] group transition-all duration-300"
                 onClick={() => setSelectedApp(app)}
               >
               <div className="flex justify-between items-center">
@@ -207,7 +207,7 @@ export default function ApplicationsPage() {
                           e.stopPropagation();
                           handleApprove(app);
                         }}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+                        className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                       >
                         승인
                       </button>
@@ -216,7 +216,7 @@ export default function ApplicationsPage() {
                           e.stopPropagation();
                           handleReject(app);
                         }}
-                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+                        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                       >
                         거절
                       </button>
@@ -232,14 +232,14 @@ export default function ApplicationsPage() {
         {/* 상세 정보 모달 */}
         {selectedApp && (
           <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
             onClick={() => setSelectedApp(null)}
           >
             <div
-              className="bg-white border-2 border-primary rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg"
+              className="card-elegant p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-bold mb-4">지원서 상세</h2>
+              <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 상세</h2>
               <div className="space-y-4">
                 <div>
                   <p className="font-semibold">이름</p>
@@ -325,7 +325,7 @@ export default function ApplicationsPage() {
                         handleApprove(selectedApp);
                         setSelectedApp(null);
                       }}
-                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                     >
                       승인
                     </button>
@@ -334,7 +334,7 @@ export default function ApplicationsPage() {
                         handleReject(selectedApp);
                         setSelectedApp(null);
                       }}
-                      className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                     >
                       거절
                     </button>
@@ -342,7 +342,7 @@ export default function ApplicationsPage() {
                 )}
                 <button
                   onClick={() => setSelectedApp(null)}
-                  className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition"
+                  className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                 >
                   닫기
                 </button>
