@@ -9,6 +9,8 @@ import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { Round, Profile } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function RotationPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();

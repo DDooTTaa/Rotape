@@ -7,6 +7,8 @@ import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default function ParticipantLanding() {
   const router = useRouter();
   const [user] = useAuthState(auth!);

@@ -10,6 +10,8 @@ import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default function EventsPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();

@@ -4,6 +4,8 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function PendingPage() {
   const router = useRouter();
 

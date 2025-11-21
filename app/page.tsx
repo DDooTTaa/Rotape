@@ -6,6 +6,8 @@ import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { createUser, getUser, updateUser } from "@/lib/firebase/users";
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);

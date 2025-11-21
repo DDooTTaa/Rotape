@@ -6,6 +6,8 @@ import { auth } from "@/lib/firebase/config";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfileViewPage() {
   const router = useRouter();
   const [qrScanned, setQrScanned] = useState(false);

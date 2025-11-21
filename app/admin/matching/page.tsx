@@ -9,6 +9,8 @@ import { getProfile } from "@/lib/firebase/profiles";
 import { Like, Match, Profile } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function MatchingPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();

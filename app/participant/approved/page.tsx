@@ -10,6 +10,8 @@ import { Profile, Event } from "@/lib/firebase/types";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+export const dynamic = 'force-dynamic';
+
 export default function ApprovedPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();

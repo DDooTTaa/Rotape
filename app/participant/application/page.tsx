@@ -9,6 +9,8 @@ import { createApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
 import { getEvent } from "@/lib/firebase/events";
 
+export const dynamic = 'force-dynamic';
+
 const loveLanguages = ["행동", "선물", "언어", "시간", "스킨십"];
 
 function ApplicationFormContent() {

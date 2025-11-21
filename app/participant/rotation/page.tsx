@@ -9,6 +9,8 @@ import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { submitLike } from "@/lib/firebase/matching";
 import { Profile } from "@/lib/firebase/types";
 
+export const dynamic = 'force-dynamic';
+
 export default function RotationPage() {
   const router = useRouter();
   const [user] = useAuthState(auth!);

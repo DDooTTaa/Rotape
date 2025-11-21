@@ -8,6 +8,8 @@ import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 interface NavItem {
   href: string;
   label: string;
@@ -87,6 +89,12 @@ const adminNavItems: NavItem[] = [
 export default function Navigation() {
   const pathname = usePathname();
   const router = useRouter();
+  
+  // 서버 사이드 렌더링 방지
+  if (typeof window === 'undefined' || !auth) {
+    return null;
+  }
+  
   const [user] = useAuthState(auth!);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
