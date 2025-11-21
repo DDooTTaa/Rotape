@@ -108,3 +108,18 @@ export async function getApplicationsByStatus(status: ApplicationStatus): Promis
   return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Application));
 }
 
+// 행사별 지원서 조회
+export async function getApplicationsByEventId(eventId: string): Promise<(Application & { docId: string })[]> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  const q = query(collection(db, applicationsCollection), where("eventId", "==", eventId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      uid: data.uid || doc.id.split('_')[0],
+      docId: doc.id,
+      ...data
+    } as Application & { docId: string };
+  });
+}
+
