@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { createApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
@@ -92,19 +91,6 @@ function ApplicationFormContent() {
     }
   };
 
-  const handleLogout = async () => {
-    if (!auth) {
-      alert("인증 서비스를 사용할 수 없습니다.");
-      return;
-    }
-    try {
-      await signOut(auth!);
-      router.push("/");
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다.");
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,19 +209,11 @@ function ApplicationFormContent() {
   return (
     <div className="min-h-screen text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 작성</h1>
-            {eventTitle && (
-              <p className="text-lg text-primary mt-2 font-semibold">행사: {eventTitle}</p>
-            )}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-          >
-            로그아웃
-          </button>
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 작성</h1>
+          {eventTitle && (
+            <p className="text-lg text-primary mt-2 font-semibold">행사: {eventTitle}</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

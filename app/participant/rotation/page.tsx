@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { submitLike } from "@/lib/firebase/matching";
@@ -43,15 +42,6 @@ export default function RotationPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth!);
-      router.push("/");
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다.");
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,14 +96,8 @@ export default function RotationPage() {
   return (
     <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold">1, 2, 3순위 선택하기</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
-          >
-            로그아웃
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

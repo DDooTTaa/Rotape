@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getProfile } from "@/lib/firebase/profiles";
 import { getEvent } from "@/lib/firebase/events";
@@ -41,15 +40,6 @@ export default function ApprovedPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth!);
-      router.push("/");
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다.");
-    }
-  };
 
   if (loading) {
     return (
@@ -70,14 +60,8 @@ export default function ApprovedPage() {
   return (
     <div className="min-h-screen bg-white text-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold">승인 완료</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition"
-          >
-            로그아웃
-          </button>
         </div>
 
         <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">

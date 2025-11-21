@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getAllApplications, updateApplicationStatus } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
@@ -111,15 +110,6 @@ export default function ApplicationsPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth!);
-      router.push("/");
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다.");
-    }
-  };
 
   if (loading) {
     return (
@@ -132,14 +122,8 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-screen text-foreground py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
+        <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원자 리스트</h1>
-          <button
-            onClick={handleLogout}
-            className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-          >
-            로그아웃
-          </button>
         </div>
 
         {/* 필터 */}
