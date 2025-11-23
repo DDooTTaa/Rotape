@@ -221,25 +221,13 @@ export default function EventDetailPage() {
                 return (
                   <div
                     key={app.docId || app.uid}
-                    className={`card-elegant card-hover p-6 cursor-pointer transition-all duration-300 ${
-                      isRejected 
-                        ? "bg-red-50 border-2 border-red-300 opacity-90 hover:opacity-100" 
-                        : isApproved
-                        ? "bg-green-50 border-2 border-green-300"
-                        : "hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a]"
-                    } group`}
+                    className="card-elegant card-hover p-6 cursor-pointer hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] group transition-all duration-300"
                     onClick={() => setSelectedApp(app)}
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <p className={`font-semibold transition ${
-                            isRejected 
-                              ? "text-red-800 group-hover:text-red-900" 
-                              : isApproved
-                              ? "text-green-800"
-                              : "group-hover:text-white"
-                          }`}>
+                          <p className="font-semibold group-hover:text-white transition">
                             {app.user?.name || "이름 없음"}
                           </p>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -252,55 +240,29 @@ export default function EventDetailPage() {
                             {isPending ? "심사 중" : isApproved ? "승인됨" : "거절됨"}
                           </span>
                         </div>
-                        <p className={`text-sm transition ${
-                          isRejected 
-                            ? "text-red-700 group-hover:text-red-800" 
-                            : isApproved
-                            ? "text-green-700"
-                            : "text-gray-700 group-hover:text-white"
-                        }`}>
+                        <p className="text-sm text-gray-700 group-hover:text-white transition">
                           {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        {isPending && (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleApprove(app);
-                              }}
-                              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                            >
-                              승인
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleReject(app);
-                              }}
-                              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                            >
-                              거절
-                            </button>
-                          </>
-                        )}
-                        {isRejected && (
-                          <div className="flex items-center text-red-600 font-semibold">
-                            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            거절됨
-                          </div>
-                        )}
-                        {isApproved && (
-                          <div className="flex items-center text-green-600 font-semibold">
-                            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            승인됨
-                          </div>
-                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(app);
+                          }}
+                          className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                        >
+                          승인
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReject(app);
+                          }}
+                          className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                        >
+                          거절
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -399,28 +361,24 @@ export default function EventDetailPage() {
                 </div>
               </div>
               <div className="flex gap-4 mt-6">
-                {selectedApp.status === "pending" && (
-                  <>
-                    <button
-                      onClick={() => {
-                        handleApprove(selectedApp);
-                        setSelectedApp(null);
-                      }}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                      승인
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleReject(selectedApp);
-                        setSelectedApp(null);
-                      }}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                      거절
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => {
+                    handleApprove(selectedApp);
+                    setSelectedApp(null);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  승인
+                </button>
+                <button
+                  onClick={() => {
+                    handleReject(selectedApp);
+                    setSelectedApp(null);
+                  }}
+                  className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  거절
+                </button>
                 <button
                   onClick={() => setSelectedApp(null)}
                   className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
