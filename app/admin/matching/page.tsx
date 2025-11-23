@@ -80,15 +80,6 @@ export default function MatchingPage() {
           <h1 className="text-3xl font-bold">매칭 결과 관리</h1>
         </div>
 
-        <div className="mb-6">
-          <button
-            onClick={handleRunMatching}
-            className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            매칭 알고리즘 실행
-          </button>
-        </div>
-
         {/* 선택 결과 */}
         <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
           <h2 className="text-2xl font-semibold mb-4 text-primary">참가자별 선택 결과</h2>

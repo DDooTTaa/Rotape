@@ -229,7 +229,9 @@ export default function EventPage() {
               <div key={event.eventId} className="bg-gray-100 border-2 border-primary rounded-lg p-4">
                 <h3 className="font-semibold text-lg">{event.title}</h3>
                 <p className="text-sm text-gray-300">
-                  {new Date(event.date).toLocaleString("ko-KR")} | {event.location}
+                  {event.date instanceof Date 
+                    ? event.date.toLocaleString("ko-KR")
+                    : new Date(event.date).toLocaleString("ko-KR")} | {event.location}
                 </p>
               </div>
             ))}

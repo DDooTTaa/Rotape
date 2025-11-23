@@ -80,7 +80,9 @@ export default function AdminPage() {
                   <div className="space-y-2 text-gray-700">
                     <p className="text-sm">
                       <span className="font-semibold">일시:</span>{" "}
-                      {new Date(event.date).toLocaleString("ko-KR")}
+                      {event.date instanceof Date 
+                        ? event.date.toLocaleString("ko-KR")
+                        : new Date(event.date).toLocaleString("ko-KR")}
                     </p>
                     <p className="text-sm">
                       <span className="font-semibold">장소:</span> {event.location}

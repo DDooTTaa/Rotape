@@ -93,7 +93,9 @@ export default function EventsPage() {
                   <div className="space-y-2 mb-4">
                     <p className="text-gray-700">
                       <span className="font-semibold">일시:</span>{" "}
-                      {new Date(event.date).toLocaleString("ko-KR")}
+                      {event.date instanceof Date 
+                        ? event.date.toLocaleString("ko-KR")
+                        : new Date(event.date).toLocaleString("ko-KR")}
                     </p>
                     <p className="text-gray-700">
                       <span className="font-semibold">장소:</span> {event.location}

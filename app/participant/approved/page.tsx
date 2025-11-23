@@ -77,7 +77,9 @@ export default function ApprovedPage() {
         {event && (
           <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
             <h2 className="text-2xl font-semibold mb-4 text-primary">행사 안내</h2>
-            <p className="mb-2 text-gray-800">일시: {new Date(event.date).toLocaleString("ko-KR")}</p>
+            <p className="mb-2 text-gray-800">일시: {event.date instanceof Date 
+              ? event.date.toLocaleString("ko-KR")
+              : new Date(event.date).toLocaleString("ko-KR")}</p>
             <p className="mb-2 text-gray-800">장소: {event.location}</p>
             {event.schedule.intro && <p className="mb-2 text-gray-800">인트로: {event.schedule.intro}</p>}
             {event.schedule.part1 && <p className="mb-2 text-gray-800">1부: {event.schedule.part1}</p>}

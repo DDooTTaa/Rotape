@@ -148,7 +148,7 @@ export default function EventDetailPage() {
               href="/admin"
               className="text-primary hover:underline mb-2 inline-block"
             >
-              ← 대시보드로 돌아가기
+              ← 행사 관리로 돌아가기
             </Link>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
               {event.title}
@@ -156,7 +156,9 @@ export default function EventDetailPage() {
             <div className="mt-4 space-y-2 text-gray-700">
               <p>
                 <span className="font-semibold">일시:</span>{" "}
-                {new Date(event.date).toLocaleString("ko-KR")}
+                {event.date instanceof Date 
+                  ? event.date.toLocaleString("ko-KR")
+                  : new Date(event.date).toLocaleString("ko-KR")}
               </p>
               <p>
                 <span className="font-semibold">장소:</span> {event.location}
