@@ -213,49 +213,99 @@ export default function EventDetailPage() {
                   : "필터 조건에 맞는 지원자가 없습니다."}
               </div>
             ) : (
-              filteredApplications.map((app) => (
-                <div
-                  key={app.docId || app.uid}
-                  className="card-elegant card-hover p-6 cursor-pointer hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] group transition-all duration-300"
-                  onClick={() => setSelectedApp(app)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold group-hover:text-white transition">{app.user?.name || "이름 없음"}</p>
-                      <p className="text-sm text-gray-700 group-hover:text-white transition">
-                        {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
-                      </p>
-                      <p className="text-sm text-gray-600 group-hover:text-white mt-1 transition">
-                        상태: {app.status === "pending" ? "심사 중" : app.status === "approved" ? "승인됨" : "거절됨"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {app.status === "pending" && (
-                        <>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleApprove(app);
-                            }}
-                            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                          >
-                            승인
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReject(app);
-                            }}
-                            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                          >
-                            거절
-                          </button>
-                        </>
-                      )}
+              filteredApplications.map((app) => {
+                const isRejected = app.status === "rejected";
+                const isApproved = app.status === "approved";
+                const isPending = app.status === "pending";
+                
+                return (
+                  <div
+                    key={app.docId || app.uid}
+                    className={`card-elegant card-hover p-6 cursor-pointer transition-all duration-300 ${
+                      isRejected 
+                        ? "bg-red-50 border-2 border-red-300 opacity-90 hover:opacity-100" 
+                        : isApproved
+                        ? "bg-green-50 border-2 border-green-300"
+                        : "hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a]"
+                    } group`}
+                    onClick={() => setSelectedApp(app)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className={`font-semibold transition ${
+                            isRejected 
+                              ? "text-red-800 group-hover:text-red-900" 
+                              : isApproved
+                              ? "text-green-800"
+                              : "group-hover:text-white"
+                          }`}>
+                            {app.user?.name || "이름 없음"}
+                          </p>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            isRejected
+                              ? "bg-red-200 text-red-800 border border-red-300"
+                              : isApproved
+                              ? "bg-green-200 text-green-800 border border-green-300"
+                              : "bg-yellow-200 text-yellow-800 border border-yellow-300"
+                          }`}>
+                            {isPending ? "심사 중" : isApproved ? "승인됨" : "거절됨"}
+                          </span>
+                        </div>
+                        <p className={`text-sm transition ${
+                          isRejected 
+                            ? "text-red-700 group-hover:text-red-800" 
+                            : isApproved
+                            ? "text-green-700"
+                            : "text-gray-700 group-hover:text-white"
+                        }`}>
+                          {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {isPending && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApprove(app);
+                              }}
+                              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                            >
+                              승인
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleReject(app);
+                              }}
+                              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                            >
+                              거절
+                            </button>
+                          </>
+                        )}
+                        {isRejected && (
+                          <div className="flex items-center text-red-600 font-semibold">
+                            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            거절됨
+                          </div>
+                        )}
+                        {isApproved && (
+                          <div className="flex items-center text-green-600 font-semibold">
+                            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            승인됨
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

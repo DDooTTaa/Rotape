@@ -279,7 +279,7 @@ function ApplicationFormContent() {
             <input
               type="number"
               required
-              min="140"
+              min="100"
               max="220"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
