@@ -37,12 +37,34 @@ export default function Home() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [isKakaoBrowser, setIsKakaoBrowser] = useState(false);
+  const [userAgentString, setUserAgentString] = useState('');
 
   // 카카오톡 인앱 브라우저 감지
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isKakao = userAgent.includes('kakaotalk') || userAgent.includes('kakaobrowser');
+      const userAgent = navigator.userAgent;
+      const userAgentLower = userAgent.toLowerCase();
+      
+      // 다양한 카카오톡 브라우저 패턴 확인
+      // 카카오톡 인앱 브라우저의 User-Agent는 보통 다음과 같습니다:
+      // Android: "KAKAOTALK" 또는 "kakaotalk" 포함
+      // iOS: "KAKAOTALK" 또는 "kakaotalk" 포함
+      const isKakao = 
+        userAgentLower.includes('kakaotalk') || 
+        userAgentLower.includes('kakaobrowser') ||
+        userAgent.includes('KAKAOTALK') ||
+        userAgent.includes('KakaoTalk') ||
+        /kakao/i.test(userAgent) ||
+        // 추가 패턴: 카카오톡 웹뷰 감지
+        (userAgentLower.includes('android') && userAgentLower.includes('wv') && userAgentLower.includes('kakao')) ||
+        (userAgentLower.includes('iphone') && userAgentLower.includes('kakao')) ||
+        (userAgentLower.includes('ipad') && userAgentLower.includes('kakao'));
+      
+      // 디버깅을 위한 로그 및 상태 저장
+      console.log('User-Agent:', userAgent);
+      console.log('카카오톡 브라우저 감지:', isKakao);
+      setUserAgentString(userAgent);
+      
       setIsKakaoBrowser(isKakao);
     }
   }, []);
@@ -222,6 +244,15 @@ export default function Home() {
             당신의 인연이 한 컷의 테이프처럼 남기를
           </p>
         </div>
+
+        {/* 디버깅: User-Agent 표시 (개발용) */}
+        {process.env.NODE_ENV === 'development' && userAgentString && (
+          <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-lg text-xs">
+            <p className="font-semibold mb-1">디버깅 정보:</p>
+            <p className="text-gray-600 break-all">User-Agent: {userAgentString}</p>
+            <p className="text-gray-600 mt-1">감지 결과: {isKakaoBrowser ? '✅ 카카오톡 브라우저' : '❌ 일반 브라우저'}</p>
+          </div>
+        )}
 
         {/* 카카오톡 브라우저 안내 */}
         {isKakaoBrowser && (
