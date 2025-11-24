@@ -44,7 +44,7 @@ export default function Home() {
     }
 
     setIsFirebaseReady(true);
-    
+
     // 이미 로그인된 사용자 확인
     const unsubscribe = onAuthStateChanged(auth!, async (user) => {
       if (user) {
@@ -88,7 +88,7 @@ export default function Home() {
 
       // 기존 사용자 확인
       const existingUser = await getUser(user.uid);
-      
+
       if (existingUser) {
         // 기존 사용자
         if (existingUser.isAdmin) {
@@ -138,13 +138,13 @@ export default function Home() {
   const handleAcceptTerms = async () => {
     setTermsAccepted(true);
     setShowTerms(false);
-    
+
     // 약관 동의 후 자동으로 로그인 처리
     if (!auth) return;
-    
+
     try {
       if (!auth.currentUser) return;
-      
+
       const user = auth.currentUser;
       const userData = await getUser(user.uid);
       if (userData) {
@@ -187,13 +187,15 @@ export default function Home() {
           />
         ))}
       </div>
-      
+
       <div className="max-w-md w-full relative z-10">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
             Rotape
           </h1>
-          <p className="text-gray-600 text-lg">로테이션 소개팅 서비스</p>
+          <p className="text-gray-700 text-base font-medium">
+            인연이 한 컷의 테이프처럼 재생되기를
+          </p>
         </div>
 
         {/* Firebase 설정 안내 */}
@@ -259,7 +261,7 @@ export default function Home() {
             )}
           </button>
         </div>
-        
+
         {/* <div className="mt-6 text-center">
           <Link
             href="/adminLogin"
