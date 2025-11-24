@@ -266,8 +266,8 @@ export default function Home() {
             <div className="text-xs text-gray-600 space-y-1">
               <p className="font-semibold">📱 접속 방법:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>우측 상단의 <span className="font-semibold">'...'</span> 메뉴 클릭</li>
-                <li><span className="font-semibold">'다른 브라우저로 열기'</span> 또는 <span className="font-semibold">'외부 브라우저로 열기'</span> 선택</li>
+                <li>우측 상단의 <span className="font-semibold">&apos;...&apos;</span> 메뉴 클릭</li>
+                <li><span className="font-semibold">&apos;다른 브라우저로 열기&apos;</span> 또는 <span className="font-semibold">&apos;외부 브라우저로 열기&apos;</span> 선택</li>
                 <li>Chrome, Safari 등 기본 브라우저에서 다시 접속</li>
               </ol>
             </div>

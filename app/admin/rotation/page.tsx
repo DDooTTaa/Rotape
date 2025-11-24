@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getRoundsByEvent, createRound, endRound } from "@/lib/firebase/rounds";
@@ -19,13 +19,7 @@ export default function RotationPage() {
   const [eventId, setEventId] = useState("current-event-id");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user, eventId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const roundsData = await getRoundsByEvent(eventId);
       setRounds(roundsData);
@@ -35,7 +29,13 @@ export default function RotationPage() {
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     }
-  };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (user) {
+      loadData();
+    }
+  }, [user, loadData]);
 
   const handleStartRound = async () => {
     setLoading(true);
