@@ -66,3 +66,22 @@ body {
   }
 }
 
+/* 모바일용 눈송이 애니메이션 (절반만 내림) */
+@keyframes snowfall-mobile {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(50vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 모바일에서만 절반 애니메이션 적용 */
+@media (max-width: 768px) {
+  .snowflake-mobile {
+    animation-name: snowfall-mobile !important;
+  }
+}
+

@@ -14,7 +14,7 @@ function Snowflake({ delay, duration, left, initialTop }: { delay: number; durat
   const size = Math.random() * 15 + 18; // 18-33px 크기
   return (
     <div
-      className="absolute text-white pointer-events-none select-none"
+      className="absolute text-white pointer-events-none select-none snowflake-mobile"
       style={{
         left: `${left}%`,
         top: `${initialTop}%`,
@@ -104,8 +104,7 @@ export default function Home() {
     // 카카오톡 브라우저에서 구글 로그인 시도 시 경고
     if (isKakaoBrowser) {
       alert(
-        "카카오톡 브라우저에서는 Google 로그인이 지원되지 않습니다.\n\n" +
-        "다음 방법으로 접속해주세요:\n" +
+        "카톡 브라우저에선 Google 로그인이 지원되지 않아요.\n\n" +
         "1. 우측 상단의 '...' 메뉴를 클릭하세요\n" +
         "2. '다른 브라우저로 열기' 또는 '외부 브라우저로 열기'를 선택하세요\n" +
         "3. Chrome, Safari 등 기본 브라우저에서 다시 접속해주세요"
@@ -258,10 +257,7 @@ export default function Home() {
         {isKakaoBrowser && (
           <div className="mb-6 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-lg">
             <p className="text-sm font-semibold text-red-600 mb-2">
-              ⚠️ 카카오톡 브라우저에서는 Google 로그인이 지원되지 않습니다
-            </p>
-            <p className="text-xs text-gray-700 mb-3">
-              다른 브라우저로 접속해주세요.
+              ⚠️ 카톡 브라우저에선 Google 로그인이 지원되지 않아요
             </p>
             <div className="text-xs text-gray-600 space-y-1">
               <p className="font-semibold">📱 접속 방법:</p>
@@ -302,7 +298,7 @@ export default function Home() {
         <div className="space-y-4">
           <button
             onClick={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || isKakaoBrowser}
             className="w-full bg-white text-gray-900 px-6 py-4 rounded-xl font-semibold hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] hover:text-white transition-all duration-300 disabled:opacity-50 border-2 border-primary shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
           >
             {loading ? (
