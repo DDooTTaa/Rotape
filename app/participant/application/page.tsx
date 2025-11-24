@@ -21,7 +21,7 @@ function ApplicationFormContent() {
   const [loading, setLoading] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
   const [eventTitle, setEventTitle] = useState<string>("");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     gender: "M" as "M" | "F",
@@ -55,7 +55,7 @@ function ApplicationFormContent() {
 
       try {
         setIsLoadingData(true);
-        
+
         // 사용자 정보 불러오기
         const userData = await getUser(user.uid);
         if (userData) {
@@ -133,7 +133,7 @@ function ApplicationFormContent() {
       const newPhotos = [...formData.photos];
       newPhotos[index] = file;
       setFormData({ ...formData, photos: newPhotos });
-      
+
       // 미리보기 생성
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -171,7 +171,7 @@ function ApplicationFormContent() {
     const uploadedPhotos = formData.photos.filter(photo => photo !== undefined && photo !== null);
     const existingPhotoUrls = photoPreviews.filter(url => url && !url.startsWith('data:') && url.startsWith('http'));
     const totalPhotos = uploadedPhotos.length + existingPhotoUrls.length;
-    
+
     if (totalPhotos < 2) {
       alert("사진을 최소 2장 이상 업로드해주세요.");
       return;
@@ -187,7 +187,7 @@ function ApplicationFormContent() {
 
     try {
       console.log("지원서 제출 시작...");
-      
+
       // 사진 처리: 새로 업로드한 사진은 업로드하고, 기존 URL은 그대로 사용
       console.log("사진 처리 시작...");
       const photoUrls: string[] = [];
@@ -196,7 +196,7 @@ function ApplicationFormContent() {
         for (let i = 0; i < 3; i++) {
           const newPhoto = formData.photos[i];
           const existingUrl = photoPreviews[i];
-          
+
           if (newPhoto && newPhoto instanceof File) {
             // 새로 업로드한 사진이 있으면 업로드
             console.log(`사진 ${i + 1} 업로드 중...`);
@@ -260,9 +260,9 @@ function ApplicationFormContent() {
       console.error("에러 코드:", error?.code);
       console.error("에러 메시지:", error?.message);
       console.error("전체 에러:", error);
-      
+
       let errorMessage = "지원서 제출에 실패했습니다.";
-      
+
       if (error?.message?.includes("사진 업로드 실패")) {
         errorMessage = `사진 업로드에 실패했습니다.\n${error.message}`;
       } else if (error?.message?.includes("사용자 정보 업데이트 실패")) {
@@ -276,7 +276,7 @@ function ApplicationFormContent() {
       } else if (error?.message) {
         errorMessage = `오류: ${error.message}\n브라우저 콘솔(F12)을 확인하세요.`;
       }
-      
+
       alert(errorMessage);
       setLoading(false);
     }
@@ -473,28 +473,51 @@ function ApplicationFormContent() {
 
           {/* 사랑의 언어 */}
           <div>
-            <label className="block mb-2 font-semibold">사랑의 언어 1~5 순위 선택</label>
-            <div className="space-y-2">
-              {loveLanguages.map((lang) => (
-                <label key={lang} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.loveLanguage.includes(lang)}
-                    onChange={() => handleLoveLanguageChange(lang)}
-                    className="mr-2"
-                  />
-                  {lang}
-                  {formData.loveLanguage.includes(lang) && (
-                    <span className="ml-2 text-primary font-semibold">
-                      ({formData.loveLanguage.indexOf(lang) + 1}순위)
-                    </span>
-                  )}
-                </label>
-              ))}
+            <label className="block mb-3 font-semibold">연애에서 뭐가 제일 중요한가요?</label>
+            <div className="flex flex-wrap gap-3">
+              {loveLanguages.map((lang) => {
+                const isSelected = formData.loveLanguage.includes(lang);
+                const rank = isSelected ? formData.loveLanguage.indexOf(lang) + 1 : null;
+                const isDisabled = !isSelected && formData.loveLanguage.length >= 5;
+
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => handleLoveLanguageChange(lang)}
+                    disabled={isDisabled}
+                    className={`
+                      px-5 py-3 rounded-full font-semibold text-sm border-2
+                      transition-colors
+                      ${isSelected
+                        ? 'bg-gradient-to-r from-primary to-[#0d4a1a] text-white shadow-lg border-primary'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5'
+                      }
+                      ${isDisabled
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer'
+                      }
+                    `}
+                  >
+                    {lang}
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-sm mt-2 text-gray-600">
-              선택된 순서대로 순위가 결정됩니다. (5개 모두 선택 필요)
-            </p>
+            <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex flex-wrap gap-2">
+                {formData.loveLanguage.length == 0 && (
+                  <span className="text-xs bg-white px-2 py-1 rounded-full border border-primary/30">
+                    선택한 순서대로 순위가 결정됩니다. (5개 모두 선택해주세요)
+                  </span>
+                )}
+                {formData.loveLanguage.map((lang, index) => (
+                  <span key={lang} className="text-xs bg-white px-2 py-1 rounded-full border border-primary/30">
+                    {index + 1}순위: {lang}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <button

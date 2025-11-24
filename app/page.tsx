@@ -244,15 +244,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* 디버깅: User-Agent 표시 (개발용) */}
-        {process.env.NODE_ENV === 'development' && userAgentString && (
-          <div className="mb-4 p-3 bg-gray-100 border border-gray-300 rounded-lg text-xs">
-            <p className="font-semibold mb-1">디버깅 정보:</p>
-            <p className="text-gray-600 break-all">User-Agent: {userAgentString}</p>
-            <p className="text-gray-600 mt-1">감지 결과: {isKakaoBrowser ? '✅ 카카오톡 브라우저' : '❌ 일반 브라우저'}</p>
-          </div>
-        )}
-
         {/* 카카오톡 브라우저 안내 */}
         {isKakaoBrowser && (
           <div className="mb-6 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-lg">
