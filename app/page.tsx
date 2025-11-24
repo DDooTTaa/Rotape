@@ -9,6 +9,26 @@ import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
+// 눈송이 컴포넌트
+function Snowflake({ delay, duration, left }: { delay: number; duration: number; left: number }) {
+  const size = Math.random() * 15 + 18; // 18-33px 크기
+  return (
+    <div
+      className="absolute top-0 text-white pointer-events-none select-none"
+      style={{
+        left: `${left}%`,
+        animation: `snowfall ${duration}s linear ${delay}s infinite`,
+        fontSize: `${size}px`,
+        textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(173, 216, 230, 0.6)',
+        filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.9))',
+        opacity: 0.95,
+      }}
+    >
+      ❄
+    </div>
+  );
+}
+
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -140,9 +160,35 @@ export default function Home() {
     }
   };
 
+  // 눈송이 생성
+  const [snowflakes, setSnowflakes] = useState<Array<{ id: number; delay: number; duration: number; left: number }>>([]);
+
+  useEffect(() => {
+    // 80개의 눈송이 생성 (더 많이)
+    const flakes = Array.from({ length: 80 }, (_, i) => ({
+      id: i,
+      delay: Math.random() * 5,
+      duration: Math.random() * 3 + 5, // 5-8초
+      left: Math.random() * 100,
+    }));
+    setSnowflakes(flakes);
+  }, []);
+
   return (
-    <div className="min-h-screen text-foreground flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen text-foreground flex items-center justify-center px-4 relative overflow-hidden">
+      {/* 눈송이 배경 */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {snowflakes.map((flake) => (
+          <Snowflake
+            key={flake.id}
+            delay={flake.delay}
+            duration={flake.duration}
+            left={flake.left}
+          />
+        ))}
+      </div>
+      
+      <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
             Rotape

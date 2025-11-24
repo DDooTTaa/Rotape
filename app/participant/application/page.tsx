@@ -4,9 +4,10 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
-import { createApplication } from "@/lib/firebase/applications";
+import { createApplication, getApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
 import { getEvent } from "@/lib/firebase/events";
+import { getUser } from "@/lib/firebase/users";
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,7 @@ function ApplicationFormContent() {
     photos: [] as File[],
   });
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     const eventIdParam = searchParams.get("eventId");
@@ -41,6 +43,71 @@ function ApplicationFormContent() {
       loadEventInfo(eventIdParam);
     }
   }, [searchParams]);
+
+  // 사용자 정보와 기존 지원서 정보 불러오기
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) {
+        setIsLoadingData(false);
+        return;
+      }
+
+      try {
+        setIsLoadingData(true);
+        
+        // 사용자 정보 불러오기
+        const userData = await getUser(user.uid);
+        if (userData) {
+          // 생년월일에서 연도 추출 (YYYY-MM-DD 형식 또는 YYYY 형식)
+          let birthYear = "";
+          if (userData.birthday) {
+            if (userData.birthday.includes("-")) {
+              birthYear = userData.birthday.split("-")[0];
+            } else if (userData.birthday.length === 4) {
+              birthYear = userData.birthday;
+            }
+          }
+
+          setFormData(prev => ({
+            ...prev,
+            name: userData.name || "",
+            gender: userData.gender || "M",
+            birthYear: birthYear,
+          }));
+        }
+
+        // 기존 지원서 정보 불러오기 (있다면)
+        if (eventId) {
+          const existingApplication = await getApplication(user.uid, eventId);
+          if (existingApplication) {
+            // 기존 지원서의 사진 URL을 미리보기로 설정
+            if (existingApplication.photos && existingApplication.photos.length > 0) {
+              setPhotoPreviews(existingApplication.photos);
+            }
+
+            setFormData(prev => ({
+              ...prev,
+              height: existingApplication.height?.toString() || "",
+              job: existingApplication.job || "",
+              intro: existingApplication.intro || "",
+              idealType: existingApplication.idealType || "",
+              loveStyle: existingApplication.loveStyle || "",
+              loveLanguage: existingApplication.loveLanguage || [],
+            }));
+          } else {
+            // 기존 지원서가 없으면, 다른 행사의 최근 지원서 정보를 참고
+            // (선택사항: 사용자가 원하면 다른 행사의 지원서 정보도 불러올 수 있음)
+          }
+        }
+      } catch (error) {
+        console.error("사용자 정보 로드 실패:", error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, eventId]);
 
   const loadEventInfo = async (id: string) => {
     try {
@@ -99,8 +166,13 @@ function ApplicationFormContent() {
       return;
     }
 
-    if (formData.photos.length < 3) {
-      alert("사진 3장을 모두 업로드해주세요.");
+    // 사진 검증: 새로 업로드한 사진 + 기존 사진 URL 합쳐서 최소 2장 이상인지 확인
+    const uploadedPhotos = formData.photos.filter(photo => photo !== undefined && photo !== null);
+    const existingPhotoUrls = photoPreviews.filter(url => url && !url.startsWith('data:') && url.startsWith('http'));
+    const totalPhotos = uploadedPhotos.length + existingPhotoUrls.length;
+    
+    if (totalPhotos < 2) {
+      alert("사진을 최소 2장 이상 업로드해주세요.");
       return;
     }
 
@@ -115,20 +187,31 @@ function ApplicationFormContent() {
     try {
       console.log("지원서 제출 시작...");
       
-      // 사진 업로드
-      console.log("사진 업로드 시작...");
+      // 사진 처리: 새로 업로드한 사진은 업로드하고, 기존 URL은 그대로 사용
+      console.log("사진 처리 시작...");
       const photoUrls: string[] = [];
       try {
-        for (let i = 0; i < formData.photos.length; i++) {
-          console.log(`사진 ${i + 1} 업로드 중...`);
-          const url = await uploadPhoto(user.uid, formData.photos[i], i);
-          photoUrls.push(url);
-          console.log(`사진 ${i + 1} 업로드 완료:`, url);
+        // 각 슬롯(0, 1, 2)에 대해 처리
+        for (let i = 0; i < 3; i++) {
+          const newPhoto = formData.photos[i];
+          const existingUrl = photoPreviews[i];
+          
+          if (newPhoto && newPhoto instanceof File) {
+            // 새로 업로드한 사진이 있으면 업로드
+            console.log(`사진 ${i + 1} 업로드 중...`);
+            const url = await uploadPhoto(user.uid, newPhoto, i);
+            photoUrls.push(url);
+            console.log(`사진 ${i + 1} 업로드 완료:`, url);
+          } else if (existingUrl && existingUrl.startsWith('http')) {
+            // 기존 URL이 있으면 그대로 사용 (새로 업로드한 사진이 없는 경우)
+            photoUrls.push(existingUrl);
+            console.log(`사진 ${i + 1} 기존 URL 사용:`, existingUrl);
+          }
         }
-        console.log("모든 사진 업로드 완료");
+        console.log("모든 사진 처리 완료:", photoUrls.length, "장");
       } catch (photoError: any) {
-        console.error("사진 업로드 실패:", photoError);
-        throw new Error(`사진 업로드 실패: ${photoError?.message || photoError}`);
+        console.error("사진 처리 실패:", photoError);
+        throw new Error(`사진 처리 실패: ${photoError?.message || photoError}`);
       }
 
       // 사용자 정보 업데이트
@@ -202,6 +285,16 @@ function ApplicationFormContent() {
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
         <p>로그인이 필요합니다.</p>
+      </div>
+    );
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-primary">정보를 불러오는 중...</p>
+        </div>
       </div>
     );
   }
@@ -301,7 +394,7 @@ function ApplicationFormContent() {
 
           {/* 사진 업로드 */}
           <div>
-            <label className="block mb-2 font-semibold">사진 업로드 (3장 필수)</label>
+            <label className="block mb-2 font-semibold">사진 업로드 (2장 이상)</label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
                 <div key={index} className="border-2 border-dashed border-primary rounded-xl bg-gray-50 relative overflow-hidden hover:border-primary/60 transition-all duration-300">
