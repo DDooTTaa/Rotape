@@ -10,13 +10,14 @@ import Link from "next/link";
 export const dynamic = 'force-dynamic';
 
 // 눈송이 컴포넌트
-function Snowflake({ delay, duration, left }: { delay: number; duration: number; left: number }) {
+function Snowflake({ delay, duration, left, initialTop }: { delay: number; duration: number; left: number; initialTop: number }) {
   const size = Math.random() * 15 + 18; // 18-33px 크기
   return (
     <div
-      className="absolute top-0 text-white pointer-events-none select-none"
+      className="absolute text-white pointer-events-none select-none"
       style={{
         left: `${left}%`,
+        top: `${initialTop}%`,
         animation: `snowfall ${duration}s linear ${delay}s infinite`,
         fontSize: `${size}px`,
         textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(173, 216, 230, 0.6)',
@@ -161,15 +162,16 @@ export default function Home() {
   };
 
   // 눈송이 생성
-  const [snowflakes, setSnowflakes] = useState<Array<{ id: number; delay: number; duration: number; left: number }>>([]);
+  const [snowflakes, setSnowflakes] = useState<Array<{ id: number; delay: number; duration: number; left: number; initialTop: number }>>([]);
 
   useEffect(() => {
     // 80개의 눈송이 생성 (더 많이)
     const flakes = Array.from({ length: 80 }, (_, i) => ({
       id: i,
-      delay: Math.random() * 5,
+      delay: Math.random() * 2, // 0-2초로 줄임 (바로 보이도록)
       duration: Math.random() * 3 + 5, // 5-8초
       left: Math.random() * 100,
+      initialTop: Math.random() * 100, // 화면 내 랜덤 위치에서 시작
     }));
     setSnowflakes(flakes);
   }, []);
@@ -184,6 +186,7 @@ export default function Home() {
             delay={flake.delay}
             duration={flake.duration}
             left={flake.left}
+            initialTop={flake.initialTop}
           />
         ))}
       </div>
@@ -194,7 +197,7 @@ export default function Home() {
             Rotape
           </h1>
           <p className="text-gray-700 text-base font-medium">
-            인연이 한 컷의 테이프처럼 재생되기를
+            당신의 인연이 한 컷의 테이프처럼 남기를
           </p>
         </div>
 

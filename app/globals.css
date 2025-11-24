@@ -57,13 +57,7 @@ body {
 /* 눈송이 애니메이션 */
 @keyframes snowfall {
   0% {
-    transform: translateY(-100vh) rotate(0deg);
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.95;
-  }
-  95% {
+    transform: translateY(0) rotate(0deg);
     opacity: 0.95;
   }
   100% {
