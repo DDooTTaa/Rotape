@@ -325,28 +325,32 @@ function ApplicationFormContent() {
 
           {/* 성별 */}
           <div>
-            <label className="block mb-2 font-semibold">성별</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="M"
-                  checked={formData.gender === "M"}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value as "M" | "F" })}
-                  className="mr-2"
-                />
-                남성
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="F"
-                  checked={formData.gender === "F"}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value as "M" | "F" })}
-                  className="mr-2"
-                />
-                여성
-              </label>
+            <label className="block mb-3 font-semibold">성별</label>
+            <div className="flex gap-3">
+              {[
+                { value: "M" as const, label: "남성" },
+                { value: "F" as const, label: "여성" },
+              ].map((option) => {
+                const isSelected = formData.gender === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, gender: option.value })}
+                    className={`
+                      flex-1 px-5 py-3 rounded-full font-semibold text-sm border-2
+                      transition-colors
+                      ${isSelected
+                        ? 'bg-gradient-to-r from-primary to-[#0d4a1a] text-white shadow-lg border-primary'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5'
+                      }
+                      cursor-pointer
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
