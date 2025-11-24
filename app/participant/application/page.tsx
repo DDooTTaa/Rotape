@@ -8,6 +8,7 @@ import { createApplication, getApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
 import { getEvent } from "@/lib/firebase/events";
 import { getUser } from "@/lib/firebase/users";
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
@@ -407,10 +408,12 @@ function ApplicationFormContent() {
                   />
                   {photoPreviews[index] ? (
                     <div className="relative w-full aspect-square">
-                      <img
+                      <Image
                         src={photoPreviews[index]}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                       <label
                         htmlFor={`photo-${index}`}
