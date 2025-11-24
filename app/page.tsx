@@ -36,6 +36,16 @@ export default function Home() {
   const [showTerms, setShowTerms] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
+  const [isKakaoBrowser, setIsKakaoBrowser] = useState(false);
+
+  // 카카오톡 인앱 브라우저 감지
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isKakao = userAgent.includes('kakaotalk') || userAgent.includes('kakaobrowser');
+      setIsKakaoBrowser(isKakao);
+    }
+  }, []);
 
   useEffect(() => {
     if (!auth) {
@@ -69,6 +79,18 @@ export default function Home() {
   }, [router]);
 
   const handleGoogleLogin = async () => {
+    // 카카오톡 브라우저에서 구글 로그인 시도 시 경고
+    if (isKakaoBrowser) {
+      alert(
+        "카카오톡 브라우저에서는 Google 로그인이 지원되지 않습니다.\n\n" +
+        "다음 방법으로 접속해주세요:\n" +
+        "1. 우측 상단의 '...' 메뉴를 클릭하세요\n" +
+        "2. '다른 브라우저로 열기' 또는 '외부 브라우저로 열기'를 선택하세요\n" +
+        "3. Chrome, Safari 등 기본 브라우저에서 다시 접속해주세요"
+      );
+      return;
+    }
+
     if (!auth) {
       alert(
         "Firebase 인증 서비스를 사용할 수 없습니다.\n\n" +
@@ -200,6 +222,26 @@ export default function Home() {
             당신의 인연이 한 컷의 테이프처럼 남기를
           </p>
         </div>
+
+        {/* 카카오톡 브라우저 안내 */}
+        {isKakaoBrowser && (
+          <div className="mb-6 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-lg">
+            <p className="text-sm font-semibold text-red-600 mb-2">
+              ⚠️ 카카오톡 브라우저에서는 Google 로그인이 지원되지 않습니다
+            </p>
+            <p className="text-xs text-gray-700 mb-3">
+              다른 브라우저로 접속해주세요.
+            </p>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p className="font-semibold">📱 접속 방법:</p>
+              <ol className="list-decimal list-inside space-y-1 ml-2">
+                <li>우측 상단의 <span className="font-semibold">'...'</span> 메뉴 클릭</li>
+                <li><span className="font-semibold">'다른 브라우저로 열기'</span> 또는 <span className="font-semibold">'외부 브라우저로 열기'</span> 선택</li>
+                <li>Chrome, Safari 등 기본 브라우저에서 다시 접속</li>
+              </ol>
+            </div>
+          </div>
+        )}
 
         {/* Firebase 설정 안내 */}
         {!isFirebaseReady && (
