@@ -26,7 +26,7 @@ function ApplicationFormContent() {
     name: "",
     gender: "M" as "M" | "F",
     birthYear: "",
-    height: "",
+    height: "170", // 남성 기본값
     job: "",
     intro: "",
     idealType: "",
@@ -69,11 +69,14 @@ function ApplicationFormContent() {
             }
           }
 
+          const userGender = userData.gender || "M";
           setFormData(prev => ({
             ...prev,
             name: userData.name || "",
-            gender: userData.gender || "M",
+            gender: userGender,
             birthYear: birthYear,
+            // 남성이고 키가 비어있으면 170으로 설정
+            height: prev.height || (userGender === "M" ? "170" : ""),
           }));
         }
 
@@ -319,6 +322,7 @@ function ApplicationFormContent() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="예: 홍길동"
               className="input-elegant"
             />
           </div>
@@ -336,7 +340,15 @@ function ApplicationFormContent() {
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() => setFormData({ ...formData, gender: option.value })}
+                    onClick={() => {
+                      const newGender = option.value;
+                      // 남성으로 변경 시 키가 비어있으면 170으로 설정
+                      if (newGender === "M" && !formData.height) {
+                        setFormData({ ...formData, gender: newGender, height: "170" });
+                      } else {
+                        setFormData({ ...formData, gender: newGender });
+                      }
+                    }}
                     className={`
                       flex-1 px-5 py-3 rounded-full font-semibold text-sm border-2
                       transition-colors
@@ -364,6 +376,7 @@ function ApplicationFormContent() {
               max="2004"
               value={formData.birthYear}
               onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
+              placeholder="예: 1995"
               className="input-elegant"
             />
             {formData.birthYear && (
@@ -381,6 +394,7 @@ function ApplicationFormContent() {
               max="220"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+              placeholder="예: 175"
               className="input-elegant"
             />
           </div>
@@ -393,6 +407,7 @@ function ApplicationFormContent() {
               required
               value={formData.job}
               onChange={(e) => setFormData({ ...formData, job: e.target.value })}
+              placeholder="예: 개발자, 디자이너, 학생 등"
               className="input-elegant"
             />
           </div>
@@ -446,6 +461,7 @@ function ApplicationFormContent() {
               required
               value={formData.intro}
               onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
+              placeholder="예: 밝고 긍정적인 에너지로 함께하는 시간을 즐거움으로 만들어요"
               className="input-elegant"
               rows={2}
             />
@@ -458,6 +474,7 @@ function ApplicationFormContent() {
               required
               value={formData.idealType}
               onChange={(e) => setFormData({ ...formData, idealType: e.target.value })}
+              placeholder="예: 서로를 존중하고 이해할 수 있는 사람"
               className="input-elegant"
               rows={2}
             />
@@ -470,6 +487,7 @@ function ApplicationFormContent() {
               required
               value={formData.loveStyle}
               onChange={(e) => setFormData({ ...formData, loveStyle: e.target.value })}
+              placeholder="예: 함께 성장하고 서로를 응원하는 연애"
               className="input-elegant"
               rows={2}
             />
