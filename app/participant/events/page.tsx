@@ -177,8 +177,8 @@ export default function EventsPage() {
                 }
                 if (status === "rejected") {
                   return (
-                    <span className="bg-gradient-to-r from-red-100 to-red-50 text-red-800 px-4 py-2 rounded-full text-xs font-semibold shadow-md">
-                      거절됨
+                    <span className="text-sm font-semibold text-gray-500">
+                      다음 기회에
                     </span>
                   );
                 }
