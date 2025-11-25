@@ -239,8 +239,8 @@ export default function Home() {
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
             Rotape
           </h1>
-          <p className="text-gray-700 text-base font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", fontSize: '32px', marginTop: 24 }}>
-            한 컷의 테이프처럼 영원히 소장될 당신의 인연
+          <p className="text-gray-700 text-2xl md:text-[32px] font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", marginTop: 24 }}>
+            한 컷의 테이프처럼 영월할 당신의 인연
           </p>
         </div>
 
