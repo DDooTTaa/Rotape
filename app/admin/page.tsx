@@ -67,32 +67,36 @@ export default function AdminPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-3">
               {events.map((event) => (
                 <Link
                   key={event.eventId}
                   href={`/admin/event/${event.eventId}`}
-                  className="card-elegant card-hover p-6"
+                  className="block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors"
                 >
-                  <h3 className="text-xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
-                    {event.title}
-                  </h3>
-                  <div className="space-y-2 text-gray-700">
-                    <p className="text-sm">
-                      <span className="font-semibold">일시:</span>{" "}
-                      {event.date instanceof Date 
-                        ? event.date.toLocaleString("ko-KR")
-                        : new Date(event.date).toLocaleString("ko-KR")}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">장소:</span> {event.location}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명
-                    </p>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <span className="text-primary font-semibold text-sm">상세 보기 →</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold mb-2 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
+                        {event.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-700">
+                        <span>
+                          <span className="font-semibold">일시:</span>{" "}
+                          {event.date instanceof Date 
+                            ? event.date.toLocaleString("ko-KR")
+                            : new Date(event.date).toLocaleString("ko-KR")}
+                        </span>
+                        <span>
+                          <span className="font-semibold">장소:</span> {event.location}
+                        </span>
+                        <span>
+                          <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <span className="text-primary font-semibold text-sm">→</span>
+                    </div>
                   </div>
                 </Link>
               ))}
