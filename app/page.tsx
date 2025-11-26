@@ -38,6 +38,7 @@ export default function Home() {
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
   const [isKakaoBrowser, setIsKakaoBrowser] = useState(false);
   const [userAgentString, setUserAgentString] = useState('');
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // 카카오톡 인앱 브라우저 감지
   useEffect(() => {
@@ -234,6 +235,33 @@ export default function Home() {
         ))}
       </div>
 
+      {/* 우측 상단 ? 아이콘 */}
+      <button
+        onClick={() => setShowInfoModal(true)}
+        className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
+        aria-label="서비스 안내"
+      >
+        <svg
+          className="w-5 h-5 md:w-6 md:h-6 text-primary"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4s-1.79 4-4 4c-1.742 0-3.223-.835-3.772-2M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 21a9 9 0 100-18 9 9 0 000 18z"
+          />
+        </svg>
+      </button>
+
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
@@ -354,6 +382,134 @@ export default function Home() {
                   className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                 >
                   동의
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 서비스 안내 모달 */}
+        {showInfoModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-4">
+            <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg md:text-2xl font-bold title-glow">
+                  안녕하세요 로테이션 소개팅 서비스 로테이프입니다.
+                </h2>
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                  aria-label="닫기"
+                >
+                  <svg
+                    className="w-5 h-5 md:w-6 md:h-6 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6 text-gray-700">
+                {/* Rotape 소개 */}
+                <section>
+                  <h3 className="text-xl md:text-2xl font-bold text-primary mb-3 flex items-center gap-2">
+                    <span className="text-2xl">🎞️</span>
+                    Rotape
+                  </h3>
+                  <p className="text-base md:text-lg leading-relaxed">
+                    <span className="font-semibold text-primary">Rotape</span>는 &quot;수많은 순간 속 한 컷의 인연을 테이프처럼&quot; 이라는 컨셉으로 만들어진 로테이션 소개팅 서비스입니다.
+                  </p>
+                  <p className="text-sm md:text-base mt-2 text-gray-600">
+                    영화 필름처럼 여러 순간을 담아낼 수 있는 테이프처럼, 여러 사람과의 만남을 통해 진정한 인연을 찾을 수 있도록 도와드립니다.
+                  </p>
+                </section>
+
+                {/* 로테이션 소개팅 설명 */}
+                <section>
+                  <h3 className="text-xl md:text-2xl font-bold text-primary mb-3 flex items-center gap-2">
+                    <span className="text-2xl">💫</span>
+                    로테이션 소개팅이란?
+                  </h3>
+                  <div className="space-y-3 text-sm md:text-base">
+                    <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                      <p className="font-semibold text-primary mb-2">🔄 로테이션 방식</p>
+                      <p className="leading-relaxed">
+                        여러 명의 참가자가 일정 시간마다 자리를 바꿔가며 대화를 나누는 방식입니다. 짧은 시간 동안 여러 사람과 만나볼 수 있어 효율적이고 다양한 인연을 만날 수 있습니다.
+                      </p>
+                    </div>
+                    <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                      <p className="font-semibold text-primary mb-2">✨ 주요 특징</p>
+                      <ul className="space-y-2 list-disc list-inside leading-relaxed">
+                        <li>여러 사람과 짧은 시간 동안 만나볼 수 있어 효율적</li>
+                        <li>다양한 성향의 사람들을 한 자리에서 만날 수 있음</li>
+                        <li>부담 없이 자연스러운 대화를 나눌 수 있는 분위기</li>
+                        <li>서로의 프로필과 사랑의 언어를 통해 더 깊이 알아갈 수 있음</li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 이용 방법 */}
+                <section>
+                  <h3 className="text-xl md:text-2xl font-bold text-primary mb-3 flex items-center gap-2">
+                    <span className="text-2xl">📝</span>
+                    이용 방법
+                  </h3>
+                  <div className="space-y-3 text-sm md:text-base">
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                        1
+                      </span>
+                      <div>
+                        <p className="font-semibold">행사 신청</p>
+                        <p className="text-gray-600">참여하고 싶은 행사를 선택하고 지원서를 작성하세요.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                        2
+                      </span>
+                      <div>
+                        <p className="font-semibold">승인 대기</p>
+                        <p className="text-gray-600">운영자가 지원서를 검토하고 승인합니다.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                        3
+                      </span>
+                      <div>
+                        <p className="font-semibold">로테이션 참여</p>
+                        <p className="text-gray-600">행사 당일 로테이션에 참여하여 여러 사람과 만나보세요.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
+                        4
+                      </span>
+                      <div>
+                        <p className="font-semibold">매칭 결과 확인</p>
+                        <p className="text-gray-600">서로 관심을 보인 상대와의 매칭 결과를 확인하세요.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowInfoModal(false)}
+                  className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  확인
                 </button>
               </div>
             </div>

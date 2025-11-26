@@ -96,6 +96,45 @@ body {
   }
 }
 
+/* 제목 그라데이션 애니메이션 */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title-glow {
+  background: linear-gradient(
+    90deg,
+    #0B3D15 0%,
+    #0d4a1a 25%,
+    #C5A028 50%,
+    #0d4a1a 75%,
+    #0B3D15 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite, fade-in-up 0.8s ease-out;
+  text-shadow: 0 0 30px rgba(11, 61, 21, 0.3);
+  filter: drop-shadow(0 2px 4px rgba(11, 61, 21, 0.2));
+}
+
 .event-active {
   position: relative;
   border-radius: 1rem;
