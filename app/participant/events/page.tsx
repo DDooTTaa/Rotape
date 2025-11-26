@@ -230,7 +230,7 @@ export default function EventsPage() {
                               disabled={applyingEventId === event.eventId}
                               className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none whitespace-nowrap"
                             >
-                              {applyingEventId === event.eventId ? "신청 중..." : "행사 신청하기"}
+                              {applyingEventId === event.eventId ? "신청 중..." : "신청하기"}
                             </button>
                           )}
                         </>
