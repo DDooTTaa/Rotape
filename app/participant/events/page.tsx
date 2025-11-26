@@ -202,17 +202,9 @@ export default function EventsPage() {
                   key={event.eventId}
                   className={`card-elegant card-hover p-6 ${isActive ? 'event-active' : ''}`}
                 >
-                  {isActive && (
-                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      오늘 진행 예정
-                    </div>
-                  )}
                   <div className="flex items-start justify-between mb-3">
                     <h2
-                      className={`flex-1 min-w-0 pr-3 text-xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent ${isActive ? 'relative' : ''}`}
+                      className="flex-1 min-w-0 pr-3 text-xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent"
                       style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -221,7 +213,29 @@ export default function EventsPage() {
                     >
                       {event.title}
                     </h2>
-                    {!isActive && renderStatusBadge()}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isActive ? (
+                        <div className="flex items-center gap-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                          </svg>
+                          오늘 진행 예정
+                        </div>
+                      ) : (
+                        <>
+                          {renderStatusBadge()}
+                          {!status && (
+                            <button
+                              onClick={() => handleApply(event.eventId)}
+                              disabled={applyingEventId === event.eventId}
+                              className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none whitespace-nowrap"
+                            >
+                              {applyingEventId === event.eventId ? "신청 중..." : "행사 신청하기"}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2 mb-3 text-sm">
                     <p className="text-gray-700">
@@ -270,16 +284,6 @@ export default function EventsPage() {
                       <span className="text-gray-400">통계를 불러오는 중...</span>
                     )}
                   </div>
-
-                  {!status && (
-                    <button
-                      onClick={() => handleApply(event.eventId)}
-                      disabled={applyingEventId === event.eventId}
-                      className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
-                    >
-                      {applyingEventId === event.eventId ? "신청 중..." : "행사 신청하기"}
-                    </button>
-                  )}
                 </div>
               );
             })}
