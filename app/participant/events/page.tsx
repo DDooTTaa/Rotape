@@ -6,7 +6,7 @@ import { auth } from "@/lib/firebase/config";
 import { getAllEvents } from "@/lib/firebase/events";
 import { getApplicationByEvent, getApplicationsByEventId } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
-import { Event, Application } from "@/lib/firebase/types";
+import { Event, Application, User as UserData } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +29,15 @@ export default function EventsPage() {
       }
     >
   >({});
+  const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [eventParticipants, setEventParticipants] = useState<
+    Array<{
+      application: Application;
+      user: UserData | null;
+    }>
+  >([]);
 
   useEffect(() => {
     if (user) {
@@ -132,6 +141,52 @@ export default function EventsPage() {
     router.push(`/participant/application?eventId=${eventId}`);
   };
 
+  const handleViewParticipants = async (eventData: Event) => {
+    setSelectedEvent(eventData);
+    setParticipantsModalOpen(true);
+    setParticipantsLoading(true);
+    try {
+      const apps = await getApplicationsByEventId(eventData.eventId);
+      const applicantsWithUser = await Promise.all(
+        apps.map(async (app) => {
+          try {
+            const userData = await getUser(app.uid);
+            return { application: app, user: userData };
+          } catch (error) {
+            console.error("지원자 사용자 정보 로드 실패:", error);
+            return { application: app, user: null };
+          }
+        })
+      );
+
+      const statusOrder: Record<Application["status"], number> = {
+        approved: 0,
+        pending: 1,
+        rejected: 2,
+      };
+
+      applicantsWithUser.sort(
+        (a, b) =>
+          statusOrder[a.application.status] - statusOrder[b.application.status]
+      );
+
+      setEventParticipants(applicantsWithUser);
+    } catch (error) {
+      console.error("지원자 목록 로드 실패:", error);
+      alert("지원자 정보를 불러오는 중 문제가 발생했습니다.");
+      setEventParticipants([]);
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
+  const closeParticipantsModal = () => {
+    setParticipantsModalOpen(false);
+    setEventParticipants([]);
+    setSelectedEvent(null);
+    setParticipantsLoading(false);
+  };
+
   // 진행중인 행사 판단 함수
   const isEventActive = (event: Event): boolean => {
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
@@ -200,7 +255,12 @@ export default function EventsPage() {
               return (
                 <div
                   key={event.eventId}
-                  className={`card-elegant card-hover p-6 ${isActive ? 'event-active' : ''}`}
+                  className={`card-elegant card-hover p-6 ${isActive ? 'event-active cursor-pointer' : ''}`}
+                  onClick={() => {
+                    if (isActive) {
+                      handleViewParticipants(event);
+                    }
+                  }}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <h2
@@ -290,6 +350,130 @@ export default function EventsPage() {
           </div>
         )}
       </div>
+
+      {participantsModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-4">
+          <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 md:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="text-xs font-semibold text-primary tracking-widest uppercase">
+                  오늘 진행 예정
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+                  {selectedEvent?.title}
+                </h2>
+                {selectedEvent && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {selectedEvent.date instanceof Date
+                      ? selectedEvent.date.toLocaleString("ko-KR")
+                      : new Date(selectedEvent.date).toLocaleString("ko-KR")}{" "}
+                    · {selectedEvent.location}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={closeParticipantsModal}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                aria-label="닫기"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {participantsLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-gray-500">지원자 정보를 불러오는 중...</p>
+              </div>
+            ) : eventParticipants.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                아직 지원자가 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {eventParticipants.map(({ application, user }, index) => {
+                  const statusLabelMap: Record<Application["status"], string> = {
+                    approved: "승인됨",
+                    pending: "심사 중",
+                    rejected: "다음 기회에",
+                  };
+                  const statusClassMap: Record<Application["status"], string> = {
+                    approved: "bg-green-100 text-green-800",
+                    pending: "bg-yellow-100 text-yellow-800",
+                    rejected: "bg-gray-100 text-gray-600",
+                  };
+
+                  return (
+                    <div
+                      key={`${application.uid}-${index}`}
+                      className="border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {user?.name || "이름 미등록"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {user?.gender === "M" ? "남성" : user?.gender === "F" ? "여성" : "성별 미등록"}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClassMap[application.status]}`}
+                        >
+                          {statusLabelMap[application.status]}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                        <p>
+                          <span className="font-semibold text-gray-800">직업:</span>{" "}
+                          {application.job || "미입력"}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-gray-800">한 줄 소개:</span>{" "}
+                          {application.intro || "미입력"}
+                        </p>
+                        <p className="md:col-span-2">
+                          <span className="font-semibold text-gray-800">이상형:</span>{" "}
+                          {application.idealType || "미입력"}
+                        </p>
+                        <div className="md:col-span-2">
+                          <span className="font-semibold text-gray-800">사랑의 언어:</span>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {application.loveLanguage?.length > 0 ? (
+                              application.loveLanguage.map((lang) => (
+                                <span
+                                  key={lang}
+                                  className="px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-semibold border border-primary/20"
+                                >
+                                  {lang}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-gray-400">미입력</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-6">
+              <button
+                onClick={closeParticipantsModal}
+                className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
