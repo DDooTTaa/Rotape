@@ -139,7 +139,7 @@ export default function AdminPage() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-6">행사 리스트</h2>
+          <h2 className="text-2xl font-bold mb-6">로테이션 소개팅 리스트</h2>
           {events.length === 0 ? (
             <div className="text-center py-12 card-elegant">
               <p className="text-gray-600 text-lg">생성된 행사가 없습니다.</p>
