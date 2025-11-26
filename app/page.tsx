@@ -236,11 +236,12 @@ export default function Home() {
       </div>
 
       {/* 우측 상단 ? 아이콘 */}
-      <button
-        onClick={() => setShowInfoModal(true)}
-        className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
-        aria-label="서비스 안내"
-      >
+      {!showInfoModal && (
+        <button
+          onClick={() => setShowInfoModal(true)}
+          className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
+          aria-label="서비스 안내"
+        >
         <svg
           className="w-5 h-5 md:w-6 md:h-6 text-primary"
           fill="none"
@@ -261,6 +262,7 @@ export default function Home() {
           />
         </svg>
       </button>
+      )}
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
@@ -394,7 +396,7 @@ export default function Home() {
             <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg md:text-2xl font-bold title-glow">
-                  안녕하세요 로테이션 소개팅 서비스 로테이프입니다.
+                  안녕하세요. Rotape입니다.
                 </h2>
                 <button
                   onClick={() => setShowInfoModal(false)}
@@ -428,7 +430,7 @@ export default function Home() {
                     <span className="font-semibold text-primary">Rotape</span>는 &quot;수많은 순간 속 한 컷의 인연을 테이프처럼&quot; 이라는 컨셉으로 만들어진 로테이션 소개팅 서비스입니다.
                   </p>
                   <p className="text-sm md:text-base mt-2 text-gray-600">
-                    영화 필름처럼 여러 순간을 담아낼 수 있는 테이프처럼, 여러 사람과의 만남을 통해 진정한 인연을 찾을 수 있도록 도와드립니다.
+                    여러 순간을 담아낼 수 있는 영화 테이프처럼, 여러 사람과의 만남을 통해 진정한 인연을 찾을 수 있도록 도와드립니다.
                   </p>
                 </section>
 
@@ -440,18 +442,18 @@ export default function Home() {
                   </h3>
                   <div className="space-y-3 text-sm md:text-base">
                     <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-                      <p className="font-semibold text-primary mb-2">🔄 로테이션 방식</p>
+                      <p className="font-semibold text-primary mb-2">🔄 로테이션 소개팅</p>
                       <p className="leading-relaxed">
-                        여러 명의 참가자가 일정 시간마다 자리를 바꿔가며 대화를 나누는 방식입니다. 짧은 시간 동안 여러 사람과 만나볼 수 있어 효율적이고 다양한 인연을 만날 수 있습니다.
+                        여러 명의 참가자가 일정 시간마다 자리를 바꿔가며 대화를 나누는 방식입니다. 짧은 시간 동안 여러 사람과 만나볼 수 있어요!
                       </p>
                     </div>
                     <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-                      <p className="font-semibold text-primary mb-2">✨ 주요 특징</p>
+                      <p className="font-semibold text-primary mb-2">✨ 이런 점이 좋아요</p>
                       <ul className="space-y-2 list-disc list-inside leading-relaxed">
-                        <li>여러 사람과 짧은 시간 동안 만나볼 수 있어 효율적</li>
-                        <li>다양한 성향의 사람들을 한 자리에서 만날 수 있음</li>
-                        <li>부담 없이 자연스러운 대화를 나눌 수 있는 분위기</li>
-                        <li>서로의 프로필과 사랑의 언어를 통해 더 깊이 알아갈 수 있음</li>
+                        <li>한 번에 여러 분과 만나볼 수 있어 시간을 효율적으로 활용할 수 있어요</li>
+                        <li>다양한 매력을 가진 분들을 한 자리에서 만날 수 있는 기회예요</li>
+                        <li>부담스럽지 않은 분위기에서 자연스럽게 대화를 나눌 수 있어요</li>
+                        <li>서로의 프로필과 사랑의 언어를 통해 인연을 찾을 수 있어요</li>
                       </ul>
                     </div>
                   </div>
@@ -496,8 +498,8 @@ export default function Home() {
                         4
                       </span>
                       <div>
-                        <p className="font-semibold">매칭 결과 확인</p>
-                        <p className="text-gray-600">서로 관심을 보인 상대와의 매칭 결과를 확인하세요.</p>
+                        <p className="font-semibold">이후에는?</p>
+                        <p className="text-gray-600">서로 관심을 보인 상대와 인연을 이어 가세요. 저희가 도와드릴게요!</p>
                       </div>
                     </div>
                   </div>
