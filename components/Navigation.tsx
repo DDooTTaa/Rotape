@@ -6,6 +6,7 @@ import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,7 @@ export default function Navigation() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // 클라이언트에서만 마운트되도록 처리
   useEffect(() => {
@@ -152,17 +154,22 @@ export default function Navigation() {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await signOut(auth!);
       router.push("/");
+      // 리다이렉트 후에도 잠시 로딩 유지
+      setTimeout(() => setIsLoggingOut(false), 500);
     } catch (error) {
       console.error("로그아웃 실패:", error);
       alert("로그아웃에 실패했습니다.");
+      setIsLoggingOut(false);
     }
   };
 
   return (
     <>
+      {isLoggingOut && <LoadingSpinner message="로그아웃 중..." />}
       {/* 데스크톱 네비게이션 (상단) */}
       <nav className="hidden md:flex fixed top-0 left-0 right-0 bg-white border-b-2 border-primary z-50 shadow-md">
         <div className="max-w-7xl mx-auto w-full px-4">

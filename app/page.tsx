@@ -6,6 +6,7 @@ import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/firebase/users";
 import Link from "next/link";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export const dynamic = 'force-dynamic';
 
@@ -142,7 +143,8 @@ export default function Home() {
           // 모든 사용자를 행사 리스트로 이동
           router.push("/participant/events");
         }
-        setLoading(false);
+        // 리다이렉트 후에도 잠시 로딩 유지
+        setTimeout(() => setLoading(false), 500);
         return;
       }
 
@@ -172,6 +174,8 @@ export default function Home() {
 
       // 리다이렉트
       router.push("/participant/events");
+      // 리다이렉트 후에도 잠시 로딩 유지
+      setTimeout(() => setLoading(false), 500);
     } catch (error) {
       console.error("로그인 실패:", error);
       alert("로그인에 실패했습니다.");
@@ -221,7 +225,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen text-foreground flex items-center justify-center px-4 relative overflow-hidden">
+    <>
+      {loading && <LoadingSpinner message="로그인 중..." />}
+      <div className="min-h-screen text-foreground flex items-center justify-center px-4 relative overflow-hidden">
       {/* 눈송이 배경 */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {snowflakes.map((flake) => (
@@ -503,6 +509,7 @@ export default function Home() {
         )}
       </div>
     </div>
+    </>
   );
 }
 
