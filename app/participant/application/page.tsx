@@ -295,7 +295,7 @@ function ApplicationFormContent() {
 
   if (isLoadingData) {
     return (
-      <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4 flex items-center justify-center">
+      <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4 flex items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-primary">정보를 불러오는 중...</p>
         </div>
@@ -304,7 +304,7 @@ function ApplicationFormContent() {
   }
 
   return (
-    <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 작성</h1>

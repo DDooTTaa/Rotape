@@ -115,7 +115,7 @@ export default function EventPage() {
 
 
   return (
-    <div className="min-h-screen bg-white text-foreground pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen bg-white text-foreground pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">행사 설정</h1>
@@ -156,29 +156,7 @@ export default function EventPage() {
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">인트로 시간</label>
-            <input
-              type="text"
-              value={formData.intro}
-              onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
-              placeholder="예: 14:00"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-semibold">1부 시간</label>
-            <input
-              type="text"
-              value={formData.part1}
-              onChange={(e) => setFormData({ ...formData, part1: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
-              placeholder="예: 14:30"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-semibold">쉬는 시간</label>
+            <label className="block mb-2 font-semibold">시작 시간</label>
             <input
               type="text"
               value={formData.break}
@@ -189,18 +167,18 @@ export default function EventPage() {
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">2부 시간</label>
+            <label className="block mb-2 font-semibold">종료 시간</label>
             <input
               type="text"
               value={formData.part2}
               onChange={(e) => setFormData({ ...formData, part2: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
-              placeholder="예: 16:15"
+              placeholder="예: 17:00"
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">최대 참가자 수</label>
+            <label className="block mb-2 font-semibold">참가자 수</label>
             <input
               type="number"
               required

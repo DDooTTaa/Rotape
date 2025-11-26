@@ -107,6 +107,16 @@ export default function AdminPage() {
     setEventStats(Object.fromEntries(statsEntries));
   };
 
+  // 진행중인 행사 판단 함수
+  const isEventActive = (event: Event): boolean => {
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    // 행사 날짜가 오늘인지 확인 (날짜만 비교)
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return eventDateOnly.getTime() === todayOnly.getTime();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen text-foreground flex items-center justify-center">
@@ -116,7 +126,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen text-foreground pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-foreground pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">행사 관리</h1>
@@ -147,12 +157,22 @@ export default function AdminPage() {
                 const maleQuota = Math.floor(event.maxParticipants / 2);
                 const femaleQuota = event.maxParticipants - maleQuota;
 
+                const isActive = isEventActive(event);
+
                 return (
                   <Link
                     key={event.eventId}
                     href={`/admin/event/${event.eventId}`}
-                    className="block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors"
+                    className={`block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors ${isActive ? 'event-active' : ''} relative`}
                   >
+                    {isActive && (
+                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        </svg>
+                        진행중
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-6">
                       <div className="flex-1">
                         <h3

@@ -132,6 +132,16 @@ export default function EventsPage() {
     router.push(`/participant/application?eventId=${eventId}`);
   };
 
+  // 진행중인 행사 판단 함수
+  const isEventActive = (event: Event): boolean => {
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    // 행사 날짜가 오늘인지 확인 (날짜만 비교)
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return eventDateOnly.getTime() === todayOnly.getTime();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
@@ -141,7 +151,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">행사 리스트</h1>
@@ -185,14 +195,24 @@ export default function EventsPage() {
                 return null;
               };
 
+              const isActive = isEventActive(event) && status === "approved";
+
               return (
                 <div
                   key={event.eventId}
-                  className="card-elegant card-hover p-6"
+                  className={`card-elegant card-hover p-6 ${isActive ? 'event-active' : ''}`}
                 >
+                  {isActive && (
+                    <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                      오늘 진행 예정
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-3">
                     <h2
-                      className="flex-1 min-w-0 pr-3 text-xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent"
+                      className={`flex-1 min-w-0 pr-3 text-xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent ${isActive ? 'relative' : ''}`}
                       style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -201,7 +221,7 @@ export default function EventsPage() {
                     >
                       {event.title}
                     </h2>
-                    {renderStatusBadge()}
+                    {!isActive && renderStatusBadge()}
                   </div>
                   <div className="space-y-2 mb-3 text-sm">
                     <p className="text-gray-700">

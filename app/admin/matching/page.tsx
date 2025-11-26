@@ -74,7 +74,7 @@ export default function MatchingPage() {
 
 
   return (
-    <div className="min-h-screen bg-white text-foreground pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen bg-white text-foreground pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">매칭 결과 관리</h1>

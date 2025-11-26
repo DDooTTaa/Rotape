@@ -5,8 +5,10 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getEvent } from "@/lib/firebase/events";
 import { getApplicationsByEventId, updateApplicationStatus } from "@/lib/firebase/applications";
+import { getProfile } from "@/lib/firebase/profiles";
 import { getUser } from "@/lib/firebase/users";
-import { Event, Application, User } from "@/lib/firebase/types";
+import { Event, Application, User, Profile } from "@/lib/firebase/types";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -19,15 +21,15 @@ export default function EventDetailPage() {
   const eventId = params?.eventId as string;
   
   const [event, setEvent] = useState<Event | null>(null);
-  const [applications, setApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
+  const [applications, setApplications] = useState<(Application & { user?: User; docId?: string; profile?: Profile })[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User; docId?: string; profile?: Profile })[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
     status: "all" as "all" | "pending" | "approved" | "rejected",
     gender: "all" as "all" | "M" | "F",
   });
-  const [selectedApp, setSelectedApp] = useState<(Application & { user?: User }) | null>(null);
+  const [selectedApp, setSelectedApp] = useState<(Application & { user?: User; profile?: Profile }) | null>(null);
 
   useEffect(() => {
     if (user && eventId) {
@@ -52,10 +54,18 @@ export default function EventDetailPage() {
         apps.map(async (app) => {
           try {
             const userData = await getUser(app.uid);
-            return { ...app, user: userData || undefined };
+            // 프로필 정보도 함께 로드
+            let profileData: Profile | undefined;
+            try {
+              profileData = await getProfile(app.uid) || undefined;
+            } catch (profileError) {
+              // 프로필이 없을 수 있으므로 에러는 무시
+              console.log(`프로필 없음 (${app.uid})`);
+            }
+            return { ...app, user: userData || undefined, profile: profileData };
           } catch (userError) {
             console.error(`사용자 ${app.uid} 정보 로드 실패:`, userError);
-            return { ...app, user: undefined };
+            return { ...app, user: undefined, profile: undefined };
           }
         })
       );
@@ -140,7 +150,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen text-foreground pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-foreground pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -318,7 +328,13 @@ export default function EventDetailPage() {
                 </div>
                 <div>
                   <p className="font-semibold">사랑의 언어</p>
-                  <p>{selectedApp.loveLanguage.join(", ")}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedApp.loveLanguage.map((lang, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                        {idx + 1}순위: {lang}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="font-semibold">사진</p>
@@ -359,6 +375,50 @@ export default function EventDetailPage() {
                     ))}
                   </div>
                 </div>
+                
+                {/* 프로필 정보 (있는 경우) */}
+                {selectedApp.profile && (
+                  <div className="mt-6 pt-6 border-t-2 border-primary/20">
+                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
+                      프로필 정보
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-semibold mb-1">프로필 이름</p>
+                        <p className="text-gray-700">{selectedApp.profile.displayName || "미입력"}</p>
+                      </div>
+                      {selectedApp.profile.photos && selectedApp.profile.photos.length > 0 && (
+                        <div>
+                          <p className="font-semibold mb-2">프로필 사진</p>
+                          <div className="grid grid-cols-3 gap-4">
+                            {selectedApp.profile.photos.map((photo, idx) => (
+                              <div key={idx} className="relative aspect-square">
+                                <Image
+                                  src={photo}
+                                  alt={`프로필 사진 ${idx + 1}`}
+                                  fill
+                                  className="object-cover rounded-lg"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedApp.profile.loveLanguage && selectedApp.profile.loveLanguage.length > 0 && (
+                        <div>
+                          <p className="font-semibold mb-1">사랑의 언어 (프로필)</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedApp.profile.loveLanguage.map((lang, idx) => (
+                              <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                                {idx + 1}순위: {lang}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex gap-4 mt-6">
                 <button
