@@ -242,25 +242,7 @@ export default function Home() {
           className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
           aria-label="서비스 안내"
         >
-        <svg
-          className="w-5 h-5 md:w-6 md:h-6 text-primary"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4s-1.79 4-4 4c-1.742 0-3.223-.835-3.772-2M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 21a9 9 0 100-18 9 9 0 000 18z"
-          />
-        </svg>
+        <span className="text-2xl md:text-3xl font-bold text-primary">?</span>
       </button>
       )}
 
@@ -421,24 +403,26 @@ export default function Home() {
 
               <div className="space-y-6 text-gray-700">
                 {/* Rotape 소개 */}
-                <section>
-                  <h3 className="text-xl md:text-2xl font-bold text-primary mb-3 flex items-center gap-2">
-                    <span className="text-2xl">🎞️</span>
-                    Rotape
-                  </h3>
-                  <p className="text-base md:text-lg leading-relaxed">
-                    <span className="font-semibold text-primary">Rotape</span>는 &quot;수많은 순간 속 한 컷의 인연을 테이프처럼&quot; 이라는 컨셉으로 만들어진 로테이션 소개팅 서비스입니다.
-                  </p>
-                  <p className="text-sm md:text-base mt-2 text-gray-600">
-                    여러 순간을 담아낼 수 있는 영화 테이프처럼, 여러 사람과의 만남을 통해 진정한 인연을 찾을 수 있도록 도와드립니다.
-                  </p>
+                <section className="mb-6">
+                  <div className="bg-gradient-to-r from-primary/10 to-[#0d4a1a]/10 rounded-xl p-5 border border-primary/20 mb-4">
+                    <h3 className="text-xl md:text-2xl font-bold mb-3 flex items-center gap-2">
+                      <span className="text-2xl">🎞️</span>
+                      Rotape
+                    </h3>
+                    <p className="text-base md:text-lg leading-relaxed text-gray-700">
+                      <span className="font-semibold text-primary">Rotape</span>는 &quot;수많은 순간 속 한 컷의 인연을 테이프처럼&quot; 이라는 컨셉으로 만들어진 <span className="font-semibold text-primary">로테이션 소개팅 서비스</span>입니다.
+                    </p>
+                    <p className="text-sm md:text-base mt-3 text-gray-600 leading-relaxed">
+                      여러 순간을 담아낼 수 있는 영화 테이프처럼, 여러 사람과의 만남을 통해 진정한 인연을 찾을 수 있도록 도와드립니다.
+                    </p>
+                  </div>
                 </section>
 
                 {/* 로테이션 소개팅 설명 */}
                 <section>
-                  <h3 className="text-xl md:text-2xl font-bold text-primary mb-3 flex items-center gap-2">
+                  <h3 className="text-xl md:text-2xl font-bold mb-3 flex items-center gap-2">
                     <span className="text-2xl">💫</span>
-                    로테이션 소개팅이란?
+                    <span className="bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">로테이션 소개팅이란?</span>
                   </h3>
                   <div className="space-y-3 text-sm md:text-base">
                     <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
