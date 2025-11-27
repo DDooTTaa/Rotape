@@ -240,6 +240,7 @@ function ApplicationFormContent() {
         await createApplication(
           user.uid,
           {
+            age: calculateAge(formData.birthYear),
             height: parseInt(formData.height),
             job: formData.job,
             intro: formData.intro,

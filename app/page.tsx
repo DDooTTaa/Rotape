@@ -14,21 +14,116 @@ export const dynamic = 'force-dynamic';
 // 눈송이 컴포넌트
 function Snowflake({ delay, duration, left, initialTop }: { delay: number; duration: number; left: number; initialTop: number }) {
   const size = Math.random() * 15 + 18; // 18-33px 크기
+  
+  // 눈송이 색상 변수 (한 곳에서 수정 가능)
+  const snowflakeColor = "white"; // "white", "#E0F2FE", "#F0F0F0" 등으로 변경 가능
+  
+  // 색상에 따른 그림자 효과 (RGB 값 추출)
+  const getShadowColor = (color: string) => {
+    if (color === "white") return "rgba(255, 255, 255, 0.9)";
+    if (color === "#E0F2FE") return "rgba(224, 242, 254, 0.9)";
+    if (color === "#F0F0F0") return "rgba(240, 240, 240, 0.9)";
+    // HEX 색상을 RGB로 변환
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, 0.9)`;
+  };
+  
   return (
     <div
-      className="absolute text-white pointer-events-none select-none snowflake-mobile"
+      className="absolute pointer-events-none select-none snowflake-mobile"
       style={{
         left: `${left}%`,
         top: `${initialTop}%`,
         animation: `snowfall ${duration}s linear ${delay}s infinite`,
-        fontSize: `${size}px`,
-        textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(173, 216, 230, 0.6)',
-        filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.9))',
+        width: `${size}px`,
+        height: `${size}px`,
+        filter: `drop-shadow(0 0 3px ${getShadowColor(snowflakeColor)})`,
         opacity: 0.95,
-        color: 'white',
       }}
     >
-      ❄
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 100 100"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* 중앙 육각형 */}
+        <polygon
+          points="50,42 58,46 58,54 50,58 42,54 42,46"
+          fill={snowflakeColor}
+          stroke={snowflakeColor}
+          strokeWidth="1"
+        />
+        
+        {/* 6개의 주요 팔 (상하좌우 + 대각선) */}
+        {/* 위쪽 팔 */}
+        <line x1="50" y1="42" x2="50" y2="10" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="50" y1="28" x2="44" y2="22" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="50" y1="28" x2="56" y2="22" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="50" y1="20" x2="46" y2="16" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="50" y1="20" x2="54" y2="16" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 아래쪽 팔 */}
+        <line x1="50" y1="58" x2="50" y2="90" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="50" y1="72" x2="44" y2="78" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="50" y1="72" x2="56" y2="78" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="50" y1="80" x2="46" y2="84" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="50" y1="80" x2="54" y2="84" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 왼쪽 팔 */}
+        <line x1="42" y1="50" x2="10" y2="50" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="28" y1="50" x2="22" y2="44" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="28" y1="50" x2="22" y2="56" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="20" y1="50" x2="16" y2="46" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="20" y1="50" x2="16" y2="54" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 오른쪽 팔 */}
+        <line x1="58" y1="50" x2="90" y2="50" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="72" y1="50" x2="78" y2="44" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="72" y1="50" x2="78" y2="56" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="80" y1="50" x2="84" y2="46" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="80" y1="50" x2="84" y2="54" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 왼쪽 위 대각선 팔 */}
+        <line x1="42" y1="42" x2="18" y2="18" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="30" y1="30" x2="24" y2="24" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="30" x2="24" y2="36" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="30" x2="36" y2="24" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="22" y1="22" x2="19" y2="19" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="22" y1="22" x2="19" y2="25" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="22" y1="22" x2="25" y2="19" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 오른쪽 아래 대각선 팔 */}
+        <line x1="58" y1="58" x2="82" y2="82" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="70" y1="70" x2="76" y2="76" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="70" y1="70" x2="76" y2="64" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="70" y1="70" x2="64" y2="76" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="78" y1="78" x2="81" y2="81" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="78" y1="78" x2="81" y2="75" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="78" y1="78" x2="75" y2="81" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 오른쪽 위 대각선 팔 */}
+        <line x1="58" y1="42" x2="82" y2="18" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="70" y1="30" x2="76" y2="24" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="70" y1="30" x2="76" y2="36" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="70" y1="30" x2="64" y2="24" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="78" y1="22" x2="81" y2="19" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="78" y1="22" x2="81" y2="25" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="78" y1="22" x2="75" y2="19" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* 왼쪽 아래 대각선 팔 */}
+        <line x1="42" y1="58" x2="18" y2="82" stroke={snowflakeColor} strokeWidth="4" strokeLinecap="round" />
+        <line x1="30" y1="70" x2="24" y2="76" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="70" x2="24" y2="64" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="30" y1="70" x2="36" y2="76" stroke={snowflakeColor} strokeWidth="3" strokeLinecap="round" />
+        <line x1="22" y1="78" x2="19" y2="81" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="22" y1="78" x2="19" y2="75" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="22" y1="78" x2="25" y2="81" stroke={snowflakeColor} strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
     </div>
   );
 }
