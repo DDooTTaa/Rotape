@@ -382,7 +382,7 @@ export default function Home() {
             Rotape
           </h1>
           <p className="text-gray-700 text-2xl md:text-[32px] font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", marginTop: 24 }}>
-            한 컷의 테이프처럼 영월할 당신의 인연
+            한 컷의 테이프처럼 영원할 당신의 인연
           </p>
         </div>
 
