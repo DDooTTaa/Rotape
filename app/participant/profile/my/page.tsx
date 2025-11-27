@@ -108,7 +108,7 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-32 md:py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">마이페이지</h1>

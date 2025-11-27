@@ -49,12 +49,20 @@ export default function EventsPage() {
     if (!user) return;
     try {
       const eventsData = await getAllEvents();
-      setEvents(eventsData);
-      loadEventStats(eventsData);
+      // 오늘 날짜 이후의 행사만 필터링
+      const now = new Date();
+      const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const futureEvents = eventsData.filter((event) => {
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+        return eventDateOnly.getTime() >= todayOnly.getTime();
+      });
+      setEvents(futureEvents);
+      loadEventStats(futureEvents);
 
       // 각 행사에 대한 지원서 상태 확인
       const apps: Record<string, Application | null> = {};
-      for (const event of eventsData) {
+      for (const event of futureEvents) {
         try {
           const app = await getApplicationByEvent(user.uid, event.eventId);
           apps[event.eventId] = app;
