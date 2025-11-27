@@ -225,10 +225,37 @@ export default function Home() {
     setSnowflakes(flakes);
   }, []);
 
+  // 데스크톱에서 메인 컨테이너만 스크롤 제거 (푸터는 보이도록)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const handleResize = () => {
+        const isDesktop = window.innerWidth >= 768;
+        const mainElement = document.querySelector('.main-page');
+        if (mainElement && isDesktop) {
+          // 메인 컨테이너만 overflow hidden
+          (mainElement as HTMLElement).style.overflow = 'hidden';
+        } else if (mainElement) {
+          (mainElement as HTMLElement).style.overflow = '';
+        }
+      };
+      
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        const mainElement = document.querySelector('.main-page');
+        if (mainElement) {
+          (mainElement as HTMLElement).style.overflow = '';
+        }
+      };
+    }
+  }, []);
+
   return (
     <>
       {loading && <LoadingSpinner message="로그인 중..." />}
-      <div className="min-h-screen text-foreground flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="main-page min-h-[calc(100vh-120px)] md:h-[calc(100vh-120px)] text-foreground flex items-center justify-center px-4 relative overflow-hidden">
       {/* 눈송이 배경 */}
       <div className="fixed inset-0 pointer-events-none z-0">
         {snowflakes.map((flake) => (

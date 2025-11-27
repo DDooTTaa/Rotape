@@ -36,6 +36,14 @@ body {
   overflow-x: hidden;
 }
 
+/* 데스크톱에서 메인 페이지 스크롤 제거 */
+@media (min-width: 768px) {
+  body:has(.main-page) {
+    overflow: hidden;
+    height: 100vh;
+  }
+}
+
 /* 고급스러운 카드 스타일 */
 @layer components {
   .card-elegant {
