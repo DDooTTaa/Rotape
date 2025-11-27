@@ -25,6 +25,7 @@ function Snowflake({ delay, duration, left, initialTop }: { delay: number; durat
         textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(173, 216, 230, 0.6)',
         filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.9))',
         opacity: 0.95,
+        color: 'white',
       }}
     >
       ❄
