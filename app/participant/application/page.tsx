@@ -181,7 +181,7 @@ function ApplicationFormContent() {
     }
 
     if (formData.loveLanguage.length !== 5) {
-      alert("사랑의 언어를 5개 모두 선택해주세요.");
+      alert("연애에서 뭐가 중요한지 5개를 모두 선택해주세요..!");
       return;
     }
 
@@ -370,14 +370,20 @@ function ApplicationFormContent() {
           <div>
             <label className="block mb-2 font-semibold">생년</label>
             <input
-              type="number"
+              type="text"
               required
-              min="1984"
-              max="2004"
               value={formData.birthYear}
-              onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 숫자만 입력 허용, 최대 4자리
+                if (value === "" || (/^\d+$/.test(value) && value.length <= 4)) {
+                  setFormData({ ...formData, birthYear: value });
+                }
+              }}
               placeholder="예: 1995"
               className="input-elegant"
+              maxLength={4}
+              inputMode="numeric"
             />
             {formData.birthYear && (
               <p className="text-sm mt-1 text-gray-600">나이: {calculateAge(formData.birthYear)}세</p>
@@ -407,7 +413,7 @@ function ApplicationFormContent() {
               required
               value={formData.job}
               onChange={(e) => setFormData({ ...formData, job: e.target.value })}
-              placeholder="예: 개발자, 디자이너, 학생 등"
+              placeholder="예: 디자이너, 의사, 프로그래머 등"
               className="input-elegant"
             />
           </div>
@@ -456,7 +462,7 @@ function ApplicationFormContent() {
 
           {/* 나를 한 줄로 소개 */}
           <div>
-            <label className="block mb-2 font-semibold">나를 한 줄로 소개</label>
+            <label className="block mb-2 font-semibold">나는 어떤 사람인지 한 줄로 소개해주세요.</label>
             <textarea
               required
               value={formData.intro}
@@ -469,7 +475,7 @@ function ApplicationFormContent() {
 
           {/* 이상형 한 줄 */}
           <div>
-            <label className="block mb-2 font-semibold">이상형 한 줄</label>
+            <label className="block mb-2 font-semibold">어떤 사람을 만나고 싶은지 한 줄로 알려주세요.</label>
             <textarea
               required
               value={formData.idealType}
@@ -482,7 +488,7 @@ function ApplicationFormContent() {
 
           {/* 어떤 연애를 하고 싶은가요 */}
           <div>
-            <label className="block mb-2 font-semibold">어떤 연애를 하고 싶은가요?</label>
+            <label className="block mb-2 font-semibold">어떤 연애가 하고 싶은가요?</label>
             <textarea
               required
               value={formData.loveStyle}

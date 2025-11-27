@@ -280,30 +280,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Firebase 설정 안내 */}
-        {!isFirebaseReady && (
-          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
-            <p className="text-sm font-semibold text-yellow-600 mb-2">
-              ⚠️ Firebase가 설정되지 않았습니다
-            </p>
-            <p className="text-xs text-gray-700 mb-2">
-              프로젝트 루트에 .env.local 파일을 생성하고 Firebase 설정을 추가하세요.
-            </p>
-            <details className="text-xs text-gray-400">
-              <summary className="cursor-pointer hover:text-gray-300">
-                설정 방법 보기
-              </summary>
-              <div className="mt-2 p-2 bg-gray-100 rounded text-left">
-                <p className="mb-1">1. .env.local 파일 생성</p>
-                <p className="mb-1">2. Firebase Console에서 설정 값 가져오기</p>
-                <p className="mb-1">3. 환경 변수 추가 후 서버 재시작</p>
-                <p className="text-yellow-400 mt-2">
-                  자세한 내용: FIREBASE_SETUP.md 참고
-                </p>
-              </div>
-            </details>
-          </div>
-        )}
 
         <div className="space-y-4">
           <button

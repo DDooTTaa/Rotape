@@ -147,12 +147,19 @@ export default function MyProfilePage() {
                   className="bg-white border-2 border-primary/30 rounded-xl p-4 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-300 group card-hover"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-lg group-hover:text-primary transition">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 
+                          className="font-bold text-lg group-hover:text-primary transition flex-1 min-w-0"
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
                           {app.event ? app.event.title : "일반 지원서"}
                         </h3>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(app.status)}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0 whitespace-nowrap ${getStatusColor(app.status)}`}>
                           {getStatusText(app.status)}
                         </span>
                       </div>
@@ -169,9 +176,11 @@ export default function MyProfilePage() {
                       </p>
                       <p className="text-sm text-gray-700 line-clamp-2">{app.intro}</p>
                       <p className="text-xs text-gray-500 mt-2">
-                        작성일: {app.createdAt instanceof Date 
-                          ? app.createdAt.toLocaleDateString("ko-KR")
-                          : new Date(app.createdAt).toLocaleDateString("ko-KR")}
+                        작성일: {app.createdAt ? (
+                          app.createdAt instanceof Date 
+                            ? app.createdAt.toLocaleDateString("ko-KR")
+                            : new Date(app.createdAt).toLocaleDateString("ko-KR")
+                        ) : "날짜 정보 없음"}
                       </p>
                     </div>
                     {app.photos && app.photos.length > 0 && (
@@ -290,9 +299,11 @@ export default function MyProfilePage() {
                 <div>
                   <p className="font-semibold mb-1">작성일</p>
                   <p className="text-gray-700">
-                    {selectedApp.createdAt instanceof Date 
-                      ? selectedApp.createdAt.toLocaleString("ko-KR")
-                      : new Date(selectedApp.createdAt).toLocaleString("ko-KR")}
+                    {selectedApp.createdAt ? (
+                      selectedApp.createdAt instanceof Date 
+                        ? selectedApp.createdAt.toLocaleString("ko-KR")
+                        : new Date(selectedApp.createdAt).toLocaleString("ko-KR")
+                    ) : "날짜 정보 없음"}
                   </p>
                 </div>
               </div>

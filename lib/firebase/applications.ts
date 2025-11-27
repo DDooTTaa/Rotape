@@ -1,6 +1,19 @@
-import { collection, doc, setDoc, getDoc, updateDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "./config";
 import { Application, ApplicationStatus } from "./types";
+
+// Firestore Timestamp를 Date로 변환하는 헬퍼 함수
+function convertTimestampToDate(timestamp: any): Date {
+  if (!timestamp) return new Date();
+  if (timestamp instanceof Date) return timestamp;
+  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+    return timestamp.toDate();
+  }
+  if (timestamp.seconds) {
+    return new Date(timestamp.seconds * 1000);
+  }
+  return new Date(timestamp);
+}
 
 const applicationsCollection = "applications";
 
@@ -44,7 +57,12 @@ export async function getApplication(uid: string, eventId?: string): Promise<App
   const applicationSnap = await getDoc(applicationRef);
   
   if (applicationSnap.exists()) {
-    return { uid, ...applicationSnap.data() } as Application;
+    const data = applicationSnap.data();
+    return { 
+      uid, 
+      ...data,
+      createdAt: convertTimestampToDate(data.createdAt)
+    } as Application;
   }
   return null;
 }
@@ -63,7 +81,8 @@ export async function getUserApplications(uid: string): Promise<Application[]> {
     const data = doc.data();
     return { 
       uid: data.uid || doc.id.split('_')[0], // uid가 없으면 docId에서 추출
-      ...data 
+      ...data,
+      createdAt: convertTimestampToDate(data.createdAt)
     } as Application;
   });
   return applications;
@@ -96,7 +115,8 @@ export async function getAllApplications(): Promise<(Application & { docId: stri
     return { 
       uid: data.uid || doc.id.split('_')[0], // uid가 없으면 docId에서 추출
       docId: doc.id, // 실제 문서 ID 저장
-      ...data 
+      ...data,
+      createdAt: convertTimestampToDate(data.createdAt)
     } as Application & { docId: string };
   });
 }
@@ -105,7 +125,14 @@ export async function getApplicationsByStatus(status: ApplicationStatus): Promis
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(collection(db, applicationsCollection), where("status", "==", status));
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as Application));
+  return querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return { 
+      uid: data.uid || doc.id.split('_')[0],
+      ...data,
+      createdAt: convertTimestampToDate(data.createdAt)
+    } as Application;
+  });
 }
 
 // 행사별 지원서 조회
@@ -118,7 +145,8 @@ export async function getApplicationsByEventId(eventId: string): Promise<(Applic
     return {
       uid: data.uid || doc.id.split('_')[0],
       docId: doc.id,
-      ...data
+      ...data,
+      createdAt: convertTimestampToDate(data.createdAt)
     } as Application & { docId: string };
   });
 }
