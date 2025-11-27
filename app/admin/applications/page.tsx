@@ -258,7 +258,7 @@ export default function ApplicationsPage() {
                   <p>{selectedApp.loveStyle}</p>
                 </div>
                 <div>
-                  <p className="font-semibold">사랑의 언어</p>
+                  <p className="font-semibold">더 중요한 가치</p>
                   <p>{selectedApp.loveLanguage.join(", ")}</p>
                 </div>
                 <div>

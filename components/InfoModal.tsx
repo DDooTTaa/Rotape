@@ -72,7 +72,7 @@ export default function InfoModal({ isOpen, onClose }: InfoModalProps) {
                   <li>한 번에 여러 분과 만나볼 수 있어 시간을 효율적으로 활용할 수 있어요</li>
                   <li>다양한 매력을 가진 분들을 한 자리에서 만날 수 있는 기회예요</li>
                   <li>부담스럽지 않은 분위기에서 자연스럽게 대화를 나눌 수 있어요</li>
-                  <li>서로의 프로필과 사랑의 언어를 통해 인연을 찾을 수 있어요</li>
+                  <li>서로의 중요한 가치를 통해 인연을 찾을 수 있어요</li>
                 </ul>
               </div>
             </div>

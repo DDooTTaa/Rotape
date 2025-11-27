@@ -68,7 +68,7 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <div className="space-y-2 leading-relaxed">
               <p><strong>1. 수집하는 개인정보 항목</strong></p>
               <ul className="ml-4 list-disc list-inside space-y-1">
-                <li>필수항목: 이름, 성별, 생년월일, 연락처, 프로필 사진, 직업, 자기소개, 이상형, 사랑의 언어</li>
+                <li>필수항목: 이름, 성별, 생년월일, 연락처, 프로필 사진, 직업, 자기소개, 이상형, 연애에 있어서 더 중요한 가치</li>
                 <li>자동 수집 항목: IP 주소, 쿠키, 접속 로그, 기기 정보</li>
               </ul>
               
@@ -119,4 +119,5 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
     </div>
   );
 }
+
 

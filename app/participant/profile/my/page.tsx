@@ -268,7 +268,7 @@ export default function MyProfilePage() {
                 </div>
 
                 <div>
-                  <p className="font-semibold mb-1">사랑의 언어 순위</p>
+                  <p className="font-semibold mb-1">더 중요한 가치</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedApp.loveLanguage.map((lang, idx) => (
                       <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">

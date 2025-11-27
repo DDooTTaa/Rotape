@@ -12,7 +12,7 @@ import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
-const loveLanguages = ["행동", "선물", "언어", "시간", "스킨십"];
+const loveLanguages = ["행동", "선물", "인정하는 말", "시간", "스킨십"];
 
 function ApplicationFormContent() {
   const router = useRouter();
