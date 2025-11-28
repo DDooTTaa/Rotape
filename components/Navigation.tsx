@@ -141,6 +141,11 @@ export default function Navigation() {
     return null;
   }
 
+  // 일반 사용자가 운영자 페이지에 접근할 때 네비게이션 숨김
+  if (pathname.startsWith("/admin") && !isAdmin && !loading) {
+    return null;
+  }
+
   const navItems = isAdmin ? adminNavItems : participantNavItems;
   const isActive = (href: string) => {
     // 정확히 일치하는 경우
