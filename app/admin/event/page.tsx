@@ -10,6 +10,7 @@ import { generateQRCode, dataURLtoBlob } from "@/lib/utils/qrcode";
 import { uploadQRCode } from "@/lib/firebase/storage";
 import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
+import TimePickerPopup from "@/components/TimePickerPopup";
 
 export const dynamic = 'force-dynamic';
 
@@ -148,23 +149,21 @@ export default function EventPage() {
 
           <div>
             <label className="block mb-2 font-semibold">시작 시간</label>
-            <input
-              type="text"
+            <TimePickerPopup
               value={formData.break}
-              onChange={(e) => setFormData({ ...formData, break: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+              onChange={(value) => setFormData({ ...formData, break: value })}
               placeholder="예: 16:00"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 
           <div>
             <label className="block mb-2 font-semibold">종료 시간</label>
-            <input
-              type="text"
+            <TimePickerPopup
               value={formData.part2}
-              onChange={(e) => setFormData({ ...formData, part2: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+              onChange={(value) => setFormData({ ...formData, part2: value })}
               placeholder="예: 17:00"
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
             />
           </div>
 

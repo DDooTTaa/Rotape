@@ -7,6 +7,7 @@ import { getEvent, updateEvent } from "@/lib/firebase/events";
 import { Event } from "@/lib/firebase/types";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import TimePickerPopup from "@/components/TimePickerPopup";
 
 export const dynamic = 'force-dynamic';
 
@@ -171,10 +172,9 @@ export default function EditEventPage() {
           {/* 시작 시간 */}
           <div>
             <label className="block mb-2 font-semibold">시작 시간</label>
-            <input
-              type="text"
+            <TimePickerPopup
               value={formData.break}
-              onChange={(e) => setFormData({ ...formData, break: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, break: value })}
               placeholder="예: 16:00"
               className="input-elegant"
             />
@@ -183,10 +183,9 @@ export default function EditEventPage() {
           {/* 종료 시간 */}
           <div>
             <label className="block mb-2 font-semibold">종료 시간</label>
-            <input
-              type="text"
+            <TimePickerPopup
               value={formData.part2}
-              onChange={(e) => setFormData({ ...formData, part2: e.target.value })}
+              onChange={(value) => setFormData({ ...formData, part2: value })}
               placeholder="예: 17:00"
               className="input-elegant"
             />

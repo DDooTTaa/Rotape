@@ -424,6 +424,26 @@ function ApplicationFormContent() {
             />
           </div>
 
+          {/* 전화번호 */}
+          <div>
+            <label className="block mb-2 font-semibold">전화번호</label>
+            <input
+              type="tel"
+              required
+              value={formData.phone}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 숫자와 하이픈만 허용
+                if (value === "" || /^[0-9-]+$/.test(value)) {
+                  setFormData({ ...formData, phone: value });
+                }
+              }}
+              placeholder="예: 010-1234-5678"
+              className="input-elegant"
+              maxLength={13}
+            />
+          </div>
+
           {/* 사진 업로드 */}
           <div>
             <label className="block mb-2 font-semibold">사진 업로드 (2장 이상)</label>
