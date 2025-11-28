@@ -155,8 +155,15 @@ export default function EventsPage() {
     setParticipantsLoading(true);
     try {
       const apps = await getApplicationsByEventId(eventData.eventId);
+      
+      // 오늘 진행중인 행사인 경우 승인된 사람만 필터링
+      const isActive = isEventActive(eventData);
+      const filteredApps = isActive 
+        ? apps.filter(app => app.status === "approved")
+        : apps;
+      
       const applicantsWithUser = await Promise.all(
-        apps.map(async (app) => {
+        filteredApps.map(async (app) => {
           try {
             const userData = await getUser(app.uid);
             return { application: app, user: userData };
@@ -167,6 +174,7 @@ export default function EventsPage() {
         })
       );
 
+      // 승인된 사람만 보이므로 정렬 불필요하지만, 혹시 모를 경우를 위해 유지
       const statusOrder: Record<Application["status"], number> = {
         approved: 0,
         pending: 1,
@@ -448,7 +456,7 @@ export default function EventsPage() {
                           {application.idealType || "미입력"}
                         </p>
                         <div className="md:col-span-2">
-                          <span className="font-semibold text-gray-800">사랑의 언어:</span>
+                          <span className="font-semibold text-gray-800">더 중요한 가치:</span>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {application.loveLanguage?.length > 0 ? (
                               application.loveLanguage.map((lang) => (
