@@ -94,17 +94,8 @@ export default function EventPage() {
       }
 
       alert("행사가 생성되었습니다.");
-      await loadEvents();
-      setFormData({
-        title: "",
-        date: "",
-        location: "",
-        intro: "",
-        part1: "",
-        part2: "",
-        break: "",
-        maxParticipants: 20,
-      });
+      // 행사 리스트 페이지로 이동
+      router.push("/admin");
     } catch (error) {
       console.error("행사 생성 실패:", error);
       alert("행사 생성에 실패했습니다.");

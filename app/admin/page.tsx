@@ -29,6 +29,23 @@ export default function AdminPage() {
     >
   >({});
 
+  // 행사 상태 판단 함수
+  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' => {
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    // 날짜만 비교
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (eventDateOnly.getTime() < todayOnly.getTime()) {
+      return 'past'; // 지난 행사
+    } else if (eventDateOnly.getTime() === todayOnly.getTime()) {
+      return 'active'; // 진행중인 행사
+    } else {
+      return 'upcoming'; // 진행할 행사
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadEvents();
@@ -38,8 +55,33 @@ export default function AdminPage() {
   const loadEvents = async () => {
     try {
       const data = await getAllEvents();
-      setEvents(data);
-      await loadEventStats(data);
+      // 예정 행사를 위로 오름차순 정렬
+      const sortedEvents = data.sort((a, b) => {
+        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+        const statusA = getEventStatus(a);
+        const statusB = getEventStatus(b);
+        
+        // 상태별 우선순위: active > upcoming > past
+        const statusOrder = { 'active': 0, 'upcoming': 1, 'past': 2 };
+        const statusDiff = statusOrder[statusA] - statusOrder[statusB];
+        
+        if (statusDiff !== 0) return statusDiff;
+        
+        // 같은 상태 내에서는 날짜 오름차순 (예정 행사는 가까운 날짜가 위로)
+        if (statusA === 'upcoming') {
+          return dateA.getTime() - dateB.getTime();
+        }
+        // 지난 행사는 최근 날짜가 위로
+        if (statusA === 'past') {
+          return dateB.getTime() - dateA.getTime();
+        }
+        // 진행중인 행사는 날짜 오름차순
+        return dateA.getTime() - dateB.getTime();
+      });
+      
+      setEvents(sortedEvents);
+      await loadEventStats(sortedEvents);
     } catch (error) {
       console.error("행사 로드 실패:", error);
     } finally {
@@ -107,14 +149,9 @@ export default function AdminPage() {
     setEventStats(Object.fromEntries(statsEntries));
   };
 
-  // 진행중인 행사 판단 함수
+  // 진행중인 행사 판단 함수 (기존 호환성 유지)
   const isEventActive = (event: Event): boolean => {
-    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-    const now = new Date();
-    // 행사 날짜가 오늘인지 확인 (날짜만 비교)
-    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return eventDateOnly.getTime() === todayOnly.getTime();
+    return getEventStatus(event) === 'active';
   };
 
   if (loading) {
@@ -157,20 +194,37 @@ export default function AdminPage() {
                 const maleQuota = Math.floor(event.maxParticipants / 2);
                 const femaleQuota = event.maxParticipants - maleQuota;
 
-                const isActive = isEventActive(event);
+                const eventStatus = getEventStatus(event);
+                const isActive = eventStatus === 'active';
 
                 return (
                   <Link
                     key={event.eventId}
                     href={`/admin/event/${event.eventId}`}
-                    className={`block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors ${isActive ? 'event-active' : ''} relative`}
+                    className={`block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors ${isActive ? 'event-active' : ''} relative ${eventStatus === 'past' ? 'opacity-60' : ''}`}
                   >
-                    {isActive && (
-                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                    {eventStatus === 'active' && (
+                      <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse flex items-center gap-1">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                         </svg>
                         진행중
+                      </div>
+                    )}
+                    {eventStatus === 'upcoming' && (
+                      <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        예정
+                      </div>
+                    )}
+                    {eventStatus === 'past' && (
+                      <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-gray-400 to-gray-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        </svg>
+                        지난 행사
                       </div>
                     )}
                     <div className="flex items-center justify-between gap-6">

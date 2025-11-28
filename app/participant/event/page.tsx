@@ -5,7 +5,9 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getProfile, getProfilesByEvent } from "@/lib/firebase/profiles";
 import { getUser } from "@/lib/firebase/users";
-import { Profile } from "@/lib/firebase/types";
+import { getEvent } from "@/lib/firebase/events";
+import { getLike } from "@/lib/firebase/matching";
+import { Profile, Event } from "@/lib/firebase/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -21,6 +23,9 @@ export default function EventPage() {
   const [otherGenderProfiles, setOtherGenderProfiles] = useState<Profile[]>([]);
   const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [isEventEnded, setIsEventEnded] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -35,6 +40,27 @@ export default function EventPage() {
       setProfile(profileData);
       
       if (profileData) {
+        // 행사 정보 로드
+        const eventData = await getEvent(profileData.eventId);
+        setEvent(eventData);
+        
+        // 행사가 끝났는지 확인 (행사 날짜가 오늘 이전이면 종료)
+        if (eventData) {
+          const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
+          const now = new Date();
+          const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+          const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          setIsEventEnded(eventDateOnly.getTime() < todayOnly.getTime());
+          
+          // 투표 여부 확인
+          try {
+            const existingLike = await getLike(user.uid, profileData.eventId);
+            setHasVoted(!!existingLike);
+          } catch (error) {
+            console.error("투표 확인 실패:", error);
+          }
+        }
+        
         // 사용자 성별 확인
         const userData = await getUser(user.uid);
         if (userData?.gender) {
@@ -135,18 +161,40 @@ export default function EventPage() {
           </div>
         </div>
 
-        {/* 현재 라운드 */}
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">현재 라운드</h2>
-          <p className="text-3xl font-bold mb-2 text-gray-800">라운드 {currentRound}</p>
-          <p className="text-gray-600 mb-4">다음 라운드까지 약 10분 남았습니다.</p>
-          <Link
-            href="/participant/rotation"
-            className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            라운드 종료 후 선택하기
-          </Link>
-        </div>
+        {/* 현재 라운드 또는 투표 */}
+        {isEventEnded ? (
+          <div className="bg-gradient-to-r from-primary/10 to-[#0d4a1a]/10 border-2 border-primary rounded-lg p-6 mb-6">
+            <h2 className="text-2xl font-semibold mb-4 text-primary">모임이 종료되었습니다</h2>
+            {hasVoted ? (
+              <div>
+                <p className="text-gray-700 mb-4">이미 투표를 완료하셨습니다.</p>
+                <p className="text-sm text-gray-600">운영자가 결과를 공개할 때까지 기다려주세요.</p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-700 mb-4">이성 중에서 Top 1, 2, 3을 선택해주세요.</p>
+                <Link
+                  href={`/participant/rotation?eventId=${profile?.eventId}`}
+                  className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-lg"
+                >
+                  투표하기
+                </Link>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
+            <h2 className="text-2xl font-semibold mb-4 text-primary">현재 라운드</h2>
+            <p className="text-3xl font-bold mb-2 text-gray-800">라운드 {currentRound}</p>
+            <p className="text-gray-600 mb-4">다음 라운드까지 약 10분 남았습니다.</p>
+            <Link
+              href={`/participant/rotation?eventId=${profile?.eventId}`}
+              className="inline-block bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              라운드 종료 후 선택하기
+            </Link>
+          </div>
+        )}
 
         {/* 아이스브레이킹 툴 */}
         <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
@@ -279,7 +327,7 @@ export default function EventPage() {
                 </div>
 
                 <div>
-                  <p className="font-semibold mb-1">사랑의 언어</p>
+                  <p className="font-semibold mb-1">더 중요한 가치</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedProfile.loveLanguage.map((lang, idx) => (
                       <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
