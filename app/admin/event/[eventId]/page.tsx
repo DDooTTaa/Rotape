@@ -346,8 +346,8 @@ export default function EventDetailPage() {
           </div>
         )}
 
-        {/* 필터 및 지원자 목록 (예정 행사 또는 진행중인 행사, 종료 전) */}
-        {(getEventStatus(event) === 'upcoming' || getEventStatus(event) === 'active') && (
+        {/* 필터 및 지원자 목록 (모든 행사에서 표시, 종료된 행사 포함) */}
+        {(getEventStatus(event) === 'upcoming' || getEventStatus(event) === 'active' || getEventStatus(event) === 'ended') && (
           <>
             {/* 필터 */}
             <div className="card-elegant p-6 mb-8">
@@ -423,26 +423,28 @@ export default function EventDetailPage() {
                           {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprove(app);
-                          }}
-                          className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                        >
-                          승인
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReject(app);
-                          }}
-                          className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                        >
-                          거절
-                        </button>
-                      </div>
+                      {getEventStatus(event) !== 'ended' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApprove(app);
+                            }}
+                            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReject(app);
+                            }}
+                            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                          >
+                            거절
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -546,73 +548,33 @@ export default function EventDetailPage() {
                     ))}
                   </div>
                 </div>
-                
-                {/* 프로필 정보 (있는 경우) */}
-                {selectedApp.profile && (
-                  <div className="mt-6 pt-6 border-t-2 border-primary/20">
-                    <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
-                      프로필 정보
-                    </h3>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="font-semibold mb-1">프로필 이름</p>
-                        <p className="text-gray-700">{selectedApp.profile.displayName || "미입력"}</p>
-                      </div>
-                      {selectedApp.profile.photos && selectedApp.profile.photos.length > 0 && (
-                        <div>
-                          <p className="font-semibold mb-2">프로필 사진</p>
-                          <div className="grid grid-cols-3 gap-4">
-                            {selectedApp.profile.photos.map((photo, idx) => (
-                              <div key={idx} className="relative aspect-square">
-                                <Image
-                                  src={photo}
-                                  alt={`프로필 사진 ${idx + 1}`}
-                                  fill
-                                  className="object-cover rounded-lg"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {selectedApp.profile.loveLanguage && selectedApp.profile.loveLanguage.length > 0 && (
-                        <div>
-                          <p className="font-semibold mb-1">더 중요한 가치 (프로필)</p>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedApp.profile.loveLanguage.map((lang, idx) => (
-                              <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
-                                {idx + 1}순위: {lang}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
               <div className="flex gap-4 mt-6">
-                <button
-                  onClick={() => {
-                    handleApprove(selectedApp);
-                    setSelectedApp(null);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  승인
-                </button>
-                <button
-                  onClick={() => {
-                    handleReject(selectedApp);
-                    setSelectedApp(null);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  거절
-                </button>
+                {getEventStatus(event) !== 'ended' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleApprove(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      승인
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReject(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      거절
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setSelectedApp(null)}
-                  className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                  className={`${getEventStatus(event) !== 'ended' ? 'flex-1' : 'w-full'} bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300`}
                 >
                   닫기
                 </button>
