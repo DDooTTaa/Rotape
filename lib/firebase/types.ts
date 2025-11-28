@@ -24,6 +24,7 @@ export interface Application {
   loveStyle: string;
   loveLanguage: string[];
   photos: string[];
+  phone?: string; // 전화번호
   status: ApplicationStatus;
   createdAt: Date;
 }

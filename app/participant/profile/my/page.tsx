@@ -130,6 +130,10 @@ export default function MyProfilePage() {
               <p className="font-semibold mb-1 text-gray-800">나이</p>
               <p className="text-gray-700">{userData.age > 0 ? `${userData.age + 1}세` : "미입력"}</p>
             </div>
+            <div>
+              <p className="font-semibold mb-1 text-gray-800">전화번호</p>
+              <p className="text-gray-700">{userData.phone || "미입력"}</p>
+            </div>
           </div>
         </div>
 

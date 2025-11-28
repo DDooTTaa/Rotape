@@ -33,6 +33,7 @@ function ApplicationFormContent() {
     loveStyle: "",
     loveLanguage: [] as string[],
     photos: [] as File[],
+    phone: "",
   });
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -77,6 +78,7 @@ function ApplicationFormContent() {
             birthYear: birthYear,
             // 남성이고 키가 비어있으면 170으로 설정
             height: prev.height || (userGender === "M" ? "170" : ""),
+            phone: prev.phone || userData.phone || "",
           }));
         }
 
@@ -97,6 +99,7 @@ function ApplicationFormContent() {
               idealType: existingApplication.idealType || "",
               loveStyle: existingApplication.loveStyle || "",
               loveLanguage: existingApplication.loveLanguage || [],
+              phone: existingApplication.phone || userData?.phone || "",
             }));
           } else {
             // 기존 지원서가 없으면, 다른 행사의 최근 지원서 정보를 참고
@@ -227,6 +230,7 @@ function ApplicationFormContent() {
           gender: formData.gender,
           birthday: formData.birthYear,
           age: calculateAge(formData.birthYear),
+          phone: formData.phone,
         });
         console.log("사용자 정보 업데이트 완료");
       } catch (userError: any) {
@@ -248,6 +252,7 @@ function ApplicationFormContent() {
             loveStyle: formData.loveStyle,
             loveLanguage: formData.loveLanguage,
             photos: photoUrls,
+            phone: formData.phone,
           },
           eventId || undefined
         );
