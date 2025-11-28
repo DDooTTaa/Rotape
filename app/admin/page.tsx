@@ -91,8 +91,13 @@ export default function AdminPage() {
         const statusA = getEventStatus(a);
         const statusB = getEventStatus(b);
         
-        // 상태별 우선순위: active > upcoming > past
-        const statusOrder = { 'active': 0, 'upcoming': 1, 'past': 2 };
+        // 상태별 우선순위: active > upcoming > ended > past
+        const statusOrder: Record<'active' | 'upcoming' | 'ended' | 'past', number> = { 
+          'active': 0, 
+          'upcoming': 1, 
+          'ended': 2, 
+          'past': 3 
+        };
         const statusDiff = statusOrder[statusA] - statusOrder[statusB];
         
         if (statusDiff !== 0) return statusDiff;
@@ -101,8 +106,8 @@ export default function AdminPage() {
         if (statusA === 'upcoming') {
           return dateA.getTime() - dateB.getTime();
         }
-        // 지난 행사는 최근 날짜가 위로
-        if (statusA === 'past') {
+        // 지난 행사와 종료된 행사는 최근 날짜가 위로
+        if (statusA === 'past' || statusA === 'ended') {
           return dateB.getTime() - dateA.getTime();
         }
         // 진행중인 행사는 날짜 오름차순
