@@ -39,30 +39,84 @@ export default function EventsPage() {
     }>
   >([]);
 
+  // 행사 종료 시간 계산 함수
+  const calculateEventEndTime = (event: Event): Date | null => {
+    // endTime 필드가 있으면 사용
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    
+    // schedule.part2에서 종료 시간 추출 (예: "17:00")
+    if (event.schedule?.part2) {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const timeStr = event.schedule.part2.trim();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endTime = new Date(eventDate);
+        endTime.setHours(hours, minutes || 0, 0, 0);
+        return endTime;
+      }
+    }
+    
+    return null;
+  };
+
+  // 행사가 종료되었는지 확인
+  const isEventEnded = (event: Event): boolean => {
+    const now = new Date();
+    const endTime = calculateEventEndTime(event);
+    
+    if (endTime) {
+      return now.getTime() >= endTime.getTime();
+    }
+    
+    // 종료 시간이 없으면 날짜만 비교
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return eventDateOnly.getTime() < todayOnly.getTime();
+  };
+
+  // 진행중인 행사 판단 함수
+  const isEventActive = (event: Event): boolean => {
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    // 행사 날짜가 오늘인지 확인 (날짜만 비교)
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return eventDateOnly.getTime() === todayOnly.getTime();
+  };
+
   useEffect(() => {
     if (user) {
       loadData();
     }
   }, [user]);
 
+  // 종료 시간이 지난 행사를 실시간으로 확인하고 업데이트
+  useEffect(() => {
+    if (!user) return;
+
+    const checkAndReload = () => {
+      // 종료 시간이 지난 행사가 있는지 확인하고 필요시 데이터 다시 로드
+      loadData();
+    };
+
+    // 1분마다 종료 시간 확인 및 데이터 업데이트
+    const interval = setInterval(checkAndReload, 60000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const loadData = async () => {
     if (!user) return;
     try {
       const eventsData = await getAllEvents();
-      // 오늘 날짜 이후의 행사만 필터링
-      const now = new Date();
-      const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const futureEvents = eventsData.filter((event) => {
-        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-        const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-        return eventDateOnly.getTime() >= todayOnly.getTime();
-      });
-      setEvents(futureEvents);
-      loadEventStats(futureEvents);
-
-      // 각 행사에 대한 지원서 상태 확인
+      
+      // 각 행사에 대한 지원서 상태 확인 (필터링 전에 먼저 확인)
       const apps: Record<string, Application | null> = {};
-      for (const event of futureEvents) {
+      for (const event of eventsData) {
         try {
           const app = await getApplicationByEvent(user.uid, event.eventId);
           apps[event.eventId] = app;
@@ -71,6 +125,23 @@ export default function EventsPage() {
         }
       }
       setApplications(apps);
+
+      // 필터링: 종료되지 않은 행사 OR (종료된 행사 AND 사용자가 신청한 행사)
+      const filteredEvents = eventsData.filter((event) => {
+        const isEnded = isEventEnded(event);
+        const hasApplication = apps[event.eventId] !== null;
+        
+        // 종료되지 않은 행사는 모두 표시
+        if (!isEnded) {
+          return true;
+        }
+        
+        // 종료된 행사는 사용자가 신청한 경우만 표시
+        return hasApplication;
+      });
+      
+      setEvents(filteredEvents);
+      loadEventStats(filteredEvents);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     } finally {
@@ -203,16 +274,6 @@ export default function EventsPage() {
     setParticipantsLoading(false);
   };
 
-  // 진행중인 행사 판단 함수
-  const isEventActive = (event: Event): boolean => {
-    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
-    const now = new Date();
-    // 행사 날짜가 오늘인지 확인 (날짜만 비교)
-    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    return eventDateOnly.getTime() === todayOnly.getTime();
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
@@ -300,7 +361,7 @@ export default function EventsPage() {
                       ) : (
                         <>
                           {renderStatusBadge()}
-                          {!status && (
+                          {!status && !isEventEnded(event) && (
                             <button
                               onClick={() => handleApply(event.eventId)}
                               disabled={applyingEventId === event.eventId}
@@ -308,6 +369,11 @@ export default function EventsPage() {
                             >
                               {applyingEventId === event.eventId ? "신청 중..." : "신청하기"}
                             </button>
+                          )}
+                          {isEventEnded(event) && (
+                            <span className="text-xs font-semibold text-gray-500">
+                              종료된 행사
+                            </span>
                           )}
                         </>
                       )}

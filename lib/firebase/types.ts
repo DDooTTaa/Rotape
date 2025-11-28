@@ -53,6 +53,7 @@ export interface Event {
   };
   maxParticipants: number;
   createdAt: Date;
+  endTime?: Date; // 행사 종료 시간 (선택사항)
 }
 
 export interface Round {

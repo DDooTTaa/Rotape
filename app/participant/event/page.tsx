@@ -33,6 +33,55 @@ export default function EventPage() {
     }
   }, [user]);
 
+  // 종료 시간이 지났는지 실시간으로 확인
+  useEffect(() => {
+    if (!event) return;
+
+    const checkEventEndTime = () => {
+      const now = new Date();
+      let eventEnded = false;
+      
+      // 종료 시간 계산
+      let endTime: Date | null = null;
+      
+      // endTime 필드가 있으면 사용
+      if (event.endTime) {
+        endTime = event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+      } else if (event.schedule?.part2) {
+        // schedule.part2에서 종료 시간 추출 (예: "17:00")
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        const timeStr = event.schedule.part2.trim();
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          endTime = new Date(eventDate);
+          endTime.setHours(hours, minutes || 0, 0, 0);
+        }
+      }
+      
+      // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
+      if (endTime) {
+        eventEnded = now.getTime() >= endTime.getTime();
+      } else {
+        // 종료 시간이 없으면 날짜만 비교
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+        const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
+      }
+      
+      setIsEventEnded(eventEnded);
+    };
+
+    // 즉시 확인
+    checkEventEndTime();
+
+    // 1분마다 종료 시간 확인
+    const interval = setInterval(checkEventEndTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [event]);
+
   const loadProfile = async () => {
     if (!user) return;
     try {
@@ -44,13 +93,41 @@ export default function EventPage() {
         const eventData = await getEvent(profileData.eventId);
         setEvent(eventData);
         
-        // 행사가 끝났는지 확인 (행사 날짜가 오늘 이전이면 종료)
+        // 행사가 끝났는지 확인 (종료 시간을 고려)
         if (eventData) {
-          const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
           const now = new Date();
-          const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-          const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          setIsEventEnded(eventDateOnly.getTime() < todayOnly.getTime());
+          let eventEnded = false;
+          
+          // 종료 시간 계산
+          let endTime: Date | null = null;
+          
+          // endTime 필드가 있으면 사용
+          if (eventData.endTime) {
+            endTime = eventData.endTime instanceof Date ? eventData.endTime : new Date(eventData.endTime);
+          } else if (eventData.schedule?.part2) {
+            // schedule.part2에서 종료 시간 추출 (예: "17:00")
+            const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
+            const timeStr = eventData.schedule.part2.trim();
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            
+            if (!isNaN(hours) && !isNaN(minutes)) {
+              endTime = new Date(eventDate);
+              endTime.setHours(hours, minutes || 0, 0, 0);
+            }
+          }
+          
+          // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
+          if (endTime) {
+            eventEnded = now.getTime() >= endTime.getTime();
+          } else {
+            // 종료 시간이 없으면 날짜만 비교
+            const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
+            const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+            const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
+          }
+          
+          setIsEventEnded(eventEnded);
           
           // 투표 여부 확인
           try {

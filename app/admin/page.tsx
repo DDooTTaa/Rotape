@@ -29,13 +29,42 @@ export default function AdminPage() {
     >
   >({});
 
+  // 행사 종료 시간 계산 함수
+  const calculateEventEndTime = (event: Event): Date | null => {
+    // endTime 필드가 있으면 사용
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    
+    // schedule.part2에서 종료 시간 추출 (예: "17:00")
+    if (event.schedule?.part2) {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const timeStr = event.schedule.part2.trim();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endTime = new Date(eventDate);
+        endTime.setHours(hours, minutes || 0, 0, 0);
+        return endTime;
+      }
+    }
+    
+    return null;
+  };
+
   // 행사 상태 판단 함수
-  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' => {
+  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' | 'ended' => {
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const now = new Date();
     // 날짜만 비교
     const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
     const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // 종료 시간 확인
+    const endTime = calculateEventEndTime(event);
+    if (endTime && now.getTime() >= endTime.getTime()) {
+      return 'ended'; // 종료 시간이 지났으면 'ended'
+    }
     
     if (eventDateOnly.getTime() < todayOnly.getTime()) {
       return 'past'; // 지난 행사
@@ -201,7 +230,7 @@ export default function AdminPage() {
                   <Link
                     key={event.eventId}
                     href={`/admin/event/${event.eventId}`}
-                    className={`block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors ${isActive ? 'event-active' : ''} relative ${eventStatus === 'past' ? 'opacity-60' : ''}`}
+                    className={`block card-elegant card-hover p-4 hover:bg-primary/5 transition-colors ${isActive ? 'event-active' : ''} relative ${eventStatus === 'past' || eventStatus === 'ended' ? 'opacity-60' : ''}`}
                   >
                     {eventStatus === 'active' && (
                       <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse flex items-center gap-1">
@@ -225,6 +254,14 @@ export default function AdminPage() {
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                         </svg>
                         지난 행사
+                      </div>
+                    )}
+                    {eventStatus === 'ended' && (
+                      <div className="absolute top-3 right-3 z-10 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        종료
                       </div>
                     )}
                     <div className="flex items-center justify-between gap-6">

@@ -7,7 +7,8 @@ import { auth } from "@/lib/firebase/config";
 import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { submitLike, getLike } from "@/lib/firebase/matching";
 import { getUser } from "@/lib/firebase/users";
-import { Profile } from "@/lib/firebase/types";
+import { getEvent } from "@/lib/firebase/events";
+import { Profile, Event } from "@/lib/firebase/types";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,8 @@ export default function RotationPage() {
   const [submitted, setSubmitted] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
   const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [isEventEnded, setIsEventEnded] = useState(false);
   
   const [selections, setSelections] = useState({
     first: "",
@@ -38,11 +41,107 @@ export default function RotationPage() {
 
   useEffect(() => {
     if (user && eventId) {
+      loadEventData();
       loadUserData();
       loadProfiles();
       checkExistingLike();
     }
   }, [user, eventId]);
+
+  // 종료 시간이 지났는지 실시간으로 확인
+  useEffect(() => {
+    if (!event) return;
+
+    const checkEventEndTime = () => {
+      const now = new Date();
+      let eventEnded = false;
+      
+      // 종료 시간 계산
+      let endTime: Date | null = null;
+      
+      // endTime 필드가 있으면 사용
+      if (event.endTime) {
+        endTime = event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+      } else if (event.schedule?.part2) {
+        // schedule.part2에서 종료 시간 추출 (예: "17:00")
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        const timeStr = event.schedule.part2.trim();
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          endTime = new Date(eventDate);
+          endTime.setHours(hours, minutes || 0, 0, 0);
+        }
+      }
+      
+      // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
+      if (endTime) {
+        eventEnded = now.getTime() >= endTime.getTime();
+      } else {
+        // 종료 시간이 없으면 날짜만 비교
+        const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+        const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+        const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
+      }
+      
+      setIsEventEnded(eventEnded);
+    };
+
+    // 즉시 확인
+    checkEventEndTime();
+
+    // 1분마다 종료 시간 확인
+    const interval = setInterval(checkEventEndTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [event]);
+
+  const loadEventData = async () => {
+    if (!eventId) return;
+    try {
+      const eventData = await getEvent(eventId);
+      setEvent(eventData);
+      
+      if (eventData) {
+        const now = new Date();
+        let eventEnded = false;
+        
+        // 종료 시간 계산
+        let endTime: Date | null = null;
+        
+        // endTime 필드가 있으면 사용
+        if (eventData.endTime) {
+          endTime = eventData.endTime instanceof Date ? eventData.endTime : new Date(eventData.endTime);
+        } else if (eventData.schedule?.part2) {
+          // schedule.part2에서 종료 시간 추출 (예: "17:00")
+          const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
+          const timeStr = eventData.schedule.part2.trim();
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          
+          if (!isNaN(hours) && !isNaN(minutes)) {
+            endTime = new Date(eventDate);
+            endTime.setHours(hours, minutes || 0, 0, 0);
+          }
+        }
+        
+        // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
+        if (endTime) {
+          eventEnded = now.getTime() >= endTime.getTime();
+        } else {
+          // 종료 시간이 없으면 날짜만 비교
+          const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
+          const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+          const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
+        }
+        
+        setIsEventEnded(eventEnded);
+      }
+    } catch (error) {
+      console.error("행사 정보 로드 실패:", error);
+    }
+  };
 
   const loadUserData = async () => {
     if (!user) return;
@@ -100,6 +199,12 @@ export default function RotationPage() {
     e.preventDefault();
     if (!user || !eventId) return;
 
+    // 행사 종료 여부 확인
+    if (!isEventEnded) {
+      alert("행사가 종료된 후에 투표할 수 있습니다.");
+      return;
+    }
+
     if (!selections.first || !selections.second || !selections.third) {
       alert("1, 2, 3순위를 모두 선택해주세요.");
       return;
@@ -144,11 +249,35 @@ export default function RotationPage() {
     );
   }
 
+  // 행사가 종료되지 않았으면 안내 메시지 표시
+  if (!isEventEnded) {
+    return (
+      <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="mb-8">
+            <div className="text-6xl mb-4 text-primary">⏰</div>
+            <h1 className="text-3xl font-bold mb-4">아직 투표 시간이 아닙니다</h1>
+            <p className="text-gray-700 mb-6">
+              행사가 종료된 후에 투표할 수 있습니다.
+            </p>
+            <button
+              onClick={() => router.push("/participant/events")}
+              className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              행사 목록으로 돌아가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">1, 2, 3순위 선택하기</h1>
+          <p className="text-gray-600 mt-2">행사가 종료되었습니다. 이성 중에서 Top 1, 2, 3을 선택해주세요.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

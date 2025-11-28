@@ -40,6 +40,7 @@ export async function getEvent(eventId: string): Promise<Event | null> {
       ...data,
       date: convertTimestampToDate(data.date),
       createdAt: convertTimestampToDate(data.createdAt),
+      endTime: data.endTime ? convertTimestampToDate(data.endTime) : undefined,
     } as Event;
   }
   return null;
@@ -56,6 +57,7 @@ export async function getAllEvents(): Promise<Event[]> {
       ...data,
       date: convertTimestampToDate(data.date),
       createdAt: convertTimestampToDate(data.createdAt),
+      endTime: data.endTime ? convertTimestampToDate(data.endTime) : undefined,
     } as Event;
   });
 }

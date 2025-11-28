@@ -45,12 +45,41 @@ export default function EventDetailPage() {
     applyFilters();
   }, [applications, filters]);
 
+  // 행사 종료 시간 계산 함수
+  const calculateEventEndTime = (event: Event): Date | null => {
+    // endTime 필드가 있으면 사용
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    
+    // schedule.part2에서 종료 시간 추출 (예: "17:00")
+    if (event.schedule?.part2) {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const timeStr = event.schedule.part2.trim();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endTime = new Date(eventDate);
+        endTime.setHours(hours, minutes || 0, 0, 0);
+        return endTime;
+      }
+    }
+    
+    return null;
+  };
+
   // 행사 상태 판단 함수
-  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' => {
+  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' | 'ended' => {
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const now = new Date();
     const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
     const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // 종료 시간 확인
+    const endTime = calculateEventEndTime(event);
+    if (endTime && now.getTime() >= endTime.getTime()) {
+      return 'ended'; // 종료 시간이 지났으면 'ended'
+    }
     
     if (eventDateOnly.getTime() < todayOnly.getTime()) {
       return 'past';
@@ -71,8 +100,8 @@ export default function EventDetailPage() {
       // 행사 상태 확인
       const eventStatus = eventData ? getEventStatus(eventData) : 'upcoming';
       
-      // 지난 행사나 오늘 진행한 행사면 투표 결과 로드
-      if (eventStatus === 'past' || eventStatus === 'active') {
+      // 지난 행사, 진행중인 행사, 또는 종료된 행사면 투표 결과 로드
+      if (eventStatus === 'past' || eventStatus === 'active' || eventStatus === 'ended') {
         try {
           const likesData = await getAllLikesForEvent(eventId);
           setLikes(likesData);
@@ -250,7 +279,7 @@ export default function EventDetailPage() {
               </p>
             </div>
           </div>
-          {getEventStatus(event) !== 'past' && (
+          {getEventStatus(event) !== 'past' && getEventStatus(event) !== 'ended' && (
             <div className="ml-4">
               <Link
                 href={`/admin/event/${eventId}/edit`}
@@ -262,8 +291,8 @@ export default function EventDetailPage() {
           )}
         </div>
 
-        {/* 투표 결과 시각화 (지난 행사나 오늘 진행한 행사) */}
-        {(getEventStatus(event) === 'past' || getEventStatus(event) === 'active') && (
+        {/* 투표 결과 시각화 (지난 행사, 진행중인 행사, 또는 종료된 행사) */}
+        {(getEventStatus(event) === 'past' || getEventStatus(event) === 'active' || getEventStatus(event) === 'ended') && (
           <div className="card-elegant p-6 mb-8">
             <h2 className="text-2xl font-bold mb-6">투표 결과</h2>
             {voteResults.length > 0 ? (
@@ -317,7 +346,7 @@ export default function EventDetailPage() {
           </div>
         )}
 
-        {/* 필터 및 지원자 목록 (예정 행사 또는 진행중인 행사) */}
+        {/* 필터 및 지원자 목록 (예정 행사 또는 진행중인 행사, 종료 전) */}
         {(getEventStatus(event) === 'upcoming' || getEventStatus(event) === 'active') && (
           <>
             {/* 필터 */}

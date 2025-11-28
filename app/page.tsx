@@ -204,7 +204,7 @@ export default function Home() {
     if (isKakaoBrowser) {
       alert(
         "카톡 브라우저에선 Google 로그인이 지원되지 않아요.\n\n" +
-        "1. 우측 상단의 '...' 메뉴를 클릭하세요\n" +
+        "1. 우측 하단의 '...' 메뉴를 클릭하세요\n" +
         "2. '다른 브라우저로 열기' 또는 '외부 브라우저로 열기'를 선택하세요\n" +
         "3. Chrome, Safari 등 기본 브라우저에서 다시 접속해주세요"
       );
@@ -395,7 +395,7 @@ export default function Home() {
             <div className="text-xs text-gray-600 space-y-1">
               <p className="font-semibold">📱 접속 방법:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>우측 상단의 <span className="font-semibold">&apos;...&apos;</span> 메뉴 클릭</li>
+                <li>우측 하단의 <span className="font-semibold">&apos;...&apos;</span> 메뉴 클릭</li>
                 <li><span className="font-semibold">&apos;다른 브라우저로 열기&apos;</span> 또는 <span className="font-semibold">&apos;외부 브라우저로 열기&apos;</span> 선택</li>
                 <li>Chrome, Safari 등 기본 브라우저에서 다시 접속</li>
               </ol>
