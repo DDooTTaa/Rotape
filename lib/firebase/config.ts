@@ -3,6 +3,11 @@ import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
+// 환경 확인
+const env = process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || "development";
+const isDevelopment = env === "development";
+const isProduction = env === "production";
+
 // 환경 변수 검증
 const requiredEnvVars = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,7 +19,7 @@ const requiredEnvVars = {
 };
 
 // 개발 환경에서만 경고 표시
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+if (typeof window !== "undefined" && isDevelopment) {
   const missingVars = Object.entries(requiredEnvVars)
     .filter(([_, value]) => !value)
     .map(([key]) => key);
@@ -27,6 +32,11 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
     console.warn(
       ".env.local 파일을 생성하고 Firebase 설정을 추가하세요."
     );
+  } else {
+    console.log(
+      `✅ Firebase 설정 완료 - 환경: ${isDevelopment ? "개발" : isProduction ? "프로덕션" : "알 수 없음"}`
+    );
+    console.log(`프로젝트 ID: ${requiredEnvVars.projectId}`);
   }
 }
 
@@ -57,9 +67,13 @@ if (typeof window !== "undefined") {
           "❌ Firebase 환경 변수가 올바르게 설정되지 않았습니다."
         );
         console.error(
-          "프로젝트 루트에 .env.local 파일을 생성하고 다음을 추가하세요:"
+          `현재 환경: ${isDevelopment ? "개발" : isProduction ? "프로덕션" : "알 수 없음"}`
+        );
+        console.error(
+          "프로젝트 루트에 .env.local (개발용) 또는 .env.production (프로덕션용) 파일을 생성하고 다음을 추가하세요:"
         );
         console.error(`
+NEXT_PUBLIC_ENV=${isDevelopment ? "development" : "production"}
 NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
