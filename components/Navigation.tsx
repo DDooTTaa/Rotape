@@ -6,6 +6,8 @@ import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import InfoModal from "@/components/InfoModal";
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +75,8 @@ export default function Navigation() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   
   // 클라이언트에서만 마운트되도록 처리
   useEffect(() => {
@@ -137,6 +141,11 @@ export default function Navigation() {
     return null;
   }
 
+  // 일반 사용자가 운영자 페이지에 접근할 때 네비게이션 숨김
+  if (pathname.startsWith("/admin") && !isAdmin && !loading) {
+    return null;
+  }
+
   const navItems = isAdmin ? adminNavItems : participantNavItems;
   const isActive = (href: string) => {
     // 정확히 일치하는 경우
@@ -152,17 +161,23 @@ export default function Navigation() {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await signOut(auth!);
       router.push("/");
+      // 리다이렉트 후에도 잠시 로딩 유지
+      setTimeout(() => setIsLoggingOut(false), 500);
     } catch (error) {
       console.error("로그아웃 실패:", error);
       alert("로그아웃에 실패했습니다.");
+      setIsLoggingOut(false);
     }
   };
 
   return (
     <>
+      {isLoggingOut && <LoadingSpinner message="로그아웃 중..." />}
+      <InfoModal isOpen={showInfoModal} onClose={() => setShowInfoModal(false)} />
       {/* 데스크톱 네비게이션 (상단) */}
       <nav className="hidden md:flex fixed top-0 left-0 right-0 bg-white border-b-2 border-primary z-50 shadow-md">
         <div className="max-w-7xl mx-auto w-full px-4">
@@ -199,12 +214,28 @@ export default function Navigation() {
         </div>
       </nav>
 
+      {/* 데스크톱 플로팅 인포 버튼 */}
+      <button
+        onClick={() => setShowInfoModal(true)}
+        className="hidden md:flex fixed bottom-6 right-6 w-14 h-14 rounded-full bg-white text-primary font-bold border-2 border-primary/40 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 items-center justify-center z-40"
+        aria-label="Rotape 소개 보기"
+      >
+        ?
+      </button>
+
       {/* 모바일 TopBar (상단) */}
       <nav className="md:hidden fixed top-0 left-0 right-0 bg-white border-b-2 border-primary z-50 shadow-md">
-        <div className="flex items-center justify-center h-14 px-4">
+        <div className="flex items-center justify-between h-14 px-4">
           <Link href={isAdmin ? "/admin" : "/participant/events"} className="flex items-center">
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">Rotape</span>
           </Link>
+          <button
+            onClick={() => setShowInfoModal(true)}
+            className="w-10 h-10 rounded-full border-2 border-primary/30 text-primary font-bold bg-white hover:bg-primary/5 transition-all duration-300 flex items-center justify-center"
+            aria-label="Rotape 소개 보기"
+          >
+            ?
+          </button>
         </div>
       </nav>
 

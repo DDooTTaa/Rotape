@@ -4,13 +4,15 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
-import { createApplication } from "@/lib/firebase/applications";
+import { createApplication, getApplication } from "@/lib/firebase/applications";
 import { uploadPhoto } from "@/lib/firebase/storage";
 import { getEvent } from "@/lib/firebase/events";
+import { getUser } from "@/lib/firebase/users";
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
-const loveLanguages = ["행동", "선물", "언어", "시간", "스킨십"];
+const loveLanguages = ["행동", "선물", "인정하는 말", "시간", "스킨십"];
 
 function ApplicationFormContent() {
   const router = useRouter();
@@ -19,20 +21,22 @@ function ApplicationFormContent() {
   const [loading, setLoading] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
   const [eventTitle, setEventTitle] = useState<string>("");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     gender: "M" as "M" | "F",
     birthYear: "",
-    height: "",
+    height: "170", // 남성 기본값
     job: "",
     intro: "",
     idealType: "",
     loveStyle: "",
     loveLanguage: [] as string[],
     photos: [] as File[],
+    phone: "",
   });
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
     const eventIdParam = searchParams.get("eventId");
@@ -41,6 +45,76 @@ function ApplicationFormContent() {
       loadEventInfo(eventIdParam);
     }
   }, [searchParams]);
+
+  // 사용자 정보와 기존 지원서 정보 불러오기
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) {
+        setIsLoadingData(false);
+        return;
+      }
+
+      try {
+        setIsLoadingData(true);
+
+        // 사용자 정보 불러오기
+        const userData = await getUser(user.uid);
+        if (userData) {
+          // 생년월일에서 연도 추출 (YYYY-MM-DD 형식 또는 YYYY 형식)
+          let birthYear = "";
+          if (userData.birthday) {
+            if (userData.birthday.includes("-")) {
+              birthYear = userData.birthday.split("-")[0];
+            } else if (userData.birthday.length === 4) {
+              birthYear = userData.birthday;
+            }
+          }
+
+          const userGender = userData.gender || "M";
+          setFormData(prev => ({
+            ...prev,
+            name: userData.name || "",
+            gender: userGender,
+            birthYear: birthYear,
+            // 남성이고 키가 비어있으면 170으로 설정
+            height: prev.height || (userGender === "M" ? "170" : ""),
+            phone: prev.phone || userData.phone || "",
+          }));
+        }
+
+        // 기존 지원서 정보 불러오기 (있다면)
+        if (eventId) {
+          const existingApplication = await getApplication(user.uid, eventId);
+          if (existingApplication) {
+            // 기존 지원서의 사진 URL을 미리보기로 설정
+            if (existingApplication.photos && existingApplication.photos.length > 0) {
+              setPhotoPreviews(existingApplication.photos);
+            }
+
+            setFormData(prev => ({
+              ...prev,
+              height: existingApplication.height?.toString() || "",
+              job: existingApplication.job || "",
+              intro: existingApplication.intro || "",
+              idealType: existingApplication.idealType || "",
+              loveStyle: existingApplication.loveStyle || "",
+              loveLanguage: existingApplication.loveLanguage || [],
+              phone: existingApplication.phone || userData?.phone || "",
+            }));
+          } else {
+            // 기존 지원서가 없으면, 다른 행사의 최근 지원서 정보를 참고
+            // (선택사항: 사용자가 원하면 다른 행사의 지원서 정보도 불러올 수 있음)
+          }
+        }
+      } catch (error) {
+        console.error("사용자 정보 로드 실패:", error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, eventId]);
 
   const loadEventInfo = async (id: string) => {
     try {
@@ -65,7 +139,7 @@ function ApplicationFormContent() {
       const newPhotos = [...formData.photos];
       newPhotos[index] = file;
       setFormData({ ...formData, photos: newPhotos });
-      
+
       // 미리보기 생성
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -99,13 +173,18 @@ function ApplicationFormContent() {
       return;
     }
 
-    if (formData.photos.length < 3) {
-      alert("사진 3장을 모두 업로드해주세요.");
+    // 사진 검증: 새로 업로드한 사진 + 기존 사진 URL 합쳐서 최소 2장 이상인지 확인
+    const uploadedPhotos = formData.photos.filter(photo => photo !== undefined && photo !== null);
+    const existingPhotoUrls = photoPreviews.filter(url => url && !url.startsWith('data:') && url.startsWith('http'));
+    const totalPhotos = uploadedPhotos.length + existingPhotoUrls.length;
+
+    if (totalPhotos < 2) {
+      alert("사진을 최소 2장 이상 업로드해주세요.");
       return;
     }
 
     if (formData.loveLanguage.length !== 5) {
-      alert("사랑의 언어를 5개 모두 선택해주세요.");
+      alert("연애에서 뭐가 중요한지 5개를 모두 선택해주세요..!");
       return;
     }
 
@@ -114,21 +193,32 @@ function ApplicationFormContent() {
 
     try {
       console.log("지원서 제출 시작...");
-      
-      // 사진 업로드
-      console.log("사진 업로드 시작...");
+
+      // 사진 처리: 새로 업로드한 사진은 업로드하고, 기존 URL은 그대로 사용
+      console.log("사진 처리 시작...");
       const photoUrls: string[] = [];
       try {
-        for (let i = 0; i < formData.photos.length; i++) {
-          console.log(`사진 ${i + 1} 업로드 중...`);
-          const url = await uploadPhoto(user.uid, formData.photos[i], i);
-          photoUrls.push(url);
-          console.log(`사진 ${i + 1} 업로드 완료:`, url);
+        // 각 슬롯(0, 1, 2)에 대해 처리
+        for (let i = 0; i < 3; i++) {
+          const newPhoto = formData.photos[i];
+          const existingUrl = photoPreviews[i];
+
+          if (newPhoto && newPhoto instanceof File) {
+            // 새로 업로드한 사진이 있으면 업로드
+            console.log(`사진 ${i + 1} 업로드 중...`);
+            const url = await uploadPhoto(user.uid, newPhoto, i);
+            photoUrls.push(url);
+            console.log(`사진 ${i + 1} 업로드 완료:`, url);
+          } else if (existingUrl && existingUrl.startsWith('http')) {
+            // 기존 URL이 있으면 그대로 사용 (새로 업로드한 사진이 없는 경우)
+            photoUrls.push(existingUrl);
+            console.log(`사진 ${i + 1} 기존 URL 사용:`, existingUrl);
+          }
         }
-        console.log("모든 사진 업로드 완료");
+        console.log("모든 사진 처리 완료:", photoUrls.length, "장");
       } catch (photoError: any) {
-        console.error("사진 업로드 실패:", photoError);
-        throw new Error(`사진 업로드 실패: ${photoError?.message || photoError}`);
+        console.error("사진 처리 실패:", photoError);
+        throw new Error(`사진 처리 실패: ${photoError?.message || photoError}`);
       }
 
       // 사용자 정보 업데이트
@@ -140,6 +230,7 @@ function ApplicationFormContent() {
           gender: formData.gender,
           birthday: formData.birthYear,
           age: calculateAge(formData.birthYear),
+          phone: formData.phone,
         });
         console.log("사용자 정보 업데이트 완료");
       } catch (userError: any) {
@@ -153,6 +244,7 @@ function ApplicationFormContent() {
         await createApplication(
           user.uid,
           {
+            age: calculateAge(formData.birthYear),
             height: parseInt(formData.height),
             job: formData.job,
             intro: formData.intro,
@@ -160,6 +252,7 @@ function ApplicationFormContent() {
             loveStyle: formData.loveStyle,
             loveLanguage: formData.loveLanguage,
             photos: photoUrls,
+            phone: formData.phone,
           },
           eventId || undefined
         );
@@ -176,9 +269,9 @@ function ApplicationFormContent() {
       console.error("에러 코드:", error?.code);
       console.error("에러 메시지:", error?.message);
       console.error("전체 에러:", error);
-      
+
       let errorMessage = "지원서 제출에 실패했습니다.";
-      
+
       if (error?.message?.includes("사진 업로드 실패")) {
         errorMessage = `사진 업로드에 실패했습니다.\n${error.message}`;
       } else if (error?.message?.includes("사용자 정보 업데이트 실패")) {
@@ -192,7 +285,7 @@ function ApplicationFormContent() {
       } else if (error?.message) {
         errorMessage = `오류: ${error.message}\n브라우저 콘솔(F12)을 확인하세요.`;
       }
-      
+
       alert(errorMessage);
       setLoading(false);
     }
@@ -206,8 +299,18 @@ function ApplicationFormContent() {
     );
   }
 
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-primary">정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">지원서 작성</h1>
@@ -225,34 +328,47 @@ function ApplicationFormContent() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="예: 홍길동"
               className="input-elegant"
             />
           </div>
 
           {/* 성별 */}
           <div>
-            <label className="block mb-2 font-semibold">성별</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="M"
-                  checked={formData.gender === "M"}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value as "M" | "F" })}
-                  className="mr-2"
-                />
-                남성
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="F"
-                  checked={formData.gender === "F"}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value as "M" | "F" })}
-                  className="mr-2"
-                />
-                여성
-              </label>
+            <label className="block mb-3 font-semibold">성별</label>
+            <div className="flex gap-3">
+              {[
+                { value: "M" as const, label: "남성" },
+                { value: "F" as const, label: "여성" },
+              ].map((option) => {
+                const isSelected = formData.gender === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      const newGender = option.value;
+                      // 남성으로 변경 시 키가 비어있으면 170으로 설정
+                      if (newGender === "M" && !formData.height) {
+                        setFormData({ ...formData, gender: newGender, height: "170" });
+                      } else {
+                        setFormData({ ...formData, gender: newGender });
+                      }
+                    }}
+                    className={`
+                      flex-1 px-5 py-3 rounded-full font-semibold text-sm border-2
+                      transition-colors
+                      ${isSelected
+                        ? 'bg-gradient-to-r from-primary to-[#0d4a1a] text-white shadow-lg border-primary'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5'
+                      }
+                      cursor-pointer
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -260,13 +376,20 @@ function ApplicationFormContent() {
           <div>
             <label className="block mb-2 font-semibold">생년</label>
             <input
-              type="number"
+              type="text"
               required
-              min="1984"
-              max="2004"
               value={formData.birthYear}
-              onChange={(e) => setFormData({ ...formData, birthYear: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 숫자만 입력 허용, 최대 4자리
+                if (value === "" || (/^\d+$/.test(value) && value.length <= 4)) {
+                  setFormData({ ...formData, birthYear: value });
+                }
+              }}
+              placeholder="예: 1995"
               className="input-elegant"
+              maxLength={4}
+              inputMode="numeric"
             />
             {formData.birthYear && (
               <p className="text-sm mt-1 text-gray-600">나이: {calculateAge(formData.birthYear)}세</p>
@@ -283,6 +406,7 @@ function ApplicationFormContent() {
               max="220"
               value={formData.height}
               onChange={(e) => setFormData({ ...formData, height: e.target.value })}
+              placeholder="예: 175"
               className="input-elegant"
             />
           </div>
@@ -295,13 +419,34 @@ function ApplicationFormContent() {
               required
               value={formData.job}
               onChange={(e) => setFormData({ ...formData, job: e.target.value })}
+              placeholder="예: 디자이너, 의사, 프로그래머 등"
               className="input-elegant"
+            />
+          </div>
+
+          {/* 전화번호 */}
+          <div>
+            <label className="block mb-2 font-semibold">전화번호</label>
+            <input
+              type="tel"
+              required
+              value={formData.phone}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 숫자와 하이픈만 허용
+                if (value === "" || /^[0-9-]+$/.test(value)) {
+                  setFormData({ ...formData, phone: value });
+                }
+              }}
+              placeholder="예: 010-1234-5678"
+              className="input-elegant"
+              maxLength={13}
             />
           </div>
 
           {/* 사진 업로드 */}
           <div>
-            <label className="block mb-2 font-semibold">사진 업로드 (3장 필수)</label>
+            <label className="block mb-2 font-semibold">사진 업로드 (2장 이상)</label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
                 <div key={index} className="border-2 border-dashed border-primary rounded-xl bg-gray-50 relative overflow-hidden hover:border-primary/60 transition-all duration-300">
@@ -314,10 +459,12 @@ function ApplicationFormContent() {
                   />
                   {photoPreviews[index] ? (
                     <div className="relative w-full aspect-square">
-                      <img
+                      <Image
                         src={photoPreviews[index]}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                       <label
                         htmlFor={`photo-${index}`}
@@ -341,11 +488,12 @@ function ApplicationFormContent() {
 
           {/* 나를 한 줄로 소개 */}
           <div>
-            <label className="block mb-2 font-semibold">나를 한 줄로 소개</label>
+            <label className="block mb-2 font-semibold">나는 어떤 사람인지 한 줄로 소개해주세요.</label>
             <textarea
               required
               value={formData.intro}
               onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
+              placeholder="예: 밝고 긍정적인 에너지로 함께하는 시간을 즐거움으로 만들어요"
               className="input-elegant"
               rows={2}
             />
@@ -353,11 +501,12 @@ function ApplicationFormContent() {
 
           {/* 이상형 한 줄 */}
           <div>
-            <label className="block mb-2 font-semibold">이상형 한 줄</label>
+            <label className="block mb-2 font-semibold">어떤 사람을 만나고 싶은지 한 줄로 알려주세요.</label>
             <textarea
               required
               value={formData.idealType}
               onChange={(e) => setFormData({ ...formData, idealType: e.target.value })}
+              placeholder="예: 서로를 존중하고 이해할 수 있는 사람"
               className="input-elegant"
               rows={2}
             />
@@ -365,11 +514,12 @@ function ApplicationFormContent() {
 
           {/* 어떤 연애를 하고 싶은가요 */}
           <div>
-            <label className="block mb-2 font-semibold">어떤 연애를 하고 싶은가요?</label>
+            <label className="block mb-2 font-semibold">어떤 연애가 하고 싶은가요?</label>
             <textarea
               required
               value={formData.loveStyle}
               onChange={(e) => setFormData({ ...formData, loveStyle: e.target.value })}
+              placeholder="예: 함께 성장하고 서로를 응원하는 연애"
               className="input-elegant"
               rows={2}
             />
@@ -377,28 +527,51 @@ function ApplicationFormContent() {
 
           {/* 사랑의 언어 */}
           <div>
-            <label className="block mb-2 font-semibold">사랑의 언어 1~5 순위 선택</label>
-            <div className="space-y-2">
-              {loveLanguages.map((lang) => (
-                <label key={lang} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.loveLanguage.includes(lang)}
-                    onChange={() => handleLoveLanguageChange(lang)}
-                    className="mr-2"
-                  />
-                  {lang}
-                  {formData.loveLanguage.includes(lang) && (
-                    <span className="ml-2 text-primary font-semibold">
-                      ({formData.loveLanguage.indexOf(lang) + 1}순위)
-                    </span>
-                  )}
-                </label>
-              ))}
+            <label className="block mb-3 font-semibold">연애에서 뭐가 제일 중요한가요?</label>
+            <div className="flex flex-wrap gap-3">
+              {loveLanguages.map((lang) => {
+                const isSelected = formData.loveLanguage.includes(lang);
+                const rank = isSelected ? formData.loveLanguage.indexOf(lang) + 1 : null;
+                const isDisabled = !isSelected && formData.loveLanguage.length >= 5;
+
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => handleLoveLanguageChange(lang)}
+                    disabled={isDisabled}
+                    className={`
+                      px-5 py-3 rounded-full font-semibold text-sm border-2
+                      transition-colors
+                      ${isSelected
+                        ? 'bg-gradient-to-r from-primary to-[#0d4a1a] text-white shadow-lg border-primary'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-primary hover:bg-primary/5'
+                      }
+                      ${isDisabled
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'cursor-pointer'
+                      }
+                    `}
+                  >
+                    {lang}
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-sm mt-2 text-gray-600">
-              선택된 순서대로 순위가 결정됩니다. (5개 모두 선택 필요)
-            </p>
+            <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex flex-wrap gap-2">
+                {formData.loveLanguage.length == 0 && (
+                  <span className="text-xs bg-white px-2 py-1 rounded-full border border-primary/30">
+                    선택한 순서대로 순위가 결정됩니다. (5개 모두 선택해주세요)
+                  </span>
+                )}
+                {formData.loveLanguage.map((lang, index) => (
+                  <span key={lang} className="text-xs bg-white px-2 py-1 rounded-full border border-primary/30">
+                    {index + 1}순위: {lang}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <button

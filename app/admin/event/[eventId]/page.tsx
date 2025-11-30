@@ -5,8 +5,11 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getEvent } from "@/lib/firebase/events";
 import { getApplicationsByEventId, updateApplicationStatus } from "@/lib/firebase/applications";
+import { getProfile } from "@/lib/firebase/profiles";
 import { getUser } from "@/lib/firebase/users";
-import { Event, Application, User } from "@/lib/firebase/types";
+import { getAllLikesForEvent } from "@/lib/firebase/matching";
+import { Event, Application, User, Profile, Like } from "@/lib/firebase/types";
+import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -19,15 +22,18 @@ export default function EventDetailPage() {
   const eventId = params?.eventId as string;
   
   const [event, setEvent] = useState<Event | null>(null);
-  const [applications, setApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
-  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User; docId?: string })[]>([]);
+  const [applications, setApplications] = useState<(Application & { user?: User; docId?: string; profile?: Profile })[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<(Application & { user?: User; docId?: string; profile?: Profile })[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
     status: "all" as "all" | "pending" | "approved" | "rejected",
     gender: "all" as "all" | "M" | "F",
   });
-  const [selectedApp, setSelectedApp] = useState<(Application & { user?: User }) | null>(null);
+  const [selectedApp, setSelectedApp] = useState<(Application & { user?: User; profile?: Profile }) | null>(null);
+  const [likes, setLikes] = useState<Like[]>([]);
+  const [voteStats, setVoteStats] = useState<Record<string, { first: number; second: number; third: number; total: number }>>({});
+  const [voteResults, setVoteResults] = useState<Array<{ uid: string; stats: { first: number; second: number; third: number; total: number }; userData: User | null; profileData: Profile | null }>>([]);
 
   useEffect(() => {
     if (user && eventId) {
@@ -39,6 +45,51 @@ export default function EventDetailPage() {
     applyFilters();
   }, [applications, filters]);
 
+  // 행사 종료 시간 계산 함수
+  const calculateEventEndTime = (event: Event): Date | null => {
+    // endTime 필드가 있으면 사용
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    
+    // schedule.part2에서 종료 시간 추출 (예: "17:00")
+    if (event.schedule?.part2) {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const timeStr = event.schedule.part2.trim();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endTime = new Date(eventDate);
+        endTime.setHours(hours, minutes || 0, 0, 0);
+        return endTime;
+      }
+    }
+    
+    return null;
+  };
+
+  // 행사 상태 판단 함수
+  const getEventStatus = (event: Event): 'past' | 'active' | 'upcoming' | 'ended' => {
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const now = new Date();
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // 종료 시간 확인
+    const endTime = calculateEventEndTime(event);
+    if (endTime && now.getTime() >= endTime.getTime()) {
+      return 'ended'; // 종료 시간이 지났으면 'ended'
+    }
+    
+    if (eventDateOnly.getTime() < todayOnly.getTime()) {
+      return 'past';
+    } else if (eventDateOnly.getTime() === todayOnly.getTime()) {
+      return 'active';
+    } else {
+      return 'upcoming';
+    }
+  };
+
   const loadData = async () => {
     if (!eventId) return;
     try {
@@ -46,16 +97,76 @@ export default function EventDetailPage() {
       const eventData = await getEvent(eventId);
       setEvent(eventData);
 
+      // 행사 상태 확인
+      const eventStatus = eventData ? getEventStatus(eventData) : 'upcoming';
+      
+      // 지난 행사, 진행중인 행사, 또는 종료된 행사면 투표 결과 로드
+      if (eventStatus === 'past' || eventStatus === 'active' || eventStatus === 'ended') {
+        try {
+          const likesData = await getAllLikesForEvent(eventId);
+          setLikes(likesData);
+          
+          // 투표 통계 계산
+          const stats: Record<string, { first: number; second: number; third: number; total: number }> = {};
+          likesData.forEach(like => {
+            // 1순위
+            if (!stats[like.first]) {
+              stats[like.first] = { first: 0, second: 0, third: 0, total: 0 };
+            }
+            stats[like.first].first++;
+            stats[like.first].total += 3;
+            
+            // 2순위
+            if (!stats[like.second]) {
+              stats[like.second] = { first: 0, second: 0, third: 0, total: 0 };
+            }
+            stats[like.second].second++;
+            stats[like.second].total += 2;
+            
+            // 3순위
+            if (!stats[like.third]) {
+              stats[like.third] = { first: 0, second: 0, third: 0, total: 0 };
+            }
+            stats[like.third].third++;
+            stats[like.third].total += 1;
+          });
+          setVoteStats(stats);
+          
+          // 투표 결과 상세 정보 로드
+          const results = await Promise.all(
+            Object.entries(stats)
+              .sort(([, a], [, b]) => b.total - a.total)
+              .slice(0, 20)
+              .map(async ([uid, stat]) => {
+                const userData = await getUser(uid).catch(() => null);
+                const profileData = await getProfile(uid).catch(() => null);
+                return { uid, stats: stat, userData, profileData };
+              })
+          );
+          setVoteResults(results);
+        } catch (error) {
+          console.error("투표 결과 로드 실패:", error);
+        }
+      }
+
       // 행사별 지원서 로드
       const apps = await getApplicationsByEventId(eventId);
       const appsWithUsers = await Promise.all(
         apps.map(async (app) => {
           try {
             const userData = await getUser(app.uid);
-            return { ...app, user: userData || undefined };
+            // 프로필 정보도 함께 로드
+            let profileData: Profile | undefined;
+            try {
+              profileData = await getProfile(app.uid) || undefined;
+            } catch (profileError) {
+              // 프로필이 없을 수 있으므로 에러는 무시
+              console.log(`프로필 없음 (${app.uid})`);
+            }
+            return { ...app, user: userData || undefined, profile: profileData };
           } catch (userError) {
             console.error(`사용자 ${app.uid} 정보 로드 실패:`, userError);
-            return { ...app, user: undefined };
+            return { ...app, user: undefined, profile: undefined };
           }
         })
       );
@@ -140,10 +251,10 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="min-h-screen text-foreground pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-foreground pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <div>
+          <div className="flex-1">
             <Link
               href="/admin"
               className="text-primary hover:underline mb-2 inline-block"
@@ -168,42 +279,110 @@ export default function EventDetailPage() {
               </p>
             </div>
           </div>
+          {getEventStatus(event) !== 'past' && getEventStatus(event) !== 'ended' && (
+            <div className="ml-4">
+              <Link
+                href={`/admin/event/${eventId}/edit`}
+                className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 inline-block"
+              >
+                행사 수정하기
+              </Link>
+            </div>
+          )}
         </div>
 
-        {/* 필터 */}
-        <div className="card-elegant p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="이름/직업 검색"
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="input-elegant"
-            />
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
-              className="input-elegant"
-            >
-              <option value="all">전체 상태</option>
-              <option value="pending">심사 중</option>
-              <option value="approved">승인됨</option>
-              <option value="rejected">거절됨</option>
-            </select>
-            <select
-              value={filters.gender}
-              onChange={(e) => setFilters({ ...filters, gender: e.target.value as any })}
-              className="input-elegant"
-            >
-              <option value="all">전체 성별</option>
-              <option value="M">남성</option>
-              <option value="F">여성</option>
-            </select>
+        {/* 투표 결과 시각화 (지난 행사, 진행중인 행사, 또는 종료된 행사) */}
+        {(getEventStatus(event) === 'past' || getEventStatus(event) === 'active' || getEventStatus(event) === 'ended') && (
+          <div className="card-elegant p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-6">투표 결과</h2>
+            {voteResults.length > 0 ? (
+              <div className="space-y-4">
+                {voteResults.map(({ uid, stats, userData, profileData }) => (
+                <div key={uid} className="bg-white/70 border-2 border-primary/30 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {profileData?.photos && profileData.photos.length > 0 && (
+                        <div className="relative w-16 h-16 rounded-full overflow-hidden">
+                          <Image
+                            src={profileData.photos[0]}
+                            alt={userData?.name || "이름 없음"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <p className="font-semibold text-lg">{userData?.name || "이름 없음"}</p>
+                        <p className="text-sm text-gray-600">{profileData?.job || ""}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">{stats.total}점</p>
+                      <p className="text-xs text-gray-500">총점</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="bg-yellow-100 rounded-lg p-2 text-center">
+                      <p className="font-semibold text-yellow-800">1순위</p>
+                      <p className="text-lg font-bold text-yellow-900">{stats.first}</p>
+                    </div>
+                    <div className="bg-blue-100 rounded-lg p-2 text-center">
+                      <p className="font-semibold text-blue-800">2순위</p>
+                      <p className="text-lg font-bold text-blue-900">{stats.second}</p>
+                    </div>
+                    <div className="bg-green-100 rounded-lg p-2 text-center">
+                      <p className="font-semibold text-green-800">3순위</p>
+                      <p className="text-lg font-bold text-green-900">{stats.third}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-600">
+                <p className="text-lg">아직 투표 결과가 없습니다.</p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
-        {/* 지원자 목록 */}
-        <div className="mb-6">
+        {/* 필터 및 지원자 목록 (모든 행사에서 표시, 종료된 행사 포함) */}
+        {(getEventStatus(event) === 'upcoming' || getEventStatus(event) === 'active' || getEventStatus(event) === 'ended') && (
+          <>
+            {/* 필터 */}
+            <div className="card-elegant p-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="이름/직업 검색"
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="input-elegant"
+                />
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
+                  className="input-elegant"
+                >
+                  <option value="all">전체 상태</option>
+                  <option value="pending">심사 중</option>
+                  <option value="approved">승인됨</option>
+                  <option value="rejected">거절됨</option>
+                </select>
+                <select
+                  value={filters.gender}
+                  onChange={(e) => setFilters({ ...filters, gender: e.target.value as any })}
+                  className="input-elegant"
+                >
+                  <option value="all">전체 성별</option>
+                  <option value="M">남성</option>
+                  <option value="F">여성</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 지원자 목록 */}
+            <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">지원자 리스트 ({filteredApplications.length}명)</h2>
           <div className="space-y-4">
             {filteredApplications.length === 0 ? (
@@ -244,33 +423,37 @@ export default function EventDetailPage() {
                           {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprove(app);
-                          }}
-                          className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                        >
-                          승인
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReject(app);
-                          }}
-                          className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                        >
-                          거절
-                        </button>
-                      </div>
+                      {getEventStatus(event) !== 'ended' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApprove(app);
+                            }}
+                            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReject(app);
+                            }}
+                            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                          >
+                            거절
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })
             )}
           </div>
-        </div>
+            </div>
+          </>
+        )}
 
         {/* 상세 정보 모달 */}
         {selectedApp && (
@@ -317,8 +500,14 @@ export default function EventDetailPage() {
                   <p>{selectedApp.loveStyle}</p>
                 </div>
                 <div>
-                  <p className="font-semibold">사랑의 언어</p>
-                  <p>{selectedApp.loveLanguage.join(", ")}</p>
+                  <p className="font-semibold">더 중요한 가치</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedApp.loveLanguage.map((lang, idx) => (
+                      <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
+                        {idx + 1}순위: {lang}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="font-semibold">사진</p>
@@ -361,27 +550,31 @@ export default function EventDetailPage() {
                 </div>
               </div>
               <div className="flex gap-4 mt-6">
-                <button
-                  onClick={() => {
-                    handleApprove(selectedApp);
-                    setSelectedApp(null);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  승인
-                </button>
-                <button
-                  onClick={() => {
-                    handleReject(selectedApp);
-                    setSelectedApp(null);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  거절
-                </button>
+                {getEventStatus(event) !== 'ended' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handleApprove(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      승인
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReject(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      거절
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setSelectedApp(null)}
-                  className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                  className={`${getEventStatus(event) !== 'ended' ? 'flex-1' : 'w-full'} bg-gradient-to-r from-gray-600 to-gray-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300`}
                 >
                   닫기
                 </button>

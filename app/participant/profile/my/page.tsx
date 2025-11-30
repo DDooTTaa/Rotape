@@ -108,7 +108,7 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="min-h-screen text-gray-800 pt-4 pb-8 md:py-8 px-4">
+    <div className="min-h-screen text-gray-800 pt-4 pb-32 md:py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">마이페이지</h1>
@@ -127,12 +127,12 @@ export default function MyProfilePage() {
               <p className="text-gray-700">{userData.gender === "M" ? "남성" : "여성"}</p>
             </div>
             <div>
-              <p className="font-semibold mb-1 text-gray-800">생년월일</p>
-              <p className="text-gray-700">{userData.birthday || "미입력"}</p>
+              <p className="font-semibold mb-1 text-gray-800">나이</p>
+              <p className="text-gray-700">{userData.age > 0 ? `${userData.age + 1}세` : "미입력"}</p>
             </div>
             <div>
-              <p className="font-semibold mb-1 text-gray-800">나이</p>
-              <p className="text-gray-700">{userData.age > 0 ? `${userData.age}세` : "미입력"}</p>
+              <p className="font-semibold mb-1 text-gray-800">전화번호</p>
+              <p className="text-gray-700">{userData.phone || "미입력"}</p>
             </div>
           </div>
         </div>
@@ -151,12 +151,19 @@ export default function MyProfilePage() {
                   className="bg-white border-2 border-primary/30 rounded-xl p-4 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-300 group card-hover"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-lg group-hover:text-primary transition">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 
+                          className="font-bold text-lg group-hover:text-primary transition flex-1 min-w-0"
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
                           {app.event ? app.event.title : "일반 지원서"}
                         </h3>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(app.status)}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0 whitespace-nowrap ${getStatusColor(app.status)}`}>
                           {getStatusText(app.status)}
                         </span>
                       </div>
@@ -173,9 +180,11 @@ export default function MyProfilePage() {
                       </p>
                       <p className="text-sm text-gray-700 line-clamp-2">{app.intro}</p>
                       <p className="text-xs text-gray-500 mt-2">
-                        작성일: {app.createdAt instanceof Date 
-                          ? app.createdAt.toLocaleDateString("ko-KR")
-                          : new Date(app.createdAt).toLocaleDateString("ko-KR")}
+                        작성일: {app.createdAt ? (
+                          app.createdAt instanceof Date 
+                            ? app.createdAt.toLocaleDateString("ko-KR")
+                            : new Date(app.createdAt).toLocaleDateString("ko-KR")
+                        ) : "날짜 정보 없음"}
                       </p>
                     </div>
                     {app.photos && app.photos.length > 0 && (
@@ -263,7 +272,7 @@ export default function MyProfilePage() {
                 </div>
 
                 <div>
-                  <p className="font-semibold mb-1">사랑의 언어 순위</p>
+                  <p className="font-semibold mb-1">더 중요한 가치</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedApp.loveLanguage.map((lang, idx) => (
                       <span key={idx} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
@@ -294,9 +303,11 @@ export default function MyProfilePage() {
                 <div>
                   <p className="font-semibold mb-1">작성일</p>
                   <p className="text-gray-700">
-                    {selectedApp.createdAt instanceof Date 
-                      ? selectedApp.createdAt.toLocaleString("ko-KR")
-                      : new Date(selectedApp.createdAt).toLocaleString("ko-KR")}
+                    {selectedApp.createdAt ? (
+                      selectedApp.createdAt instanceof Date 
+                        ? selectedApp.createdAt.toLocaleString("ko-KR")
+                        : new Date(selectedApp.createdAt).toLocaleString("ko-KR")
+                    ) : "날짜 정보 없음"}
                   </p>
                 </div>
               </div>

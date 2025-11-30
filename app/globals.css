@@ -1,4 +1,5 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -35,6 +36,14 @@ body {
   overflow-x: hidden;
 }
 
+/* 데스크톱에서 메인 페이지 스크롤 제거 */
+@media (min-width: 768px) {
+  body:has(.main-page) {
+    overflow: hidden;
+    height: 100vh;
+  }
+}
+
 /* 고급스러운 카드 스타일 */
 @layer components {
   .card-elegant {
@@ -52,5 +61,116 @@ body {
   .input-elegant {
     @apply w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300;
   }
+}
+
+/* 눈송이 애니메이션 */
+@keyframes snowfall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 모바일용 눈송이 애니메이션 (절반만 내림) */
+@keyframes snowfall-mobile {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(50vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 모바일에서만 절반 애니메이션 적용 */
+@media (max-width: 768px) {
+  .snowflake-mobile {
+    animation-name: snowfall-mobile !important;
+  }
+}
+
+/* 진행중인 행사 반짝이는 그라데이션 border */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 제목 그라데이션 애니메이션 */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.title-glow {
+  background: linear-gradient(
+    90deg,
+    #0B3D15 0%,
+    #0d4a1a 25%,
+    #C5A028 50%,
+    #0d4a1a 75%,
+    #0B3D15 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 3s ease infinite, fade-in-up 0.8s ease-out;
+  text-shadow: 0 0 30px rgba(11, 61, 21, 0.3);
+  filter: drop-shadow(0 2px 4px rgba(11, 61, 21, 0.2));
+}
+
+.event-active {
+  position: relative;
+  border-radius: 1rem;
+  background: white;
+  border: 2px solid transparent;
+}
+
+.event-active::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1rem;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    #0B3D15 0%,
+    #0d4a1a 25%,
+    #C5A028 50%,
+    #0d4a1a 75%,
+    #0B3D15 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
 }
 

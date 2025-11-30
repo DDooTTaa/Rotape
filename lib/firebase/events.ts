@@ -40,6 +40,7 @@ export async function getEvent(eventId: string): Promise<Event | null> {
       ...data,
       date: convertTimestampToDate(data.date),
       createdAt: convertTimestampToDate(data.createdAt),
+      endTime: data.endTime ? convertTimestampToDate(data.endTime) : undefined,
     } as Event;
   }
   return null;
@@ -56,7 +57,14 @@ export async function getAllEvents(): Promise<Event[]> {
       ...data,
       date: convertTimestampToDate(data.date),
       createdAt: convertTimestampToDate(data.createdAt),
+      endTime: data.endTime ? convertTimestampToDate(data.endTime) : undefined,
     } as Event;
   });
+}
+
+export async function updateEvent(eventId: string, eventData: Partial<Omit<Event, "eventId" | "createdAt">>): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  const eventRef = doc(db, eventsCollection, eventId);
+  await setDoc(eventRef, eventData, { merge: true });
 }
 

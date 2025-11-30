@@ -16,6 +16,7 @@ export interface User {
 export interface Application {
   uid: string;
   eventId?: string; // 행사 ID (선택사항, 행사별 지원 시 사용)
+  age?: number; // 나이 (선택사항)
   height: number;
   job: string;
   intro: string;
@@ -23,6 +24,7 @@ export interface Application {
   loveStyle: string;
   loveLanguage: string[];
   photos: string[];
+  phone?: string; // 전화번호
   status: ApplicationStatus;
   createdAt: Date;
 }
@@ -51,6 +53,7 @@ export interface Event {
   };
   maxParticipants: number;
   createdAt: Date;
+  endTime?: Date; // 행사 종료 시간 (선택사항)
 }
 
 export interface Round {
