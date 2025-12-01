@@ -17,7 +17,7 @@ interface EventWithParticipants extends Event {
   application: Application;
   participants: Array<{
     user: UserData;
-    application: Application;
+    application: Application & { docId: string };
   }>;
 }
 
@@ -124,7 +124,7 @@ export default function MyEventsPage() {
                 
                 // 이성만 필터링
                 const otherGenderParticipants = participants
-                  .filter((p): p is { user: UserData; application: Application } => 
+                  .filter((p): p is { user: UserData; application: Application & { docId: string } } => 
                     p !== null && 
                     p.user?.gender && 
                     p.user.gender !== currentUserData?.gender
