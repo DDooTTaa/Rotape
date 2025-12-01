@@ -6,6 +6,7 @@ import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
+import Image from "next/image";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InfoModal from "@/components/InfoModal";
 
@@ -201,7 +202,14 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto w-full px-4">
           <div className="flex items-center justify-between h-16">
             <Link href={isAdmin ? "/admin" : "/participant/events"} className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-primary">Rotape</span>
+              <Image
+                src="/logo.png"
+                alt="Rotape"
+                width={120}
+                height={48}
+                priority
+                className="h-8 w-auto"
+              />
             </Link>
             <div className="flex items-center gap-1">
               {navItems.map((item) => (

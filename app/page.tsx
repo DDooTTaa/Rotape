@@ -1,13 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/firebase/users";
 import Link from "next/link";
+import Image from "next/image";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InfoModal from "@/components/InfoModal";
+
+declare global {
+  interface Window {
+    Kakao: any;
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -137,6 +144,105 @@ export default function Home() {
   const [isKakaoBrowser, setIsKakaoBrowser] = useState(false);
   const [userAgentString, setUserAgentString] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [kakaoReady, setKakaoReady] = useState(false);
+
+  // 카카오톡 SDK 초기화
+  useEffect(() => {
+    const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+    
+    if (!kakaoAppKey) {
+      console.warn("카카오톡 앱 키가 설정되지 않았습니다.");
+      setKakaoReady(false);
+      return;
+    }
+
+    const initKakao = () => {
+      if (typeof window !== "undefined" && window.Kakao && typeof window.Kakao.init === 'function') {
+        try {
+          if (!window.Kakao.isInitialized()) {
+            window.Kakao.init(kakaoAppKey);
+            console.log("카카오톡 SDK 초기화 완료");
+          } else {
+            console.log("카카오톡 SDK 이미 초기화됨");
+          }
+          
+          // 초기화 확인
+          if (window.Kakao.isInitialized()) {
+            console.log("카카오톡 SDK 초기화 확인:", window.Kakao.isInitialized());
+            setKakaoReady(true);
+          } else {
+            console.error("카카오톡 SDK 초기화 실패");
+            setKakaoReady(false);
+          }
+        } catch (error) {
+          console.error("카카오톡 SDK 초기화 오류:", error);
+          setKakaoReady(false);
+        }
+      } else {
+        console.warn("카카오톡 SDK가 아직 로드되지 않았습니다.");
+        setKakaoReady(false);
+      }
+    };
+
+    // 클라이언트 사이드에서만 실행
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // 이미 SDK가 로드되어 있으면 바로 초기화
+    if (window.Kakao && typeof window.Kakao.init === 'function') {
+      initKakao();
+    } else {
+      // 스크립트가 이미 추가되어 있는지 확인
+      const existingScript = document.querySelector('script[src*="kakao_js_sdk"]');
+      if (existingScript) {
+        // 스크립트가 있으면 로드 완료를 기다림
+        const checkLoad = setInterval(() => {
+          if (window.Kakao && typeof window.Kakao.init === 'function') {
+            clearInterval(checkLoad);
+            initKakao();
+          }
+        }, 100);
+        
+        // 최대 5초 대기
+        setTimeout(() => {
+          clearInterval(checkLoad);
+          if (!window.Kakao) {
+            console.error("카카오톡 SDK 로드 타임아웃");
+            setKakaoReady(false);
+          }
+        }, 5000);
+      } else {
+        // SDK 스크립트 로드
+        const script = document.createElement("script");
+        script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js";
+        script.crossOrigin = "anonymous";
+        script.async = true;
+        script.onload = () => {
+          console.log("카카오톡 SDK 스크립트 로드 완료");
+          // SDK가 완전히 로드될 때까지 대기
+          let checkCount = 0;
+          const checkSDK = setInterval(() => {
+            checkCount++;
+            if (window.Kakao && typeof window.Kakao.init === 'function') {
+              clearInterval(checkSDK);
+              initKakao();
+            } else if (checkCount > 20) {
+              // 2초 후에도 없으면 포기
+              clearInterval(checkSDK);
+              console.error("카카오톡 SDK 초기화 함수를 찾을 수 없습니다.");
+              setKakaoReady(false);
+            }
+          }, 100);
+        };
+        script.onerror = () => {
+          console.error("카카오톡 SDK 스크립트 로드 실패");
+          setKakaoReady(false);
+        };
+        document.head.appendChild(script);
+      }
+    }
+  }, []);
 
   // 카카오톡 인앱 브라우저 감지
   useEffect(() => {
@@ -281,6 +387,193 @@ export default function Home() {
   };
 
 
+  const handleKakaoLogin = async () => {
+    if (!auth) {
+      alert("인증 서비스를 사용할 수 없습니다.");
+      return;
+    }
+
+    console.log("카카오톡 로그인 시도 - 상태 확인:", {
+      kakaoReady,
+      hasKakao: !!window.Kakao,
+      isInitialized: !!(window.Kakao && window.Kakao.isInitialized && window.Kakao.isInitialized()),
+      hasAuth: !!(window.Kakao && window.Kakao.Auth),
+      hasLogin: !!(window.Kakao && window.Kakao.Auth && window.Kakao.Auth.login),
+    });
+
+    // SDK가 없으면 스크립트 로드 시도
+    if (!window.Kakao) {
+      console.log("카카오톡 SDK가 없습니다. 스크립트 로드 시도...");
+      const script = document.createElement("script");
+      script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js";
+      script.crossOrigin = "anonymous";
+      script.async = true;
+      script.onload = () => {
+        console.log("카카오톡 SDK 스크립트 로드 완료, 초기화 시도...");
+        const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+        if (kakaoAppKey && window.Kakao && typeof window.Kakao.init === 'function') {
+          try {
+            window.Kakao.init(kakaoAppKey);
+            console.log("카카오톡 SDK 초기화 완료, 로그인 재시도 가능");
+            setKakaoReady(true);
+            // 사용자에게 다시 시도하라고 안내
+            alert("카카오톡 SDK가 준비되었습니다. 다시 로그인 버튼을 클릭해주세요.");
+          } catch (error) {
+            console.error("카카오톡 SDK 초기화 실패:", error);
+            alert("카카오톡 로그인 초기화에 실패했습니다.");
+          }
+        }
+      };
+      script.onerror = () => {
+        console.error("카카오톡 SDK 스크립트 로드 실패");
+        alert("카카오톡 SDK를 로드할 수 없습니다.");
+      };
+      document.head.appendChild(script);
+      alert("카카오톡 SDK를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    // SDK 초기화 확인 및 재시도
+    const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+    if (!kakaoAppKey) {
+      alert("카카오톡 앱 키가 설정되지 않았습니다.");
+      return;
+    }
+
+    if (!window.Kakao.isInitialized || !window.Kakao.isInitialized()) {
+      if (typeof window.Kakao.init === 'function') {
+        try {
+          console.log("카카오톡 SDK 초기화 시도...");
+          window.Kakao.init(kakaoAppKey);
+          console.log("카카오톡 SDK 초기화 완료");
+          setKakaoReady(true);
+        } catch (error) {
+          console.error("카카오톡 SDK 초기화 실패:", error);
+          alert("카카오톡 로그인 초기화에 실패했습니다.");
+          return;
+        }
+      } else {
+        console.error("카카오톡 SDK init 함수를 찾을 수 없습니다.");
+        alert("카카오톡 로그인을 준비하는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+    }
+
+    if (!window.Kakao.Auth || !window.Kakao.Auth.login) {
+      console.error("카카오톡 SDK Auth 객체를 찾을 수 없습니다.");
+      alert("카카오톡 로그인을 준비하는 중입니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 카카오톡 로그인
+      window.Kakao.Auth.login({
+        success: async (authObj: any) => {
+          try {
+            // 카카오톡 사용자 정보 가져오기
+            window.Kakao.API.request({
+              url: "/v2/user/me",
+              success: async (res: any) => {
+                try {
+                  const kakaoId = res.id.toString();
+                  const nickname = res.kakao_account?.profile?.nickname || res.properties?.nickname || "";
+                  const email = res.kakao_account?.email || `${kakaoId}@kakao.com`;
+
+                  // 서버에서 Custom Token 생성 요청
+                  const response = await fetch("/api/auth/kakao", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      kakaoId,
+                      nickname,
+                      email,
+                    }),
+                  });
+
+                  if (!response.ok) {
+                    throw new Error("Custom Token 생성 실패");
+                  }
+
+                  const { customToken } = await response.json();
+
+                  // Custom Token으로 Firebase 로그인
+                  const userCredential = await signInWithCustomToken(auth!, customToken);
+                  const user = userCredential.user;
+
+                  // 기존 사용자 확인
+                  const existingUser = await getUser(user.uid);
+
+                  if (existingUser) {
+                    // 기존 사용자
+                    if (existingUser.isAdmin) {
+                      router.push("/admin");
+                    } else {
+                      router.push("/participant/events");
+                    }
+                    setTimeout(() => setLoading(false), 500);
+                    return;
+                  }
+
+                  // 신규 사용자 - 사용자 문서 생성
+                  const userData = {
+                    name: nickname || "카카오톡 사용자",
+                    gender: "M" as const,
+                    birthday: "",
+                    age: 0,
+                    createdAt: new Date(),
+                    isAdmin: false,
+                  };
+
+                  try {
+                    await createUser(user.uid, userData);
+                  } catch (error) {
+                    console.log("사용자 생성 실패:", error);
+                  }
+
+                  // 약관 동의 확인
+                  if (!termsAccepted) {
+                    setShowTerms(true);
+                    setLoading(false);
+                    return;
+                  }
+
+                  // 리다이렉트
+                  router.push("/participant/events");
+                  setTimeout(() => setLoading(false), 500);
+                } catch (error) {
+                  console.error("카카오톡 사용자 정보 처리 실패:", error);
+                  alert("카카오톡 로그인에 실패했습니다.");
+                  setLoading(false);
+                }
+              },
+              fail: (err: any) => {
+                console.error("카카오톡 사용자 정보 조회 실패:", err);
+                alert("카카오톡 사용자 정보를 가져오는데 실패했습니다.");
+                setLoading(false);
+              },
+            });
+          } catch (error) {
+            console.error("카카오톡 로그인 처리 실패:", error);
+            alert("카카오톡 로그인에 실패했습니다.");
+            setLoading(false);
+          }
+        },
+        fail: (err: any) => {
+          console.error("카카오톡 로그인 실패:", err);
+          alert("카카오톡 로그인에 실패했습니다.");
+          setLoading(false);
+        },
+      });
+    } catch (error) {
+      console.error("카카오톡 로그인 오류:", error);
+      alert("카카오톡 로그인에 실패했습니다.");
+      setLoading(false);
+    }
+  };
+
   const handleAcceptTerms = async () => {
     setTermsAccepted(true);
     setShowTerms(false);
@@ -378,9 +671,16 @@ export default function Home() {
 
       <div className="max-w-md w-full relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
-            Rotape
-          </h1>
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Rotape"
+              width={200}
+              height={80}
+              priority
+              className="h-auto"
+            />
+          </div>
           <p className="text-gray-700 text-2xl md:text-[32px] font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", marginTop: 24 }}>
             한 컷의 테이프처럼 영원할 당신의 인연
           </p>
@@ -438,6 +738,28 @@ export default function Home() {
                   />
                 </svg>
                 Google로 로그인
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleKakaoLogin}
+            disabled={loading || !kakaoReady}
+            className="w-full bg-[#FEE500] text-[#000000] px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
+          >
+            {loading ? (
+              "로그인 중..."
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3Z"/>
+                </svg>
+                카카오톡으로 로그인
               </>
             )}
           </button>
