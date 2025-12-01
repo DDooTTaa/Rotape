@@ -108,18 +108,10 @@ export default function KakaoCallbackPage() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.error || "Custom Token 생성 실패";
-          const errorDetails = errorData.details || "";
-          console.error("Custom Token 생성 실패:", errorMessage, errorDetails);
-          throw new Error(`${errorMessage}${errorDetails ? `: ${errorDetails}` : ""}`);
+          throw new Error("Custom Token 생성 실패");
         }
 
         const { customToken } = await response.json();
-        
-        if (!customToken) {
-          throw new Error("Custom Token을 받을 수 없습니다.");
-        }
 
         // Custom Token으로 Firebase 로그인
         if (!auth) {
