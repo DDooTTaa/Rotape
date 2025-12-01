@@ -149,7 +149,7 @@ export default function Home() {
   // 카카오톡 SDK 초기화
   useEffect(() => {
     const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
-    
+
     if (!kakaoAppKey) {
       console.warn("카카오톡 앱 키가 설정되지 않았습니다.");
       setKakaoReady(false);
@@ -165,11 +165,11 @@ export default function Home() {
           } else {
             console.log("카카오톡 SDK 이미 초기화됨");
           }
-          
+
           // 초기화 확인 및 Auth 객체 확인
           if (window.Kakao.isInitialized()) {
             console.log("카카오톡 SDK 초기화 확인:", window.Kakao.isInitialized());
-            
+
             // Auth 객체가 준비될 때까지 대기
             let authCheckCount = 0;
             const checkAuth = setInterval(() => {
@@ -178,7 +178,7 @@ export default function Home() {
                 hasAuth: !!(window.Kakao && window.Kakao.Auth),
                 hasAuthorize: !!(window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize),
               });
-              
+
               if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize) {
                 clearInterval(checkAuth);
                 console.log("카카오톡 SDK Auth 객체 확인됨");
@@ -225,7 +225,7 @@ export default function Home() {
             initKakao();
           }
         }, 100);
-        
+
         // 최대 5초 대기
         setTimeout(() => {
           clearInterval(checkLoad);
@@ -492,7 +492,7 @@ export default function Home() {
         API: !!(window.Kakao && window.Kakao.API),
         keys: window.Kakao ? Object.keys(window.Kakao) : [],
       });
-      
+
       // Auth 객체가 준비될 때까지 대기 시도
       let waitCount = 0;
       const waitForAuth = setInterval(() => {
@@ -501,7 +501,7 @@ export default function Home() {
           hasAuth: !!(window.Kakao && window.Kakao.Auth),
           hasAuthorize: !!(window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize),
         });
-        
+
         if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize) {
           clearInterval(waitForAuth);
           console.log("Auth 객체 확인됨, 로그인 재시도");
@@ -626,22 +626,22 @@ export default function Home() {
           </button>
         )}
 
-      <div className="max-w-md w-full relative z-10">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Rotape"
-              width={200}
-              height={80}
-              priority
-              className="h-auto"
-            />
+        <div className="max-w-md w-full relative z-10">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/logo.png"
+                alt="Rotape"
+                width={200}
+                height={80}
+                priority
+                className="h-auto"
+              />
+            </div>
+            <p className="text-gray-700 text-2xl md:text-[32px] font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", marginTop: 24 }}>
+              한 컷의 테이프처럼 영원할 당신의 인연
+            </p>
           </div>
-          <p className="text-gray-700 text-2xl md:text-[32px] font-medium" style={{ fontFamily: "'Nanum Pen Script', cursive", marginTop: 24 }}>
-            한 컷의 테이프처럼 영원할 당신의 인연
-          </p>
-        </div>
 
           {/* 카카오톡 브라우저 안내 */}
           {isKakaoBrowser && (
@@ -649,14 +649,23 @@ export default function Home() {
               <p className="text-sm font-semibold text-red-600 mb-2">
                 ⚠️ 카톡 브라우저에선 Google 로그인이 지원되지 않아요
               </p>
+              <div className="text-xs text-gray-600 space-y-1">
+                <p className="font-semibold">📱 접속 방법:</p>
+                <ol className="list-decimal list-inside space-y-1 ml-2">
+                  <li>우측 하단의 <span className="font-semibold">&apos;...&apos;</span> 메뉴 클릭</li>
+                  <li><span className="font-semibold">&apos;다른 브라우저로 열기&apos;</span> 또는 <span className="font-semibold">&apos;외부 브라우저로 열기&apos;</span> 선택</li>
+                  <li>Chrome, Safari 등 기본 브라우저에서 다시 접속</li>
+                </ol>
+              </div>
             </div>
           )}
 
-          {!isKakaoBrowser && (
-            <div className="space-y-4">
+
+          <div className="space-y-4">
+            {!isKakaoBrowser && (
               <button
                 onClick={handleGoogleLogin}
-                disabled={loading}
+                disabled={loading || isKakaoBrowser}
                 className="w-full bg-white text-gray-900 px-6 py-4 rounded-xl font-semibold hover:bg-gradient-to-r hover:from-primary hover:to-[#0d4a1a] hover:text-white transition-all duration-300 disabled:opacity-50 border-2 border-primary shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
               >
                 {loading ? (
@@ -690,8 +699,38 @@ export default function Home() {
                   </>
                 )}
               </button>
-            </div>
-          )}
+            )}
+            <button
+              onClick={handleKakaoLogin}
+              disabled={loading || !kakaoReady}
+              className="w-full bg-[#FEE500] text-[#000000] px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition-all duration-300 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3"
+            >
+              {loading ? (
+                "로그인 중..."
+              ) : (
+                <>
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3Z" />
+                  </svg>
+                  카카오톡으로 로그인
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* <div className="mt-6 text-center">
+          <Link
+            href="/adminLogin"
+            className="text-primary hover:underline text-sm font-semibold"
+          >
+            운영자 로그인
+          </Link>
+        </div> */}
 
           {showTerms && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-4">
