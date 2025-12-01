@@ -413,7 +413,12 @@ function ApplicationFormContent() {
 
           {/* 직업 */}
           <div>
-            <label className="block mb-2 font-semibold">직업</label>
+            <label className="block mb-2 font-semibold">
+              직업
+              <span className="text-xs font-normal text-gray-500 ml-2">
+                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+              </span>
+            </label>
             <input
               type="text"
               required
@@ -446,7 +451,9 @@ function ApplicationFormContent() {
 
           {/* 사진 업로드 */}
           <div>
-            <label className="block mb-2 font-semibold">사진 업로드 (2장 이상)</label>
+            <label className="block mb-2 font-semibold">
+              사진 업로드 (2장 이상)
+            </label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
                 <div key={index} className="border-2 border-dashed border-primary rounded-xl bg-gray-50 relative overflow-hidden hover:border-primary/60 transition-all duration-300">
@@ -488,7 +495,12 @@ function ApplicationFormContent() {
 
           {/* 나를 한 줄로 소개 */}
           <div>
-            <label className="block mb-2 font-semibold">나는 어떤 사람인지 한 줄로 소개해주세요.</label>
+            <label className="block mb-2 font-semibold">
+              나는 어떤 사람인지 한 줄로 소개해주세요.
+              <span className="text-xs font-normal text-gray-500 ml-2">
+                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+              </span>
+            </label>
             <textarea
               required
               value={formData.intro}
@@ -501,7 +513,12 @@ function ApplicationFormContent() {
 
           {/* 이상형 한 줄 */}
           <div>
-            <label className="block mb-2 font-semibold">어떤 사람을 만나고 싶은지 한 줄로 알려주세요.</label>
+            <label className="block mb-2 font-semibold">
+              어떤 사람을 만나고 싶은지 한 줄로 알려주세요.
+              <span className="text-xs font-normal text-gray-500 ml-2">
+                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+              </span>
+            </label>
             <textarea
               required
               value={formData.idealType}
@@ -514,7 +531,12 @@ function ApplicationFormContent() {
 
           {/* 어떤 연애를 하고 싶은가요 */}
           <div>
-            <label className="block mb-2 font-semibold">어떤 연애가 하고 싶은가요?</label>
+            <label className="block mb-2 font-semibold">
+              어떤 연애가 하고 싶은가요?
+              <span className="text-xs font-normal text-gray-500 ml-2">
+                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+              </span>
+            </label>
             <textarea
               required
               value={formData.loveStyle}
@@ -527,7 +549,12 @@ function ApplicationFormContent() {
 
           {/* 사랑의 언어 */}
           <div>
-            <label className="block mb-3 font-semibold">연애에서 뭐가 제일 중요한가요?</label>
+            <label className="block mb-3 font-semibold">
+              연애에서 뭐가 제일 중요한가요?
+              <span className="text-xs font-normal text-gray-500 ml-2">
+                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+              </span>
+            </label>
             <div className="flex flex-wrap gap-3">
               {loveLanguages.map((lang) => {
                 const isSelected = formData.loveLanguage.includes(lang);
