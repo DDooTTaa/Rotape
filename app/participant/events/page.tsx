@@ -8,6 +8,7 @@ import { getApplicationByEvent, getApplicationsByEventId } from "@/lib/firebase/
 import { getUser } from "@/lib/firebase/users";
 import { Event, Application, User as UserData } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,6 +39,8 @@ export default function EventsPage() {
       user: UserData | null;
     }>
   >([]);
+  const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0);
+  const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
 
   // 행사 종료 시간 계산 함수
   const calculateEventEndTime = (event: Event): Date | null => {
@@ -224,7 +227,18 @@ export default function EventsPage() {
     setSelectedEvent(eventData);
     setParticipantsModalOpen(true);
     setParticipantsLoading(true);
+    setCurrentParticipantIndex(0);
+    
     try {
+      // 현재 사용자 정보 가져오기
+      if (!user) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+      
+      const currentUserData = await getUser(user.uid);
+      setUserGender(currentUserData?.gender || null);
+      
       const apps = await getApplicationsByEventId(eventData.eventId);
       
       // 오늘 진행중인 행사인 경우 승인된 사람만 필터링
@@ -245,19 +259,28 @@ export default function EventsPage() {
         })
       );
 
-      // 승인된 사람만 보이므로 정렬 불필요하지만, 혹시 모를 경우를 위해 유지
-      const statusOrder: Record<Application["status"], number> = {
-        approved: 0,
-        pending: 1,
-        rejected: 2,
-      };
+      // 진행 중인 행사인 경우 이성만 필터링
+      let finalParticipants = applicantsWithUser;
+      if (isActive && currentUserData?.gender) {
+        finalParticipants = applicantsWithUser.filter(
+          ({ user: participantUser }) => 
+            participantUser?.gender && 
+            participantUser.gender !== currentUserData.gender
+        );
+      } else {
+        // 진행 중이 아닌 경우 상태별 정렬
+        const statusOrder: Record<Application["status"], number> = {
+          approved: 0,
+          pending: 1,
+          rejected: 2,
+        };
+        finalParticipants.sort(
+          (a, b) =>
+            statusOrder[a.application.status] - statusOrder[b.application.status]
+        );
+      }
 
-      applicantsWithUser.sort(
-        (a, b) =>
-          statusOrder[a.application.status] - statusOrder[b.application.status]
-      );
-
-      setEventParticipants(applicantsWithUser);
+      setEventParticipants(finalParticipants);
     } catch (error) {
       console.error("지원자 목록 로드 실패:", error);
       alert("지원자 정보를 불러오는 중 문제가 발생했습니다.");
@@ -272,6 +295,7 @@ export default function EventsPage() {
     setEventParticipants([]);
     setSelectedEvent(null);
     setParticipantsLoading(false);
+    setCurrentParticipantIndex(0);
   };
 
   if (loading) {
@@ -471,77 +495,191 @@ export default function EventsPage() {
               </div>
             ) : eventParticipants.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                아직 지원자가 없습니다.
+                {isEventActive(selectedEvent!) 
+                  ? "이성 참가자가 없습니다." 
+                  : "아직 지원자가 없습니다."}
               </div>
             ) : (
               <div className="space-y-4">
-                {eventParticipants.map(({ application, user }, index) => {
-                  const statusLabelMap: Record<Application["status"], string> = {
-                    approved: "승인됨",
-                    pending: "심사 중",
-                    rejected: "다음 기회에",
-                  };
-                  const statusClassMap: Record<Application["status"], string> = {
-                    approved: "bg-green-100 text-green-800",
-                    pending: "bg-yellow-100 text-yellow-800",
-                    rejected: "bg-gray-100 text-gray-600",
-                  };
+                {/* 진행 중인 행사인 경우 카드 케러셀 */}
+                {isEventActive(selectedEvent!) ? (
+                  <div className="relative">
+                    {/* 현재 참가자 카드 */}
+                    {eventParticipants[currentParticipantIndex] && (() => {
+                      const { application, user } = eventParticipants[currentParticipantIndex];
+                      return (
+                        <div className="border-2 border-primary/30 rounded-2xl p-6 shadow-lg bg-white">
+                          <div className="space-y-3">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-gray-900 mb-1">
+                                {user?.name || "이름 미등록"}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {user?.gender === "M" ? "남성" : user?.gender === "F" ? "여성" : "성별 미등록"}
+                              </p>
+                            </div>
 
-                  return (
-                    <div
-                      key={`${application.uid}-${index}`}
-                      className="border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                        <div>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {user?.name || "이름 미등록"}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {user?.gender === "M" ? "남성" : user?.gender === "F" ? "여성" : "성별 미등록"}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClassMap[application.status]}`}
-                        >
-                          {statusLabelMap[application.status]}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
-                        <p>
-                          <span className="font-semibold text-gray-800">직업:</span>{" "}
-                          {application.job || "미입력"}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-gray-800">한 줄 소개:</span>{" "}
-                          {application.intro || "미입력"}
-                        </p>
-                        <p className="md:col-span-2">
-                          <span className="font-semibold text-gray-800">이상형:</span>{" "}
-                          {application.idealType || "미입력"}
-                        </p>
-                        <div className="md:col-span-2">
-                          <span className="font-semibold text-gray-800">더 중요한 가치:</span>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {application.loveLanguage?.length > 0 ? (
-                              application.loveLanguage.map((lang) => (
-                                <span
-                                  key={lang}
-                                  className="px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-semibold border border-primary/20"
-                                >
-                                  {lang}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-gray-400">미입력</span>
-                            )}
+                            <div className="space-y-2 text-sm">
+                              <p>
+                                <span className="font-semibold text-gray-800">직업:</span>{" "}
+                                <span className="text-gray-700">{application.job || "미입력"}</span>
+                              </p>
+                              <p>
+                                <span className="font-semibold text-gray-800">한 줄 소개:</span>{" "}
+                                <span className="text-gray-700">{application.intro || "미입력"}</span>
+                              </p>
+                              <p>
+                                <span className="font-semibold text-gray-800">이상형:</span>{" "}
+                                <span className="text-gray-700">{application.idealType || "미입력"}</span>
+                              </p>
+                              {application.loveLanguage?.length > 0 && (
+                                <div>
+                                  <span className="font-semibold text-gray-800">더 중요한 가치:</span>
+                                  <div className="flex flex-wrap gap-2 mt-1">
+                                    {application.loveLanguage.map((lang, idx) => (
+                                      <span
+                                        key={lang}
+                                        className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold"
+                                      >
+                                        {idx + 1}순위: {lang}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
+                      );
+                    })()}
+
+                    {/* 네비게이션 버튼 */}
+                    <div className="flex justify-between items-center mt-4">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentParticipantIndex((prev) => 
+                            prev > 0 ? prev - 1 : eventParticipants.length - 1
+                          );
+                        }}
+                        disabled={eventParticipants.length <= 1}
+                        className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ← 이전
+                      </button>
+                      
+                      {/* 인디케이터 */}
+                      <div className="flex gap-2">
+                        {eventParticipants.map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCurrentParticipantIndex(index);
+                            }}
+                            className={`h-2 rounded-full transition ${
+                              index === currentParticipantIndex
+                                ? "bg-primary w-8"
+                                : "bg-gray-300 w-2 hover:bg-gray-400"
+                            }`}
+                          />
+                        ))}
                       </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentParticipantIndex((prev) => 
+                            prev < eventParticipants.length - 1 ? prev + 1 : 0
+                          );
+                        }}
+                        disabled={eventParticipants.length <= 1}
+                        className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        다음 →
+                      </button>
                     </div>
-                  );
-                })}
+
+                    {/* 카운터 */}
+                    <p className="text-center text-sm text-gray-600 mt-2">
+                      {currentParticipantIndex + 1} / {eventParticipants.length}
+                    </p>
+                  </div>
+                ) : (
+                  /* 진행 중이 아닌 경우 리스트 형식 */
+                  <div className="space-y-4">
+                    {eventParticipants.map(({ application, user }, index) => {
+                      const statusLabelMap: Record<Application["status"], string> = {
+                        approved: "승인됨",
+                        pending: "심사 중",
+                        rejected: "다음 기회에",
+                      };
+                      const statusClassMap: Record<Application["status"], string> = {
+                        approved: "bg-green-100 text-green-800",
+                        pending: "bg-yellow-100 text-yellow-800",
+                        rejected: "bg-gray-100 text-gray-600",
+                      };
+
+                      return (
+                        <div
+                          key={`${application.uid}-${index}`}
+                          className="border border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                            <div>
+                              <p className="text-lg font-semibold text-gray-900">
+                                {user?.name || "이름 미등록"}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {user?.gender === "M" ? "남성" : user?.gender === "F" ? "여성" : "성별 미등록"}
+                              </p>
+                            </div>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClassMap[application.status]}`}
+                            >
+                              {statusLabelMap[application.status]}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                            <p>
+                              <span className="font-semibold text-gray-800">직업:</span>{" "}
+                              {application.job || "미입력"}
+                            </p>
+                            <p>
+                              <span className="font-semibold text-gray-800">한 줄 소개:</span>{" "}
+                              {application.intro || "미입력"}
+                            </p>
+                            <p className="md:col-span-2">
+                              <span className="font-semibold text-gray-800">이상형:</span>{" "}
+                              {application.idealType || "미입력"}
+                            </p>
+                            <div className="md:col-span-2">
+                              <span className="font-semibold text-gray-800">더 중요한 가치:</span>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {application.loveLanguage?.length > 0 ? (
+                                  application.loveLanguage.map((lang) => (
+                                    <span
+                                      key={lang}
+                                      className="px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-semibold border border-primary/20"
+                                    >
+                                      {lang}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-gray-400">미입력</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

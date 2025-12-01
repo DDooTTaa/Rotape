@@ -24,7 +24,12 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
     return 0;
   });
 
-  const handleOpen = () => {
+  const handleOpen = (e?: React.MouseEvent) => {
+    // form 제출 방지
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     // 현재 값이 있으면 파싱, 없으면 기본값
     if (value && value.includes(":")) {
       const [h, m] = value.split(":");
@@ -34,26 +39,46 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
     setIsOpen(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
     onChange(timeString);
     setIsOpen(false);
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsOpen(false);
   };
 
   return (
     <>
-      <input
-        type="text"
-        readOnly
-        value={value}
-        onClick={handleOpen}
-        placeholder={placeholder}
-        className={`cursor-pointer ${className}`}
-      />
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleOpen(e);
+        }}
+        onKeyDown={(e) => {
+          // Enter 또는 Space 키로 팝업 열기
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            handleOpen();
+          }
+        }}
+        className={`cursor-pointer ${className} ${!value ? 'text-gray-400' : ''} min-h-[42px] flex items-center`}
+        style={{
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+        }}
+      >
+        {value || <span className="text-gray-400">{placeholder}</span>}
+      </div>
       
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" onClick={handleCancel}>
@@ -70,8 +95,13 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
                   {Array.from({ length: 24 }, (_, i) => i).map((h) => (
                     <button
+                      type="button"
                       key={h}
-                      onClick={() => setHours(h)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setHours(h);
+                      }}
                       className={`w-12 py-2 rounded-lg font-semibold transition ${
                         hours === h
                           ? "bg-primary text-white"
@@ -92,8 +122,13 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
                   {[0, 15, 30, 45].map((m) => (
                     <button
+                      type="button"
                       key={m}
-                      onClick={() => setMinutes(m)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setMinutes(m);
+                      }}
                       className={`w-12 py-2 rounded-lg font-semibold transition ${
                         minutes === m
                           ? "bg-primary text-white"
@@ -109,12 +144,14 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={handleCancel}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition"
               >
                 취소
               </button>
               <button
+                type="button"
                 onClick={handleConfirm}
                 className="flex-1 px-4 py-3 rounded-lg font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] text-white hover:opacity-90 transition"
               >

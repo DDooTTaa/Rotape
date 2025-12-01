@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { signInWithPopup, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { signInWithPopup, GoogleAuthProvider, OAuthProvider, signInWithCustomToken } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { createUser, getUser } from "@/lib/firebase/users";
+
+declare global {
+  interface Window {
+    Kakao: any;
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +19,97 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [kakaoReady, setKakaoReady] = useState(false);
+
+  // 카카오톡 SDK 초기화
+  useEffect(() => {
+    const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+    
+    if (!kakaoAppKey) {
+      console.warn("카카오톡 앱 키가 설정되지 않았습니다.");
+      setKakaoReady(false);
+      return;
+    }
+
+    const initKakao = () => {
+      if (window.Kakao && typeof window.Kakao.init === 'function') {
+        try {
+          if (!window.Kakao.isInitialized()) {
+            window.Kakao.init(kakaoAppKey);
+            console.log("카카오톡 SDK 초기화 완료");
+          } else {
+            console.log("카카오톡 SDK 이미 초기화됨");
+          }
+          
+          // 초기화 확인 및 Auth 객체 확인
+          if (window.Kakao.isInitialized()) {
+            console.log("카카오톡 SDK 초기화 확인:", window.Kakao.isInitialized());
+            
+            // Auth 객체가 준비될 때까지 대기
+            let authCheckCount = 0;
+            const checkAuth = setInterval(() => {
+              authCheckCount++;
+              console.log(`Auth 객체 확인 ${authCheckCount}회:`, {
+                hasAuth: !!(window.Kakao && window.Kakao.Auth),
+                hasAuthorize: !!(window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize),
+              });
+              
+              if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize) {
+                clearInterval(checkAuth);
+                console.log("카카오톡 SDK Auth 객체 확인됨");
+                setKakaoReady(true);
+              } else if (authCheckCount > 30) {
+                // 3초 후에도 없으면 포기
+                clearInterval(checkAuth);
+                console.error("카카오톡 SDK Auth 객체를 찾을 수 없습니다.");
+                console.error("전체 Kakao 객체:", window.Kakao);
+                console.error("Kakao 객체 키:", window.Kakao ? Object.keys(window.Kakao) : []);
+                setKakaoReady(false);
+              }
+            }, 100);
+          } else {
+            console.error("카카오톡 SDK 초기화 실패");
+            setKakaoReady(false);
+          }
+        } catch (error) {
+          console.error("카카오톡 SDK 초기화 오류:", error);
+          setKakaoReady(false);
+        }
+      } else {
+        console.warn("카카오톡 SDK가 아직 로드되지 않았습니다.");
+        setKakaoReady(false);
+      }
+    };
+
+    // 이미 SDK가 로드되어 있으면 바로 초기화
+    if (typeof window !== "undefined" && window.Kakao) {
+      initKakao();
+    } else {
+      // SDK 스크립트 로드
+      const script = document.createElement("script");
+      script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.7/kakao.min.js";
+      script.integrity = "sha384-tJkjbtDbvoxO+diRuDtwRO9JXR7pjWnfjfRn5ePUpl7e7RJCxKCwwnfqUAdXh53p";
+      script.crossOrigin = "anonymous";
+      script.async = true;
+      script.onload = () => {
+        console.log("카카오톡 SDK 스크립트 로드 완료");
+        // SDK가 완전히 로드될 때까지 약간 대기
+        setTimeout(() => {
+          if (window.Kakao && typeof window.Kakao.init === 'function') {
+            initKakao();
+          } else {
+            console.error("카카오톡 SDK 초기화 함수를 찾을 수 없습니다.");
+            setKakaoReady(false);
+          }
+        }, 100);
+      };
+      script.onerror = () => {
+        console.error("카카오톡 SDK 스크립트 로드 실패");
+        setKakaoReady(false);
+      };
+      document.head.appendChild(script);
+    }
+  }, []);
 
   const handleGoogleLogin = async () => {
     if (!auth) {
@@ -130,6 +227,77 @@ export default function AuthPage() {
     }
   };
 
+  const handleKakaoLogin = async () => {
+    if (!auth) {
+      alert("인증 서비스를 사용할 수 없습니다.");
+      return;
+    }
+
+    // SDK 초기화 확인
+    if (!window.Kakao || !window.Kakao.isInitialized || !window.Kakao.isInitialized()) {
+      const kakaoAppKey = process.env.NEXT_PUBLIC_KAKAO_APP_KEY;
+      if (kakaoAppKey && window.Kakao && typeof window.Kakao.init === 'function') {
+        try {
+          window.Kakao.init(kakaoAppKey);
+        } catch (error) {
+          console.error("카카오톡 SDK 초기화 실패:", error);
+          alert("카카오톡 로그인 초기화에 실패했습니다.");
+          return;
+        }
+      } else {
+        alert("카카오톡 로그인을 준비하는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+    }
+
+    if (!window.Kakao || !window.Kakao.Auth || !window.Kakao.Auth.authorize) {
+      console.error("카카오톡 SDK Auth 객체를 찾을 수 없습니다.");
+      console.error("전체 Kakao 객체 구조:", {
+        Kakao: !!window.Kakao,
+        isInitialized: !!(window.Kakao && window.Kakao.isInitialized),
+        Auth: !!(window.Kakao && window.Kakao.Auth),
+        API: !!(window.Kakao && window.Kakao.API),
+        keys: window.Kakao ? Object.keys(window.Kakao) : [],
+      });
+      
+      // Auth 객체가 준비될 때까지 대기 시도
+      let waitCount = 0;
+      const waitForAuth = setInterval(() => {
+        waitCount++;
+        console.log(`Auth 객체 대기 ${waitCount}회:`, {
+          hasAuth: !!(window.Kakao && window.Kakao.Auth),
+          hasAuthorize: !!(window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize),
+        });
+        
+        if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize) {
+          clearInterval(waitForAuth);
+          console.log("Auth 객체 확인됨, 로그인 재시도");
+          // 재귀 호출로 다시 시도
+          handleKakaoLogin();
+        } else if (waitCount > 20) {
+          clearInterval(waitForAuth);
+          alert("카카오톡 로그인을 준비하는 중입니다. 잠시 후 다시 시도해주세요.");
+        }
+      }, 100);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 카카오톡 로그인 (공식 예제 방식: authorize 사용)
+      const redirectUri = `${window.location.origin}/api/auth/kakao/callback`;
+      window.Kakao.Auth.authorize({
+        redirectUri: redirectUri,
+      });
+      // authorize는 리다이렉트를 수행하므로 여기서 함수가 종료됨
+      // 실제 로그인 처리는 /api/auth/kakao/callback에서 수행됨
+    } catch (error) {
+      console.error("카카오톡 로그인 오류:", error);
+      alert("카카오톡 로그인에 실패했습니다.");
+      setLoading(false);
+    }
+  };
+
   const handleAcceptTerms = async () => {
     setTermsAccepted(true);
     setShowTerms(false);
@@ -187,6 +355,28 @@ export default function AuthPage() {
             className="w-full bg-black text-white px-6 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? "로그인 중..." : "Apple로 로그인"}
+          </button>
+
+          <button
+            onClick={handleKakaoLogin}
+            disabled={loading || !kakaoReady}
+            className="w-full bg-[#FEE500] text-[#000000] px-6 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              "로그인 중..."
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 3c5.799 0 10.5 3.664 10.5 8.185 0 4.52-4.701 8.184-10.5 8.184a13.5 13.5 0 0 1-1.727-.11l-4.408 2.883c-.501.265-.678.236-.472-.413l.892-3.678c-2.88-1.46-4.785-3.99-4.785-6.866C1.5 6.665 6.201 3 12 3Z"/>
+                </svg>
+                카카오톡으로 로그인
+              </>
+            )}
           </button>
         </div>
 

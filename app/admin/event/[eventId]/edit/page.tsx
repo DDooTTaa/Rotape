@@ -8,6 +8,7 @@ import { Event } from "@/lib/firebase/types";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import TimePickerPopup from "@/components/TimePickerPopup";
+import CalendarPopup from "@/components/CalendarPopup";
 
 export const dynamic = 'force-dynamic';
 
@@ -70,16 +71,40 @@ export default function EditEventPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!eventId) return;
+
+    // submit 버튼이 아닌 경우 제출 방지
+    const submitter = (e.nativeEvent as SubmitEvent).submitter;
+    if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
+      if (submitter.type !== 'submit') {
+        return;
+      }
+    }
+
+    // 필수 필드 검증
+    if (!formData.title.trim()) {
+      alert("행사 제목을 입력해주세요.");
+      return;
+    }
+    
+    if (!formData.date) {
+      alert("행사 일시를 선택해주세요.");
+      return;
+    }
+    
+    if (!formData.location.trim()) {
+      alert("행사 장소를 입력해주세요.");
+      return;
+    }
 
     setLoading(true);
     try {
       await updateEvent(eventId, {
-        title: formData.title,
+        title: formData.title.trim(),
         date: new Date(formData.date),
-        location: formData.location,
+        location: formData.location.trim(),
         schedule: {
           part2: formData.part2,
           break: formData.break,
@@ -144,18 +169,6 @@ export default function EditEventPage() {
             />
           </div>
 
-          {/* 행사 일시 */}
-          <div>
-            <label className="block mb-2 font-semibold">행사 일시</label>
-            <input
-              type="datetime-local"
-              required
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="input-elegant"
-            />
-          </div>
-
           {/* 행사 장소 */}
           <div>
             <label className="block mb-2 font-semibold">행사 장소</label>
@@ -165,6 +178,17 @@ export default function EditEventPage() {
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="예: 서울시 강남구 테헤란로 123"
+              className="input-elegant"
+            />
+          </div>
+
+          {/* 행사 일시 */}
+          <div>
+            <label className="block mb-2 font-semibold">행사 일시</label>
+            <CalendarPopup
+              value={formData.date}
+              onChange={(value) => setFormData({ ...formData, date: value })}
+              placeholder="날짜를 선택하세요"
               className="input-elegant"
             />
           </div>
