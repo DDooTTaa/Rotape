@@ -57,9 +57,6 @@ if (typeof window !== "undefined") {
         console.error(
           "❌ Firebase 환경 변수가 올바르게 설정되지 않았습니다."
         );
-        console.error(
-          `현재 환경: ${isDevelopment ? "개발" : isProduction ? "프로덕션" : "알 수 없음"}`
-        );
         console.error("로드된 환경 변수 상태:", {
           apiKey: requiredEnvVars.apiKey ? "✅" : "❌",
           authDomain: requiredEnvVars.authDomain ? "✅" : "❌",
