@@ -77,8 +77,10 @@ export default function EditEventPage() {
 
     // submit 버튼이 아닌 경우 제출 방지
     const submitter = (e.nativeEvent as SubmitEvent).submitter;
-    if (!submitter || submitter.type !== 'submit') {
-      return;
+    if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
+      if (submitter.type !== 'submit') {
+        return;
+      }
     }
 
     // 필수 필드 검증
