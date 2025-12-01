@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDoc, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, query, where, getDocs } from "firebase/firestore";
 import { db } from "./config";
 import { Message } from "./types";
 
@@ -63,11 +63,10 @@ export async function getReceivedMessages(receiverId: string): Promise<Message[]
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(
     collection(db, messagesCollection),
-    where("receiverId", "==", receiverId),
-    orderBy("createdAt", "desc")
+    where("receiverId", "==", receiverId)
   );
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => {
+  const messages = querySnapshot.docs.map(doc => {
     const data = doc.data();
     return {
       messageId: doc.id,
@@ -75,6 +74,8 @@ export async function getReceivedMessages(receiverId: string): Promise<Message[]
       createdAt: convertTimestampToDate(data.createdAt),
     } as Message;
   });
+  // 클라이언트 측에서 정렬 (인덱스 문제 방지)
+  return messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 // 보낸 쪽지 목록 조회
@@ -82,11 +83,10 @@ export async function getSentMessages(senderId: string): Promise<Message[]> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(
     collection(db, messagesCollection),
-    where("senderId", "==", senderId),
-    orderBy("createdAt", "desc")
+    where("senderId", "==", senderId)
   );
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => {
+  const messages = querySnapshot.docs.map(doc => {
     const data = doc.data();
     return {
       messageId: doc.id,
@@ -94,6 +94,8 @@ export async function getSentMessages(senderId: string): Promise<Message[]> {
       createdAt: convertTimestampToDate(data.createdAt),
     } as Message;
   });
+  // 클라이언트 측에서 정렬 (인덱스 문제 방지)
+  return messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 // 특정 행사의 쪽지 조회 (보낸 쪽지 또는 받은 쪽지)
@@ -101,11 +103,10 @@ export async function getMessagesByEvent(eventId: string, userId: string): Promi
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const q = query(
     collection(db, messagesCollection),
-    where("eventId", "==", eventId),
-    orderBy("createdAt", "desc")
+    where("eventId", "==", eventId)
   );
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs
+  const messages = querySnapshot.docs
     .map(doc => {
       const data = doc.data();
       return {
@@ -115,6 +116,8 @@ export async function getMessagesByEvent(eventId: string, userId: string): Promi
       } as Message;
     })
     .filter(msg => msg.senderId === userId || msg.receiverId === userId);
+  // 클라이언트 측에서 정렬 (인덱스 문제 방지)
+  return messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 // 쪽지 읽음 처리
@@ -122,5 +125,17 @@ export async function markMessageAsRead(messageId: string): Promise<void> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   const messageRef = doc(db, messagesCollection, messageId);
   await setDoc(messageRef, { read: true }, { merge: true });
+}
+
+// 특정 모임에서 보낸 쪽지 개수 조회
+export async function getSentMessageCountByEvent(eventId: string, senderId: string): Promise<number> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  const q = query(
+    collection(db, messagesCollection),
+    where("eventId", "==", eventId),
+    where("senderId", "==", senderId)
+  );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.size;
 }
 

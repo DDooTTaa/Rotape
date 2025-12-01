@@ -3,19 +3,35 @@
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
-import { getUserApplications } from "@/lib/firebase/applications";
+import { getUserApplications, getApplicationsByEventId } from "@/lib/firebase/applications";
 import { getEvent } from "@/lib/firebase/events";
-import { Event, Application } from "@/lib/firebase/types";
+import { getUser } from "@/lib/firebase/users";
+import { sendMessage, getSentMessageCountByEvent } from "@/lib/firebase/messages";
+import { Event, Application, User as UserData } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
+interface EventWithParticipants extends Event {
+  application: Application;
+  participants: Array<{
+    user: UserData;
+    application: Application;
+  }>;
+}
+
 export default function MyEventsPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();
-  const [events, setEvents] = useState<Array<Event & { application: Application }>>([]);
+  const [events, setEvents] = useState<EventWithParticipants[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedParticipant, setSelectedParticipant] = useState<{ user: UserData; eventId: string } | null>(null);
+  const [messageContent, setMessageContent] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [sentMessageCounts, setSentMessageCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (user) {
@@ -69,6 +85,10 @@ export default function MyEventsPage() {
     try {
       setLoading(true);
       
+      // 사용자 정보 가져오기 (성별 확인용)
+      const currentUserData = await getUser(user.uid);
+      setUserGender(currentUserData?.gender || null);
+      
       // 사용자의 모든 지원서 가져오기
       const applications = await getUserApplications(user.uid);
       
@@ -80,7 +100,41 @@ export default function MyEventsPage() {
             try {
               const event = await getEvent(app.eventId!);
               if (event) {
-                return { ...event, application: app };
+                // 행사 참가자 목록 가져오기 (승인된 사람만)
+                const allApplications = await getApplicationsByEventId(app.eventId!);
+                const approvedApplications = allApplications.filter(a => a.status === "approved");
+                
+                // 참가자 정보 가져오기
+                const participants = await Promise.all(
+                  approvedApplications
+                    .filter(a => a.uid !== user.uid) // 본인 제외
+                    .map(async (participantApp) => {
+                      try {
+                        const participantUser = await getUser(participantApp.uid);
+                        return {
+                          user: participantUser!,
+                          application: participantApp,
+                        };
+                      } catch (error) {
+                        console.error("참가자 정보 로드 실패:", error);
+                        return null;
+                      }
+                    })
+                );
+                
+                // 이성만 필터링
+                const otherGenderParticipants = participants
+                  .filter((p): p is { user: UserData; application: Application } => 
+                    p !== null && 
+                    p.user?.gender && 
+                    p.user.gender !== currentUserData?.gender
+                  );
+                
+                return { 
+                  ...event, 
+                  application: app,
+                  participants: otherGenderParticipants,
+                };
               }
               return null;
             } catch (error) {
@@ -92,7 +146,7 @@ export default function MyEventsPage() {
       
       // null 제거 및 종료된 행사만 필터링
       const endedEvents = eventsWithApplications
-        .filter((item): item is Event & { application: Application } => 
+        .filter((item): item is EventWithParticipants => 
           item !== null && isEventEnded(item)
         )
         .sort((a, b) => {
@@ -103,10 +157,62 @@ export default function MyEventsPage() {
         });
       
       setEvents(endedEvents);
+      
+      // 각 모임에서 보낸 쪽지 개수 조회
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        endedEvents.map(async (event) => {
+          try {
+            const count = await getSentMessageCountByEvent(event.eventId, user.uid);
+            counts[event.eventId] = count;
+          } catch (error) {
+            console.error("쪽지 개수 조회 실패:", error);
+            counts[event.eventId] = 0;
+          }
+        })
+      );
+      setSentMessageCounts(counts);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!user || !selectedParticipant || !messageContent.trim()) return;
+    
+    // 모임당 쪽지 3개 제한 확인
+    const currentCount = sentMessageCounts[selectedParticipant.eventId] || 0;
+    if (currentCount >= 3) {
+      alert("이 모임에서는 쪽지를 3개까지만 보낼 수 있습니다.");
+      return;
+    }
+    
+    try {
+      setSendingMessage(true);
+      await sendMessage(
+        selectedParticipant.eventId,
+        user.uid,
+        selectedParticipant.user.uid,
+        messageContent.trim()
+      );
+      
+      // 보낸 쪽지 개수 업데이트
+      setSentMessageCounts(prev => ({
+        ...prev,
+        [selectedParticipant.eventId]: (prev[selectedParticipant.eventId] || 0) + 1,
+      }));
+      
+      alert("쪽지가 전송되었습니다.");
+      setMessageModalOpen(false);
+      setMessageContent("");
+      setSelectedParticipant(null);
+    } catch (error) {
+      console.error("쪽지 전송 실패:", error);
+      alert("쪽지 전송에 실패했습니다.");
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -188,6 +294,62 @@ export default function MyEventsPage() {
                     </p>
                   </div>
 
+                  {/* 이성 참가자 목록 */}
+                  {event.participants.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-semibold text-gray-700">참가자</p>
+                        <span className="text-xs text-gray-500">
+                          쪽지 {sentMessageCounts[event.eventId] || 0}/3
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {event.participants.map((participant) => (
+                          <div
+                            key={participant.user.uid}
+                            className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
+                              {participant.user.name.charAt(0)}
+                            </div>
+                            <span className="text-sm font-medium text-gray-800">
+                              {participant.user.name}
+                            </span>
+                            <button
+                              onClick={() => {
+                                const currentCount = sentMessageCounts[event.eventId] || 0;
+                                if (currentCount >= 3) {
+                                  alert("이 모임에서는 쪽지를 3개까지만 보낼 수 있습니다.");
+                                  return;
+                                }
+                                setSelectedParticipant({
+                                  user: participant.user,
+                                  eventId: event.eventId,
+                                });
+                                setMessageModalOpen(true);
+                              }}
+                              disabled={(sentMessageCounts[event.eventId] || 0) >= 3}
+                              className={`ml-2 transition ${
+                                (sentMessageCounts[event.eventId] || 0) >= 3
+                                  ? "text-gray-400 cursor-not-allowed"
+                                  : "text-primary hover:text-primary/80"
+                              }`}
+                              title={
+                                (sentMessageCounts[event.eventId] || 0) >= 3
+                                  ? "이 모임에서는 쪽지를 3개까지만 보낼 수 있습니다."
+                                  : "쪽지 보내기"
+                              }
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <Link
                       href={`/participant/results?eventId=${event.eventId}`}
@@ -202,6 +364,76 @@ export default function MyEventsPage() {
           </div>
         )}
       </div>
+
+      {/* 쪽지 보내기 모달 */}
+      {messageModalOpen && selectedParticipant && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">
+                  {selectedParticipant.user.name}에게 쪽지 보내기
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  남은 쪽지: {3 - (sentMessageCounts[selectedParticipant.eventId] || 0)}/3
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setMessageModalOpen(false);
+                  setMessageContent("");
+                  setSelectedParticipant(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <textarea
+              value={messageContent}
+              onChange={(e) => setMessageContent(e.target.value)}
+              placeholder="쪽지 내용을 입력하세요..."
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+              maxLength={500}
+            />
+            <div className="text-right text-sm text-gray-500 mt-1">
+              {messageContent.length}/500
+            </div>
+            
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setMessageModalOpen(false);
+                  setMessageContent("");
+                  setSelectedParticipant(null);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition"
+                disabled={sendingMessage}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSendMessage}
+                disabled={
+                  !messageContent.trim() || 
+                  sendingMessage || 
+                  (sentMessageCounts[selectedParticipant.eventId] || 0) >= 3
+                }
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-[#0d4a1a] text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingMessage 
+                  ? "전송 중..." 
+                  : (sentMessageCounts[selectedParticipant.eventId] || 0) >= 3
+                  ? "3개 제한 도달"
+                  : "보내기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
