@@ -18,6 +18,11 @@ const requiredEnvVars = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// 환경 변수가 모두 있는지 확인
+const hasAllRequiredVars = Object.values(requiredEnvVars).every(
+  (val) => val && typeof val === "string" && val.length > 0
+);
+
 // 개발 환경에서만 경고 표시
 if (typeof window !== "undefined" && isDevelopment) {
   const missingVars = Object.entries(requiredEnvVars)
@@ -41,12 +46,12 @@ if (typeof window !== "undefined" && isDevelopment) {
 }
 
 const firebaseConfig = {
-  apiKey: requiredEnvVars.apiKey || "demo-api-key",
-  authDomain: requiredEnvVars.authDomain || "demo-project.firebaseapp.com",
-  projectId: requiredEnvVars.projectId || "demo-project",
-  storageBucket: requiredEnvVars.storageBucket || "demo-project.appspot.com",
-  messagingSenderId: requiredEnvVars.messagingSenderId || "123456789",
-  appId: requiredEnvVars.appId || "1:123456789:web:abcdef",
+  apiKey: requiredEnvVars.apiKey || "",
+  authDomain: requiredEnvVars.authDomain || "",
+  projectId: requiredEnvVars.projectId || "",
+  storageBucket: requiredEnvVars.storageBucket || "",
+  messagingSenderId: requiredEnvVars.messagingSenderId || "",
+  appId: requiredEnvVars.appId || "",
 };
 
 let app: FirebaseApp | undefined;
@@ -58,42 +63,38 @@ if (typeof window !== "undefined") {
   try {
     if (!getApps().length) {
       // 환경 변수가 모두 설정되었는지 확인
-      const hasValidConfig = Object.values(requiredEnvVars).every(
-        (val) => val && val !== "demo-api-key"
-      );
-
-      if (!hasValidConfig) {
+      if (!hasAllRequiredVars) {
         console.error(
           "❌ Firebase 환경 변수가 올바르게 설정되지 않았습니다."
         );
         console.error(
           `현재 환경: ${isDevelopment ? "개발" : isProduction ? "프로덕션" : "알 수 없음"}`
         );
+        console.error("로드된 환경 변수 상태:", {
+          apiKey: requiredEnvVars.apiKey ? "✅" : "❌",
+          authDomain: requiredEnvVars.authDomain ? "✅" : "❌",
+          projectId: requiredEnvVars.projectId ? "✅" : "❌",
+          storageBucket: requiredEnvVars.storageBucket ? "✅" : "❌",
+          messagingSenderId: requiredEnvVars.messagingSenderId ? "✅" : "❌",
+          appId: requiredEnvVars.appId ? "✅" : "❌",
+        });
         console.error(
-          "프로젝트 루트에 .env.local (개발용) 또는 .env.production (프로덕션용) 파일을 생성하고 다음을 추가하세요:"
+          "프로젝트 루트에 .env.local 파일을 확인하고 개발 서버를 재시작하세요."
         );
-        console.error(`
-NEXT_PUBLIC_ENV=${isDevelopment ? "development" : "production"}
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-        `);
-        // 환경 변수가 없어도 초기화는 시도 (개발용)
-        // 실제 사용 시 오류가 발생할 수 있음
+        // 환경 변수가 없으면 초기화하지 않음
+        throw new Error("Firebase 환경 변수가 설정되지 않았습니다.");
       }
       
-      // 환경 변수가 없어도 초기화 시도 (개발 중 테스트용)
+      // 환경 변수가 모두 있을 때만 초기화
       try {
         app = initializeApp(firebaseConfig);
         auth = getAuth(app);
         db = getFirestore(app);
         storage = getStorage(app);
+        console.log("✅ Firebase 초기화 성공:", firebaseConfig.projectId);
       } catch (initError: any) {
         console.error("Firebase 초기화 실패:", initError);
-        // 초기화 실패해도 계속 진행 (개발 중)
+        throw initError;
       }
     } else {
       app = getApps()[0];
