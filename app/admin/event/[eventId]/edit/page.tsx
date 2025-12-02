@@ -43,7 +43,7 @@ export default function EditEventPage() {
       const eventData = await getEvent(eventId);
       if (eventData) {
         setEvent(eventData);
-        // Date를 datetime-local 형식으로 변환
+        // Convert Date to datetime-local format
         const dateValue = eventData.date instanceof Date 
           ? eventData.date 
           : new Date(eventData.date);
