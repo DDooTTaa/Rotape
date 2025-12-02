@@ -176,36 +176,7 @@ export default function Home() {
 
           {/* 메인 섹션 */}
           <main className="max-w-4xl mx-auto">
-            {/* 서비스 소개 */}
-            <section className="text-center mb-16 md:mb-20">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-primary">로테이션 소개팅</h2>
-              <p className="text-lg md:text-xl mb-8 text-gray-700">
-                새로운 만남의 기회를 로테이션 방식으로 경험해보세요
-              </p>
-              <div className="bg-white/90 backdrop-blur-sm border-2 border-primary rounded-xl p-6 md:p-8 mb-8 shadow-lg">
-                <h3 className="text-xl md:text-2xl font-semibold mb-4 text-primary">참가 안내</h3>
-                <ul className="text-left space-y-3 max-w-md mx-auto text-base md:text-lg">
-                  <li className="flex items-center">
-                    <span className="text-primary mr-2">•</span>
-                    <span>연령: 만 20세 이상 40세 미만</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="text-primary mr-2">•</span>
-                    <span>인원: 남성 10명, 여성 10명 (총 20명)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <span className="text-primary mr-2">•</span>
-                    <span>조건: 미혼자</span>
-                  </li>
-                </ul>
-              </div>
-              <Link
-                href="/participant/auth"
-                className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-8 py-4 md:px-12 md:py-5 rounded-xl font-bold text-lg md:text-xl hover:opacity-90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                지금 시작하기
-              </Link>
-            </section>
+
 
             {/* 서비스 특징 */}
             <section className="mb-16 md:mb-20">
@@ -232,30 +203,6 @@ export default function Home() {
                     평범한 소개팅을 넘어선 특별한 만남의 경험을 선사합니다.
                   </p>
                 </div>
-              </div>
-            </section>
-
-            {/* FAQ */}
-            <section className="mb-12">
-              <h3 className="text-2xl md:text-3xl font-bold mb-8 text-center text-primary">자주 묻는 질문</h3>
-              <div className="max-w-2xl mx-auto space-y-4">
-                {faqs.map((faq, index) => (
-                  <div
-                    key={index}
-                    className="bg-white/90 backdrop-blur-sm border-2 border-primary rounded-xl overflow-hidden shadow-lg"
-                  >
-                    <button
-                      onClick={() => setFaqOpen(faqOpen === index ? null : index)}
-                      className="w-full px-6 py-4 text-left font-semibold flex justify-between items-center text-gray-800 hover:bg-primary/5 transition-colors"
-                    >
-                      <span className="text-base md:text-lg">{faq.question}</span>
-                      <span className="text-2xl text-primary">{faqOpen === index ? "−" : "+"}</span>
-                    </button>
-                    {faqOpen === index && (
-                      <div className="px-6 py-4 bg-primary/5 text-gray-700 text-base md:text-lg">{faq.answer}</div>
-                    )}
-                  </div>
-                ))}
               </div>
             </section>
 
