@@ -72,11 +72,7 @@ export default function KakaoCallbackPage() {
         });
 
         if (!tokenResponse.ok) {
-          // 에러 대신 로딩 상태 유지
-          console.error("카카오톡 토큰 받기 실패:", await tokenResponse.text());
-          // 잠시 대기 후 재시도하거나 에러 처리
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          throw new Error("카카오톡 로그인 처리 중...");
+          throw new Error("카카오톡 토큰 받기 실패");
         }
 
         const tokenData = await tokenResponse.json();
@@ -167,15 +163,28 @@ export default function KakaoCallbackPage() {
     handleCallback();
   }, [router, searchParams]);
 
-  if (status === "loading" || status === "error") {
-    // 에러 상태도 로딩 화면으로 표시
+  if (status === "loading") {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner />
-          <p className="mt-4 text-gray-600">
-            {status === "error" ? "카카오톡 로그인 처리 중..." : "카카오톡 로그인 처리 중..."}
-          </p>
+          <p className="mt-4 text-gray-600">카카오톡 로그인 처리 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{errorMessage}</p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90"
+          >
+            홈으로 돌아가기
+          </button>
         </div>
       </div>
     );

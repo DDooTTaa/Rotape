@@ -10,8 +10,6 @@ import { generateQRCode, dataURLtoBlob } from "@/lib/utils/qrcode";
 import { uploadQRCode } from "@/lib/firebase/storage";
 import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
-import TimePickerPopup from "@/components/TimePickerPopup";
-import CalendarPopup from "@/components/CalendarPopup";
 
 export const dynamic = 'force-dynamic';
 
@@ -46,41 +44,15 @@ export default function EventPage() {
     }
   };
 
-  const handleCreateEvent = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // submit 버튼이 아닌 경우 제출 방지
-    const target = e.target as HTMLFormElement;
-    const submitter = (e.nativeEvent as SubmitEvent).submitter;
-    if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
-      if (submitter.type !== 'submit') {
-        return;
-      }
-    }
-    
-    // 필수 필드 검증
-    if (!formData.title.trim()) {
-      alert("행사 제목을 입력해주세요.");
-      return;
-    }
-    
-    if (!formData.date) {
-      alert("행사 일시를 선택해주세요.");
-      return;
-    }
-    
-    if (!formData.location.trim()) {
-      alert("행사 장소를 입력해주세요.");
-      return;
-    }
-    
     setLoading(true);
 
     try {
       const eventId = await createEvent({
-        title: formData.title.trim(),
+        title: formData.title,
         date: new Date(formData.date),
-        location: formData.location.trim(),
+        location: formData.location,
         schedule: {
           intro: formData.intro,
           part1: formData.part1,
@@ -122,8 +94,17 @@ export default function EventPage() {
       }
 
       alert("행사가 생성되었습니다.");
-      // 행사 리스트 페이지로 이동
-      router.push("/admin");
+      await loadEvents();
+      setFormData({
+        title: "",
+        date: "",
+        location: "",
+        intro: "",
+        part1: "",
+        part2: "",
+        break: "",
+        maxParticipants: 20,
+      });
     } catch (error) {
       console.error("행사 생성 실패:", error);
       alert("행사 생성에 실패했습니다.");
@@ -153,6 +134,17 @@ export default function EventPage() {
           </div>
 
           <div>
+            <label className="block mb-2 font-semibold">행사 일시</label>
+            <input
+              type="datetime-local"
+              required
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+            />
+          </div>
+
+          <div>
             <label className="block mb-2 font-semibold">행사 장소</label>
             <input
               type="text"
@@ -164,32 +156,24 @@ export default function EventPage() {
           </div>
 
           <div>
-            <label className="block mb-2 font-semibold">행사 일시</label>
-            <CalendarPopup
-              value={formData.date}
-              onChange={(value) => setFormData({ ...formData, date: value })}
-              placeholder="날짜를 선택하세요"
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
-            />
-          </div>
-
-          <div>
             <label className="block mb-2 font-semibold">시작 시간</label>
-            <TimePickerPopup
+            <input
+              type="text"
               value={formData.break}
-              onChange={(value) => setFormData({ ...formData, break: value })}
-              placeholder="예: 16:00"
+              onChange={(e) => setFormData({ ...formData, break: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+              placeholder="예: 16:00"
             />
           </div>
 
           <div>
             <label className="block mb-2 font-semibold">종료 시간</label>
-            <TimePickerPopup
+            <input
+              type="text"
               value={formData.part2}
-              onChange={(value) => setFormData({ ...formData, part2: value })}
-              placeholder="예: 17:00"
+              onChange={(e) => setFormData({ ...formData, part2: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+              placeholder="예: 17:00"
             />
           </div>
 

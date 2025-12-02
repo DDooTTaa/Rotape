@@ -26,7 +26,6 @@ export default function EventPage() {
   const [event, setEvent] = useState<Event | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [isEventEnded, setIsEventEnded] = useState(false);
-  const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -169,8 +168,6 @@ export default function EventPage() {
             .map(({ profile }) => profile);
           
           setOtherGenderProfiles(filtered);
-          // 프로필이 로드되면 인덱스 초기화
-          setCurrentProfileIndex(0);
         }
       }
     } catch (error) {
@@ -307,100 +304,33 @@ export default function EventPage() {
           </div>
         </div>
 
-        {/* 진행 중인 모임일 때만 이성 프로필 케러셀 표시 */}
-        {!isEventEnded && otherGenderProfiles.length > 0 && (
+        {/* 다른 성별 프로필 목록 */}
+        {otherGenderProfiles.length > 0 && (
           <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
             <h2 className="text-2xl font-semibold mb-4 text-primary">
               {userGender === "M" ? "여성" : "남성"} 참가자 프로필
             </h2>
-            
-            {/* 카드 케러셀 */}
-            <div className="relative">
-              {/* 현재 프로필 카드 */}
-              {otherGenderProfiles[currentProfileIndex] && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {otherGenderProfiles.map((otherProfile) => (
                 <div
-                  onClick={() => setSelectedProfile(otherGenderProfiles[currentProfileIndex])}
-                  className="bg-white border-2 border-primary/30 rounded-xl p-6 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-300 card-hover"
+                  key={otherProfile.uid}
+                  onClick={() => setSelectedProfile(otherProfile)}
+                  className="bg-white border-2 border-primary/30 rounded-xl p-4 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-300 card-hover"
                 >
-                  {otherGenderProfiles[currentProfileIndex].photos && 
-                   otherGenderProfiles[currentProfileIndex].photos.length > 0 && (
-                    <div className="relative w-full aspect-square mb-4 rounded-lg overflow-hidden">
+                  {otherProfile.photos && otherProfile.photos.length > 0 && (
+                    <div className="relative w-full aspect-square mb-3 rounded-lg overflow-hidden">
                       <Image
-                        src={otherGenderProfiles[currentProfileIndex].photos[0]}
-                        alt={otherGenderProfiles[currentProfileIndex].displayName}
+                        src={otherProfile.photos[0]}
+                        alt={otherProfile.displayName}
                         fill
                         className="object-cover"
                       />
                     </div>
                   )}
-                  <p className="font-semibold text-gray-800 text-center text-xl mb-2">
-                    {otherGenderProfiles[currentProfileIndex].displayName}
-                  </p>
-                  <p className="text-sm text-gray-600 text-center mb-3">
-                    {otherGenderProfiles[currentProfileIndex].job}
-                  </p>
-                  {otherGenderProfiles[currentProfileIndex].intro && (
-                    <p className="text-sm text-gray-700 text-center line-clamp-2">
-                      {otherGenderProfiles[currentProfileIndex].intro}
-                    </p>
-                  )}
+                  <p className="font-semibold text-gray-800 text-center">{otherProfile.displayName}</p>
+                  <p className="text-sm text-gray-600 text-center mt-1">{otherProfile.job}</p>
                 </div>
-              )}
-
-              {/* 네비게이션 버튼 */}
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setCurrentProfileIndex((prev) => 
-                      prev > 0 ? prev - 1 : otherGenderProfiles.length - 1
-                    );
-                  }}
-                  disabled={otherGenderProfiles.length <= 1}
-                  className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ← 이전
-                </button>
-                
-                {/* 인디케이터 */}
-                <div className="flex gap-2">
-                  {otherGenderProfiles.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setCurrentProfileIndex(index);
-                      }}
-                      className={`w-2 h-2 rounded-full transition ${
-                        index === currentProfileIndex
-                          ? "bg-primary w-8"
-                          : "bg-gray-300 hover:bg-gray-400"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setCurrentProfileIndex((prev) => 
-                      prev < otherGenderProfiles.length - 1 ? prev + 1 : 0
-                    );
-                  }}
-                  disabled={otherGenderProfiles.length <= 1}
-                  className="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  다음 →
-                </button>
-              </div>
-
-              {/* 카운터 */}
-              <p className="text-center text-sm text-gray-600 mt-2">
-                {currentProfileIndex + 1} / {otherGenderProfiles.length}
-              </p>
+              ))}
             </div>
           </div>
         )}

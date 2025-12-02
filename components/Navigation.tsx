@@ -6,7 +6,6 @@ import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { getUser } from "@/lib/firebase/users";
 import Link from "next/link";
-import Image from "next/image";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import InfoModal from "@/components/InfoModal";
 
@@ -25,24 +24,6 @@ const participantNavItems: NavItem[] = [
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/participant/my-events",
-    label: "내 모임",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-      </svg>
-    ),
-  },
-  {
-    href: "/participant/messages",
-    label: "내 쪽지",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
       </svg>
     ),
   },
@@ -202,14 +183,7 @@ export default function Navigation() {
         <div className="max-w-7xl mx-auto w-full px-4">
           <div className="flex items-center justify-between h-16">
             <Link href={isAdmin ? "/admin" : "/participant/events"} className="flex items-center gap-2">
-              <Image
-                src="/logo.png"
-                alt="Rotape"
-                width={120}
-                height={48}
-                priority
-                className="h-8 w-auto"
-              />
+              <span className="text-2xl font-bold text-primary">Rotape</span>
             </Link>
             <div className="flex items-center gap-1">
               {navItems.map((item) => (
