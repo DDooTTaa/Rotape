@@ -431,7 +431,12 @@ function ApplicationFormContent() {
 
           {/* 전화번호 */}
           <div>
-            <label className="block mb-2 font-semibold">전화번호</label>
+            <label className="block mb-2 font-semibold">
+              전화번호
+              <span className="ml-2 text-sm font-normal text-gray-600">
+                *매칭에 성공하면 번호가 상대에게 전달돼요! (번호가 공개되길 원하지 않으면 따로 문의 주세요!)
+              </span>
+            </label>
             <input
               type="tel"
               required
