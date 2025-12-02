@@ -306,7 +306,7 @@ export default function Home() {
           </section>
 
           {/* 네 번째 페이지: 캐치프라이즈와 로그인 버튼 */}
-          <section className="min-w-full h-screen flex items-center justify-center snap-center relative z-10 px-4 bg-transparent">
+          <section className="min-w-full h-screen flex items-center justify-center snap-center relative z-10 px-4">
             <div className="text-center max-w-3xl">
               <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent">
                 지금 바로 시작하세요
@@ -319,17 +319,14 @@ export default function Home() {
               </p>
               <Link
                 href="/participant/auth"
-                className="group inline-block"
+                className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-12 py-6 md:px-16 md:py-7 rounded-2xl font-bold text-xl md:text-2xl hover:opacity-90 transition-all duration-300 shadow-2xl hover:shadow-2xl transform hover:-translate-y-2"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                <div className="relative bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-12 py-6 md:px-16 md:py-7 rounded-2xl font-bold text-xl md:text-2xl shadow-2xl transform group-hover:-translate-y-2 transition-all duration-300">
-                  <span className="flex items-center justify-center gap-3">
-                    로그인하고 시작하기
-                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </span>
-                </div>
+                <span className="flex items-center justify-center gap-3">
+                  로그인하고 시작하기
+                  <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </Link>
             </div>
           </section>
