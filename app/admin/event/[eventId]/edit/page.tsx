@@ -43,7 +43,7 @@ export default function EditEventPage() {
       const eventData = await getEvent(eventId);
       if (eventData) {
         setEvent(eventData);
-        // Convert Date to datetime-local format
+        // Date를 datetime-local 형식으로 변환
         const dateValue = eventData.date instanceof Date 
           ? eventData.date 
           : new Date(eventData.date);
@@ -65,7 +65,7 @@ export default function EditEventPage() {
       }
     } catch (error) {
       console.error("행사 정보 로드 실패:", error);
-      alert("행사 정보를 불러오는 중 오류가 발생했습니다.");
+      alert("행사 정보를 불러오는데 실패했습니다.");
     } finally {
       setIsLoadingData(false);
     }
@@ -75,7 +75,7 @@ export default function EditEventPage() {
     e.preventDefault();
     if (!eventId) return;
 
-    // submit 버튼이 아닌 경우 실행 방지
+    // submit 버튼이 아닌 경우 제출 방지
     const submitter = (e.nativeEvent as SubmitEvent).submitter;
     if (submitter && (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement)) {
       if (submitter.type !== 'submit') {
@@ -83,7 +83,7 @@ export default function EditEventPage() {
       }
     }
 
-    // 필수 입력 검증
+    // 필수 필드 검증
     if (!formData.title.trim()) {
       alert("행사 제목을 입력해주세요.");
       return;
@@ -188,7 +188,7 @@ export default function EditEventPage() {
             <CalendarPopup
               value={formData.date}
               onChange={(value) => setFormData({ ...formData, date: value })}
-              placeholder="날짜를 선택해주세요"
+              placeholder="날짜를 선택하세요"
               className="input-elegant"
             />
           </div>
@@ -227,7 +227,7 @@ export default function EditEventPage() {
               onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
               className="input-elegant"
             />
-            <p className="text-sm mt-1 text-gray-600">10명 이상 30명 이하로 설정해주세요</p>
+            <p className="text-sm mt-1 text-gray-600">10명 이상 30명 이하로 설정하세요.</p>
           </div>
 
           {/* 버튼 */}
@@ -252,3 +252,4 @@ export default function EditEventPage() {
     </div>
   );
 }
+
