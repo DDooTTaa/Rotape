@@ -171,18 +171,6 @@ export default function Home() {
   return (
     <>
       <div className="main-page min-h-screen text-foreground relative overflow-hidden">
-        {/* 눈송이 배경 */}
-        <div className="fixed inset-0 pointer-events-none z-0">
-          {snowflakes.map((flake) => (
-            <Snowflake
-              key={flake.id}
-              delay={flake.delay}
-              duration={flake.duration}
-              left={flake.left}
-              initialTop={flake.initialTop}
-            />
-          ))}
-        </div>
 
         {/* 우측 상단 ? 아이콘 */}
         {!showInfoModal && (
@@ -318,7 +306,7 @@ export default function Home() {
           </section>
 
           {/* 네 번째 페이지: 캐치프라이즈와 로그인 버튼 */}
-          <section className="min-w-full h-screen flex items-center justify-center snap-center relative z-10 px-4">
+          <section className="min-w-full h-screen flex items-center justify-center snap-center relative z-10 px-4 bg-transparent">
             <div className="text-center max-w-3xl">
               <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent">
                 지금 바로 시작하세요
