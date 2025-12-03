@@ -201,13 +201,13 @@ body {
   height: 0;
 }
 
-/* 랜딩 페이지 전체 스크롤바 숨기기 */
-html {
+/* 랜딩 페이지에서만 스크롤 숨기기 */
+html.landing-page {
   overflow-x: hidden;
   overflow-y: hidden;
 }
 
-body {
+body.landing-page {
   overflow-x: hidden;
   overflow-y: hidden;
 }

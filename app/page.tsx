@@ -77,6 +77,18 @@ export default function Home() {
   }, [currentSlide]);
 
 
+  useEffect(() => {
+    // 랜딩 페이지 클래스 추가
+    document.documentElement.classList.add('landing-page');
+    document.body.classList.add('landing-page');
+    
+    return () => {
+      // 컴포넌트 언마운트 시 클래스 제거
+      document.documentElement.classList.remove('landing-page');
+      document.body.classList.remove('landing-page');
+    };
+  }, []);
+
   return (
     <>
       <div className="fixed inset-0 md:overflow-hidden" style={{ overflow: 'auto' }}>

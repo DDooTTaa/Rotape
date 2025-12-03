@@ -129,18 +129,12 @@ export default function EventsPage() {
       }
       setApplications(apps);
 
-      // 필터링: 종료되지 않은 행사 OR (종료된 행사 AND 사용자가 신청한 행사)
+      // 필터링: 종료되지 않은 행사만 표시
       const filteredEvents = eventsData.filter((event) => {
         const isEnded = isEventEnded(event);
-        const hasApplication = apps[event.eventId] !== null;
         
-        // 종료되지 않은 행사는 모두 표시
-        if (!isEnded) {
-          return true;
-        }
-        
-        // 종료된 행사는 사용자가 신청한 경우만 표시
-        return hasApplication;
+        // 종료된 행사는 표시하지 않음
+        return !isEnded;
       });
       
       setEvents(filteredEvents);

@@ -144,24 +144,31 @@ export default function MyEventsPage() {
           })
       );
       
-      // null 제거 및 종료된 행사만 필터링
-      const endedEvents = eventsWithApplications
-        .filter((item): item is EventWithParticipants => 
-          item !== null && isEventEnded(item)
-        )
+      // null 제거 및 모든 행사 표시 (끝난 모임 + 진행중인 모임 모두)
+      const allEvents = eventsWithApplications
+        .filter((item): item is EventWithParticipants => item !== null)
         .sort((a, b) => {
-          // 최근 종료된 행사가 먼저 오도록 정렬
+          // 진행중인 행사가 먼저 오고, 그 다음 최근 행사 순으로 정렬
+          const aEnded = isEventEnded(a);
+          const bEnded = isEventEnded(b);
+          
+          if (aEnded !== bEnded) {
+            // 진행중인 행사(false)가 먼저
+            return aEnded ? 1 : -1;
+          }
+          
+          // 같은 상태면 날짜순 정렬
           const dateA = a.date instanceof Date ? a.date : new Date(a.date);
           const dateB = b.date instanceof Date ? b.date : new Date(b.date);
           return dateB.getTime() - dateA.getTime();
         });
       
-      setEvents(endedEvents);
+      setEvents(allEvents);
       
       // 각 모임에서 보낸 쪽지 개수 조회
       const counts: Record<string, number> = {};
       await Promise.all(
-        endedEvents.map(async (event) => {
+        allEvents.map(async (event) => {
           try {
             const count = await getSentMessageCountByEvent(event.eventId, user.uid);
             counts[event.eventId] = count;
@@ -239,12 +246,12 @@ export default function MyEventsPage() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
             내 모임
           </h1>
-          <p className="text-gray-600 mt-2">참여한 종료된 모임 목록입니다.</p>
+          <p className="text-gray-600 mt-2">참여한 모임 목록입니다.</p>
         </div>
 
         {events.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">참여한 종료된 모임이 없습니다.</p>
+            <p className="text-gray-600 text-lg">참여한 모임이 없습니다.</p>
             <Link
               href="/participant/events"
               className="inline-block mt-4 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
