@@ -246,6 +246,7 @@ export default function AuthPage() {
           age: 0, // 지원서에서 계산
           createdAt: new Date(),
           isAdmin: false,
+          termsAccepted: false, // 신규 사용자는 약관 동의 안 함
         };
 
         try {
@@ -255,23 +256,19 @@ export default function AuthPage() {
         }
 
         // 약관 동의 확인
-        if (!termsAccepted) {
-          setShowTerms(true);
-          setLoading(false);
-          return;
-        }
-
-        // 신규 사용자도 행사 리스트로 이동
-        router.push("/participant/events");
+        setShowTerms(true);
+        setLoading(false);
+        return;
       } else {
-        // 기존 사용자 - 약관 동의 확인
-        if (!termsAccepted) {
+        // 기존 사용자 - 약관 동의 확인 (Firestore에서 확인)
+        const userTermsAccepted = existingUser.termsAccepted ?? false;
+        if (!userTermsAccepted) {
           setShowTerms(true);
           setLoading(false);
           return;
         }
 
-        // 기존 사용자는 행사 리스트로
+        // 약관 동의한 사용자는 행사 리스트로
         router.push("/participant/events");
       }
     } catch (error) {
@@ -304,6 +301,7 @@ export default function AuthPage() {
           age: 0,
           createdAt: new Date(),
           isAdmin: false,
+          termsAccepted: false, // 신규 사용자는 약관 동의 안 함
         };
 
         try {
@@ -313,23 +311,19 @@ export default function AuthPage() {
         }
 
         // 약관 동의 확인
-        if (!termsAccepted) {
-          setShowTerms(true);
-          setLoading(false);
-          return;
-        }
-
-        // 신규 사용자도 행사 리스트로 이동
-        router.push("/participant/events");
+        setShowTerms(true);
+        setLoading(false);
+        return;
       } else {
-        // 기존 사용자 - 약관 동의 확인
-        if (!termsAccepted) {
+        // 기존 사용자 - 약관 동의 확인 (Firestore에서 확인)
+        const userTermsAccepted = existingUser.termsAccepted ?? false;
+        if (!userTermsAccepted) {
           setShowTerms(true);
           setLoading(false);
           return;
         }
 
-        // 기존 사용자는 행사 리스트로
+        // 약관 동의한 사용자는 행사 리스트로
         router.push("/participant/events");
       }
     } catch (error) {
@@ -411,11 +405,26 @@ export default function AuthPage() {
   };
 
   const handleAcceptTerms = async () => {
-    setTermsAccepted(true);
-    setShowTerms(false);
+    const currentUser = auth?.currentUser;
+    if (!currentUser) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
     
-    // 모든 사용자를 행사 리스트로 이동
-    router.push("/participant/events");
+    try {
+      // Firestore에 약관 동의 상태 저장
+      const { updateUser } = await import("@/lib/firebase/users");
+      await updateUser(currentUser.uid, { termsAccepted: true });
+      
+      setTermsAccepted(true);
+      setShowTerms(false);
+      
+      // 모든 사용자를 행사 리스트로 이동
+      router.push("/participant/events");
+    } catch (error) {
+      console.error("약관 동의 저장 실패:", error);
+      alert("약관 동의 저장에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   return (
@@ -539,7 +548,7 @@ export default function AuthPage() {
         </div>
 
         {showTerms && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-4">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000] px-4 py-4">
               <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
                 <h2 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">약관 동의</h2>
                 <div className="space-y-6 mb-6 text-sm md:text-base text-gray-700 max-h-[60vh] overflow-y-auto">

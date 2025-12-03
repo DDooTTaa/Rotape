@@ -223,10 +223,22 @@ export default function MyEventsPage() {
     }
   };
 
+  useEffect(() => {
+    if (!user) {
+      const timer = setTimeout(() => {
+        router.push("/participant/auth");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, router]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center">
-        <p>로그인이 필요합니다.</p>
+        <div className="text-center">
+          <p className="text-xl font-semibold text-gray-800 mb-2">로그인이 필요합니다.</p>
+          <p className="text-sm text-gray-600">3초 후 로그인 페이지로 이동합니다...</p>
+        </div>
       </div>
     );
   }

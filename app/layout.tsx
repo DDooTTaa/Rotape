@@ -12,6 +12,11 @@ const Footer = dynamicImport(() => import("@/components/Footer"), {
   ssr: false,
 });
 
+// 투표 알림 모달을 클라이언트에서만 동적으로 로드
+const VoteReminderModal = dynamicImport(() => import("@/components/VoteReminderModal"), {
+  ssr: false,
+});
+
 export const metadata: Metadata = {
   title: "Rotape - 로테이션 소개팅",
   description: "로테이션 소개팅 서비스로 새로운 만남을 시작하세요",
@@ -79,6 +84,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <VoteReminderModal />
       </body>
     </html>
   );

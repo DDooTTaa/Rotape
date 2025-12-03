@@ -6,7 +6,8 @@ import { auth } from "@/lib/firebase/config";
 import { getEvent } from "@/lib/firebase/events";
 import { getApplicationsByEventId, updateApplicationStatus } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
-import { Event, Application, User } from "@/lib/firebase/types";
+import { getAllLikesForEvent } from "@/lib/firebase/matching";
+import { Event, Application, User, Like } from "@/lib/firebase/types";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -28,12 +29,20 @@ export default function EventDetailPage() {
     gender: "all" as "all" | "M" | "F",
   });
   const [selectedApp, setSelectedApp] = useState<(Application & { user?: User }) | null>(null);
+  const [votes, setVotes] = useState<(Like & { voter?: User; firstTarget?: User; secondTarget?: User; thirdTarget?: User })[]>([]);
+  const [votesLoading, setVotesLoading] = useState(false);
 
   useEffect(() => {
     if (user && eventId) {
       loadData();
     }
   }, [user, eventId]);
+
+  useEffect(() => {
+    if (event && eventId) {
+      checkAndLoadVotes();
+    }
+  }, [event, eventId]);
 
   useEffect(() => {
     applyFilters();
@@ -128,6 +137,79 @@ export default function EventDetailPage() {
     }
   };
 
+  // 행사 종료 시간 계산 함수
+  const calculateEventEndTime = (event: Event): Date | null => {
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    
+    if (event.schedule?.part2) {
+      const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+      const timeStr = event.schedule.part2.trim();
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endTime = new Date(eventDate);
+        endTime.setHours(hours, minutes || 0, 0, 0);
+        return endTime;
+      }
+    }
+    
+    return null;
+  };
+
+  // 행사가 종료되었는지 확인
+  const isEventEnded = (event: Event): boolean => {
+    const now = new Date();
+    const endTime = calculateEventEndTime(event);
+    
+    if (endTime) {
+      return now.getTime() >= endTime.getTime();
+    }
+    
+    const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+    const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return eventDateOnly.getTime() < todayOnly.getTime();
+  };
+
+  // 종료된 모임이면 투표 결과 로드
+  const checkAndLoadVotes = async () => {
+    if (!event || !eventId) return;
+    
+    if (isEventEnded(event)) {
+      setVotesLoading(true);
+      try {
+        const allVotes = await getAllLikesForEvent(eventId);
+        
+        // 투표자와 투표 대상 정보 가져오기
+        const votesWithUsers = await Promise.all(
+          allVotes.map(async (vote) => {
+            const voter = await getUser(vote.uid);
+            const firstTarget = vote.first ? await getUser(vote.first).catch(() => null) : null;
+            const secondTarget = vote.second ? await getUser(vote.second).catch(() => null) : null;
+            const thirdTarget = vote.third ? await getUser(vote.third).catch(() => null) : null;
+            
+            return {
+              ...vote,
+              voter: voter || undefined,
+              firstTarget: firstTarget || undefined,
+              secondTarget: secondTarget || undefined,
+              thirdTarget: thirdTarget || undefined,
+            };
+          })
+        );
+        
+        setVotes(votesWithUsers);
+      } catch (error) {
+        console.error("투표 결과 로드 실패:", error);
+      } finally {
+        setVotesLoading(false);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen text-foreground flex items-center justify-center">
@@ -213,6 +295,71 @@ export default function EventDetailPage() {
             </select>
           </div>
         </div>
+
+        {/* 투표 결과 (종료된 모임만) */}
+        {event && isEventEnded(event) && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
+              투표 결과 ({votes.length}명 투표)
+            </h2>
+            {votesLoading ? (
+              <div className="card-elegant p-8 text-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="mt-4 text-gray-600">투표 결과를 불러오는 중...</p>
+              </div>
+            ) : votes.length === 0 ? (
+              <div className="card-elegant p-8 text-center text-gray-600">
+                아직 투표가 없습니다.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {votes.map((vote) => (
+                  <div key={vote.uid} className="card-elegant p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                          {vote.voter?.name || "이름 없음"} ({vote.voter?.gender === "M" ? "남성" : "여성"})
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700 w-16">1순위:</span>
+                        <span className={vote.first ? "text-gray-800" : "text-gray-400 italic"}>
+                          {vote.first 
+                            ? (vote.firstTarget?.name || "사용자 정보 없음")
+                            : "없음"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700 w-16">2순위:</span>
+                        <span className={vote.second ? "text-gray-800" : "text-gray-400 italic"}>
+                          {vote.second 
+                            ? (vote.secondTarget?.name || "사용자 정보 없음")
+                            : "없음"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700 w-16">3순위:</span>
+                        <span className={vote.third ? "text-gray-800" : "text-gray-400 italic"}>
+                          {vote.third 
+                            ? (vote.thirdTarget?.name || "사용자 정보 없음")
+                            : "없음"}
+                        </span>
+                      </div>
+                      {vote.message && (
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <span className="font-semibold text-gray-700">하고 싶은 말:</span>
+                          <p className="text-gray-600 mt-1">{vote.message}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 지원자 목록 */}
         <div className="mb-6">

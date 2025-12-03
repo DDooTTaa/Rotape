@@ -29,7 +29,6 @@ export default function RotationPage() {
     second: "",
     third: "",
     message: "",
-    isAnonymous: false,
   });
 
   useEffect(() => {
@@ -43,10 +42,15 @@ export default function RotationPage() {
     if (user && eventId) {
       loadEventData();
       loadUserData();
-      loadProfiles();
       checkExistingLike();
     }
   }, [user, eventId]);
+
+  useEffect(() => {
+    if (user && eventId && userGender) {
+      loadProfiles();
+    }
+  }, [user, eventId, userGender]);
 
   // 종료 시간이 지났는지 실시간으로 확인
   useEffect(() => {
@@ -205,10 +209,7 @@ export default function RotationPage() {
       return;
     }
 
-    if (!selections.first || !selections.second || !selections.third) {
-      alert("1, 2, 3순위를 모두 선택해주세요.");
-      return;
-    }
+    // 없음을 선택한 경우도 허용하므로 검증 제거
 
     setLoading(true);
     try {
@@ -278,6 +279,24 @@ export default function RotationPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold">1, 2, 3순위 선택하기</h1>
           <p className="text-gray-600 mt-2">행사가 종료되었습니다. 이성 중에서 Top 1, 2, 3을 선택해주세요.</p>
+          
+          {/* 모임 상세 정보 */}
+          {event && (
+            <div className="mt-6 bg-gradient-to-r from-primary/10 to-[#0d4a1a]/10 border-2 border-primary/30 rounded-lg p-4">
+              <h2 className="text-xl font-bold text-primary mb-3">{event.title}</h2>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p>
+                  <span className="font-semibold">일시:</span>{" "}
+                  {event.date instanceof Date
+                    ? event.date.toLocaleString("ko-KR")
+                    : new Date(event.date).toLocaleString("ko-KR")}
+                </p>
+                <p>
+                  <span className="font-semibold">장소:</span> {event.location}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -285,12 +304,11 @@ export default function RotationPage() {
           <div>
             <label className="block mb-2 font-semibold text-gray-800">1순위</label>
             <select
-              required
               value={selections.first}
               onChange={(e) => setSelections({ ...selections, first: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             >
-              <option value="">선택하세요</option>
+              <option value="">없음</option>
               {profiles.map((profile) => (
                 <option key={profile.uid} value={profile.uid}>
                   {profile.displayName}
@@ -303,14 +321,13 @@ export default function RotationPage() {
           <div>
             <label className="block mb-2 font-semibold text-gray-800">2순위</label>
             <select
-              required
               value={selections.second}
               onChange={(e) => setSelections({ ...selections, second: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             >
-              <option value="">선택하세요</option>
+              <option value="">없음</option>
               {profiles
-                .filter((p) => p.uid !== selections.first)
+                .filter((p) => p.uid !== selections.first || selections.first === "")
                 .map((profile) => (
                   <option key={profile.uid} value={profile.uid}>
                     {profile.displayName}
@@ -323,14 +340,16 @@ export default function RotationPage() {
           <div>
             <label className="block mb-2 font-semibold text-gray-800">3순위</label>
             <select
-              required
               value={selections.third}
               onChange={(e) => setSelections({ ...selections, third: e.target.value })}
               className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
             >
-              <option value="">선택하세요</option>
+              <option value="">없음</option>
               {profiles
-                .filter((p) => p.uid !== selections.first && p.uid !== selections.second)
+                .filter((p) => 
+                  (selections.first === "" || p.uid !== selections.first) && 
+                  (selections.second === "" || p.uid !== selections.second)
+                )
                 .map((profile) => (
                   <option key={profile.uid} value={profile.uid}>
                     {profile.displayName}
@@ -349,15 +368,6 @@ export default function RotationPage() {
               rows={3}
               placeholder="메시지를 입력하세요 (선택사항)"
             />
-            <label className="flex items-center mt-2 text-gray-800">
-              <input
-                type="checkbox"
-                checked={selections.isAnonymous}
-                onChange={(e) => setSelections({ ...selections, isAnonymous: e.target.checked })}
-                className="mr-2"
-              />
-              익명으로 공개
-            </label>
           </div>
 
           <button

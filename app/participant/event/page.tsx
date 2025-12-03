@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getProfile, getProfilesByEvent } from "@/lib/firebase/profiles";
-import { getUser } from "@/lib/firebase/users";
+import { getUser, updateUser } from "@/lib/firebase/users";
 import { getEvent } from "@/lib/firebase/events";
 import { getLike } from "@/lib/firebase/matching";
 import { Profile, Event } from "@/lib/firebase/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import TermsModal from "@/components/TermsModal";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,8 @@ export default function EventPage() {
   const [hasVoted, setHasVoted] = useState(false);
   const [isEventEnded, setIsEventEnded] = useState(false);
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
+  const [termsAccepted, setTermsAccepted] = useState<boolean | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -139,38 +142,43 @@ export default function EventPage() {
           }
         }
         
-        // 사용자 성별 확인
+        // 사용자 성별 확인 및 약관 동의 상태 확인
         const userData = await getUser(user.uid);
-        if (userData?.gender) {
-          setUserGender(userData.gender);
+        if (userData) {
+          // 약관 동의 상태 확인
+          setTermsAccepted(userData.termsAccepted ?? false);
           
-          // 같은 행사의 다른 성별 프로필 가져오기
-          const allProfiles = await getProfilesByEvent(profileData.eventId);
-          const otherProfiles = allProfiles.filter(p => {
-            // 프로필의 uid로 사용자 정보를 가져와서 성별 확인
-            return p.uid !== user.uid;
-          });
-          
-          // 각 프로필의 사용자 정보를 가져와서 성별 필터링
-          const profilesWithGender = await Promise.all(
-            otherProfiles.map(async (p) => {
-              try {
-                const profileUser = await getUser(p.uid);
-                return { profile: p, gender: profileUser?.gender };
-              } catch {
-                return { profile: p, gender: null };
-              }
-            })
-          );
-          
-          // 현재 사용자와 다른 성별의 프로필만 필터링
-          const filtered = profilesWithGender
-            .filter(({ gender }) => gender && gender !== userData.gender)
-            .map(({ profile }) => profile);
-          
-          setOtherGenderProfiles(filtered);
-          // 프로필이 로드되면 인덱스 초기화
-          setCurrentProfileIndex(0);
+          if (userData.gender) {
+            setUserGender(userData.gender);
+            
+            // 같은 행사의 다른 성별 프로필 가져오기
+            const allProfiles = await getProfilesByEvent(profileData.eventId);
+            const otherProfiles = allProfiles.filter(p => {
+              // 프로필의 uid로 사용자 정보를 가져와서 성별 확인
+              return p.uid !== user.uid;
+            });
+            
+            // 각 프로필의 사용자 정보를 가져와서 성별 필터링
+            const profilesWithGender = await Promise.all(
+              otherProfiles.map(async (p) => {
+                try {
+                  const profileUser = await getUser(p.uid);
+                  return { profile: p, gender: profileUser?.gender };
+                } catch {
+                  return { profile: p, gender: null };
+                }
+              })
+            );
+            
+            // 현재 사용자와 다른 성별의 프로필만 필터링
+            const filtered = profilesWithGender
+              .filter(({ gender }) => gender && gender !== userData.gender)
+              .map(({ profile }) => profile);
+            
+            setOtherGenderProfiles(filtered);
+            // 프로필이 로드되면 인덱스 초기화
+            setCurrentProfileIndex(0);
+          }
         }
       }
     } catch (error) {
@@ -253,12 +261,24 @@ export default function EventPage() {
             ) : (
               <div>
                 <p className="text-gray-700 mb-4">이성 중에서 Top 1, 2, 3을 선택해주세요.</p>
-                <Link
-                  href={`/participant/rotation?eventId=${profile?.eventId}`}
-                  className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-lg"
-                >
-                  투표하기
-                </Link>
+                {termsAccepted ? (
+                  <Link
+                    href={`/participant/rotation?eventId=${profile?.eventId}`}
+                    className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-lg"
+                  >
+                    투표하기
+                  </Link>
+                ) : (
+                  <div>
+                    <p className="text-yellow-600 mb-4 font-semibold">투표하기 전에 약관 동의가 필요합니다.</p>
+                    <button
+                      onClick={() => setShowTermsModal(true)}
+                      className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition shadow-lg"
+                    >
+                      약관 동의하기
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -488,6 +508,24 @@ export default function EventPage() {
           </div>
         )}
       </div>
+
+      {/* 약관 동의 모달 */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={async () => {
+          // 약관 동의 후 상태 업데이트
+          if (user && termsAccepted === false) {
+            try {
+              await updateUser(user.uid, { termsAccepted: true });
+              setTermsAccepted(true);
+            } catch (error) {
+              console.error("약관 동의 저장 실패:", error);
+              alert("약관 동의 저장에 실패했습니다. 다시 시도해주세요.");
+            }
+          }
+        }}
+      />
     </div>
   );
 }

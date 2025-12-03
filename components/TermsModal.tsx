@@ -3,13 +3,14 @@
 interface TermsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAccept?: () => void; // 약관 동의 시 호출할 콜백 (선택사항)
 }
 
-export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
+export default function TermsModal({ isOpen, onClose, onAccept }: TermsModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] px-4 py-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000] px-4 py-4">
       <div className="bg-white border-2 border-primary/20 rounded-2xl p-6 md:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">약관 동의</h2>
@@ -107,12 +108,23 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
           </section>
         </div>
 
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-gray-200 flex gap-3">
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+            className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
           >
-            확인
+            취소
+          </button>
+          <button
+            onClick={() => {
+              if (onAccept) {
+                onAccept();
+              }
+              onClose();
+            }}
+            className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+          >
+            동의
           </button>
         </div>
       </div>

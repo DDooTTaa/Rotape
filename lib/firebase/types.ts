@@ -11,6 +11,7 @@ export interface User {
   createdAt: Date;
   phone?: string;
   isAdmin: boolean;
+  termsAccepted?: boolean; // 약관 동의 여부
 }
 
 export interface Application {
