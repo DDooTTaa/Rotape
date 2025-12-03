@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     siteName: "Rotape",
     images: [
       {
-        url: "/og-image.png",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Rotape - 로테이션 소개팅",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Rotape - 로테이션 소개팅",
     description: "로테이션 소개팅 서비스로 새로운 만남을 시작하세요",
-    images: ["/og-image.png"],
+    images: ["/logo.png"],
   },
   robots: {
     index: true,

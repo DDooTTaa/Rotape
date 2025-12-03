@@ -15,12 +15,15 @@ export default function Home() {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // 가로 스크롤 처리
+  // 가로 스크롤 처리 (데스크톱만)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
+      // 모바일에서는 가로 스크롤 비활성화
+      if (window.innerWidth < 768) return;
+      
       if (isScrolling.current) return;
 
       e.preventDefault();
@@ -50,12 +53,15 @@ export default function Home() {
     };
   }, [currentSlide]);
 
-  // 스크롤 위치에 따라 현재 슬라이드 업데이트
+  // 스크롤 위치에 따라 현재 슬라이드 업데이트 (데스크톱만)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
+      // 모바일에서는 가로 스크롤 추적 비활성화
+      if (window.innerWidth < 768) return;
+      
       const slideWidth = window.innerWidth;
       const newSlide = Math.round(container.scrollLeft / slideWidth);
       if (newSlide !== currentSlide) {
@@ -70,90 +76,35 @@ export default function Home() {
     };
   }, [currentSlide]);
 
-  // 터치 스와이프 처리 (모바일)
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartX.current = e.touches[0].clientX;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      touchEndX.current = e.touches[0].clientX;
-    };
-
-    const handleTouchEnd = () => {
-      if (!touchStartX.current || !touchEndX.current) return;
-      
-      const distance = touchStartX.current - touchEndX.current;
-      const minSwipeDistance = 50;
-
-      if (Math.abs(distance) > minSwipeDistance) {
-        if (distance > 0 && currentSlide < 3) {
-          // Swipe left - next slide
-          const newSlide = currentSlide + 1;
-          setCurrentSlide(newSlide);
-          const slideWidth = window.innerWidth;
-          container.scrollTo({
-            left: newSlide * slideWidth,
-            behavior: 'smooth'
-          });
-        } else if (distance < 0 && currentSlide > 0) {
-          // Swipe right - previous slide
-          const newSlide = currentSlide - 1;
-          setCurrentSlide(newSlide);
-          const slideWidth = window.innerWidth;
-          container.scrollTo({
-            left: newSlide * slideWidth,
-            behavior: 'smooth'
-          });
-        }
-      }
-
-      touchStartX.current = 0;
-      touchEndX.current = 0;
-    };
-
-    container.addEventListener('touchstart', handleTouchStart, { passive: true });
-    container.addEventListener('touchmove', handleTouchMove, { passive: true });
-    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-
-    return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [currentSlide]);
 
   return (
     <>
-      <div className="fixed inset-0 overflow-hidden" style={{ overflow: 'hidden' }}>
-        {/* 우측 상단 ? 아이콘 */}
-        {!showInfoModal && (
-          <button
-            onClick={() => setShowInfoModal(true)}
-            className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
-            aria-label="서비스 안내"
-          >
-            <span className="text-2xl md:text-3xl font-bold text-primary">?</span>
-          </button>
-        )}
+      <div className="fixed inset-0 md:overflow-hidden" style={{ overflow: 'auto' }}>
+      {/* 우측 상단 ? 아이콘 */}
+      {!showInfoModal && (
+        <button
+          onClick={() => setShowInfoModal(true)}
+          className="fixed top-4 right-4 md:top-6 md:right-6 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white border-2 border-primary/30 shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110"
+          aria-label="서비스 안내"
+        >
+        <span className="text-2xl md:text-3xl font-bold text-primary">?</span>
+      </button>
+      )}
 
         {/* 가로 스크롤 컨테이너 */}
         <div
           ref={containerRef}
-          className="horizontal-scroll-container w-full h-screen scrollbar-hide"
+          className="horizontal-scroll-container w-full h-screen md:h-screen scrollbar-hide"
           style={{
             scrollBehavior: 'smooth',
             overflowX: 'auto',
-            overflowY: 'hidden',
+            overflowY: 'auto',
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          <div className="flex h-full">
+          <div className="flex flex-col md:flex-row h-auto md:h-full">
             {/* 첫 번째 페이지: 로고와 소개 */}
-            <section className="w-screen flex-shrink-0 h-screen flex flex-col items-center justify-center snap-center relative z-10 px-4 py-8 overflow-y-auto">
+            <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex flex-col items-center justify-center snap-center relative z-10 px-4 py-12 md:py-8">
               <div className="text-center max-w-4xl w-full">
                 <div className="flex justify-center mb-4 md:mb-6">
                   <Image
@@ -164,21 +115,21 @@ export default function Home() {
                     priority
                     className="h-auto w-auto max-w-[200px] md:max-w-[240px]"
                   />
-                </div>
+        </div>
                 <p className="text-gray-700 text-xl md:text-4xl font-medium mb-8 md:mb-10 px-2" style={{ fontFamily: "'Nanum Pen Script', cursive" }}>
                   한 컷의 테이프처럼 영원할 당신의 인연
                 </p>
-                <Link
+          <Link
                   href="/participant/auth"
                   className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
-                >
+          >
                   로그인하고 시작하기
-                </Link>
+          </Link>
               </div>
             </section>
 
             {/* 두 번째 페이지: 우리만의 메리트 */}
-            <section className="w-screen flex-shrink-0 h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5 overflow-y-auto">
+            <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5">
               <div className="w-full max-w-7xl">
                 <h2 className="text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
                   우리의 가치
@@ -221,11 +172,11 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </section>
+                  </div>
+                </section>
 
             {/* 세 번째 페이지: 재미 요소 */}
-            <section className="w-screen flex-shrink-0 h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5 overflow-y-auto">
+            <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5">
               <div className="w-full max-w-7xl">
                 <h2 className="text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
                   따끈따끈한 기능
@@ -272,7 +223,7 @@ export default function Home() {
             </section>
 
             {/* 네 번째 페이지: 우리가 지향하는 메시지 */}
-            <section className="w-screen flex-shrink-0 h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-8 overflow-y-auto">
+            <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8">
               <div className="w-full max-w-5xl text-center">
                 <div className="space-y-4 md:space-y-6 lg:space-y-8">
                   <p className="text-2xl md:text-5xl font-bold text-gray-800 leading-relaxed px-2">
@@ -299,8 +250,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 페이지 인디케이터 */}
-        <div className="fixed bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+        {/* 페이지 인디케이터 (데스크톱만) */}
+        <div className="hidden md:flex fixed bottom-8 left-1/2 transform -translate-x-1/2 z-20 gap-2">
           {[0, 1, 2, 3].map((index) => (
             <button
               key={index}
