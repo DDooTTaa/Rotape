@@ -467,17 +467,12 @@ export default function AuthPage() {
 
           {/* 카카오톡 브라우저 안내 */}
           {isKakaoBrowser && (
-            <div className="mb-6 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-lg">
-              <p className="text-sm font-semibold text-red-600 mb-2">
+            <div className="mb-6 p-4 bg-yellow-100/50 border-2 border-yellow-300/50 rounded-lg">
+              <p className="text-sm font-semibold text-yellow-800 mb-2">
                 ⚠️ 카톡 브라우저에선 Google 로그인이 지원되지 않아요
               </p>
               <div className="text-xs text-gray-600 space-y-1">
-                <p className="font-semibold">📱 접속 방법:</p>
-                <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>우측 하단의 <span className="font-semibold">&apos;...&apos;</span> 메뉴 클릭</li>
-                  <li><span className="font-semibold">&apos;다른 브라우저로 열기&apos;</span> 또는 <span className="font-semibold">&apos;외부 브라우저로 열기&apos;</span> 선택</li>
-                  <li>Chrome, Safari 등 기본 브라우저에서 다시 접속</li>
-                </ol>
+                <p className="font-semibold">카카오톡 로그인을 이용해 주세요</p>
               </div>
             </div>
           )}
