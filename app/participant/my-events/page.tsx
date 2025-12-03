@@ -278,11 +278,13 @@ export default function MyEventsPage() {
                 approved: "승인됨",
                 pending: "심사 중",
                 rejected: "거절됨",
+                paid: "입금 완료",
               };
               const statusClassMap: Record<Application["status"], string> = {
                 approved: "bg-green-100 text-green-800",
                 pending: "bg-yellow-100 text-yellow-800",
                 rejected: "bg-gray-100 text-gray-600",
+                paid: "bg-blue-100 text-blue-800",
               };
 
               return (
