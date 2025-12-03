@@ -8,6 +8,7 @@ import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { submitLike, getLike } from "@/lib/firebase/matching";
 import { getUser } from "@/lib/firebase/users";
 import { getEvent } from "@/lib/firebase/events";
+import { getApplicationsByEventId } from "@/lib/firebase/applications";
 import { Profile, Event } from "@/lib/firebase/types";
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default function RotationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user] = useAuthState(auth!);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<Array<Profile & { nickname?: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [eventId, setEventId] = useState<string | null>(null);
@@ -172,29 +173,86 @@ export default function RotationPage() {
   };
 
   const loadProfiles = async () => {
-    if (!user || !eventId || !userGender) return;
+    if (!user || !eventId || !userGender) {
+      console.log("loadProfiles 조건 불만족:", { user: !!user, eventId, userGender });
+      return;
+    }
+    
     try {
-      const profilesData = await getProfilesByEvent(eventId);
+      console.log("프로필 로드 시작:", { eventId, userGender, userId: user.uid });
       
-      // 이성 프로필만 필터링
-      const profilesWithGender = await Promise.all(
-        profilesData.map(async (p) => {
+      // 승인된 지원서만 가져오기
+      const applications = await getApplicationsByEventId(eventId);
+      console.log("전체 지원서 수:", applications.length);
+      
+      const approvedApplications = applications.filter(app => app.status === "approved" || app.status === "paid");
+      console.log("승인된 지원서 수:", approvedApplications.length);
+      console.log("승인된 지원서 UIDs:", approvedApplications.map(app => app.uid));
+      
+      // 승인된 사용자의 프로필 가져오기
+      const profilesData = await getProfilesByEvent(eventId);
+      console.log("전체 프로필 수:", profilesData.length);
+      console.log("전체 프로필 UIDs:", profilesData.map(p => p.uid));
+      
+      const approvedUids = new Set(approvedApplications.map(app => app.uid));
+      const approvedProfiles = profilesData.filter(p => approvedUids.has(p.uid));
+      console.log("승인된 프로필 수:", approvedProfiles.length);
+      console.log("승인된 프로필 UIDs:", approvedProfiles.map(p => p.uid));
+      
+      // 이성 프로필만 필터링하고 Application에서 닉네임 가져오기
+      const profilesWithUserInfo = await Promise.all(
+        approvedProfiles.map(async (p) => {
           try {
             const profileUser = await getUser(p.uid);
-            return { profile: p, gender: profileUser?.gender };
-          } catch {
-            return { profile: p, gender: null };
+            // Application에서 닉네임 찾기
+            const userApplication = approvedApplications.find(app => app.uid === p.uid);
+            const nickname = userApplication?.nickname;
+            
+            console.log(`프로필 ${p.uid}의 정보:`, { 
+              nickname: nickname, 
+              name: profileUser?.name, 
+              gender: profileUser?.gender 
+            });
+            
+            return { 
+              profile: p, 
+              gender: profileUser?.gender,
+              nickname: nickname || profileUser?.name 
+            };
+          } catch (error) {
+            console.error(`사용자 ${p.uid} 정보 가져오기 실패:`, error);
+            return { profile: p, gender: null, nickname: undefined };
           }
         })
       );
       
-      const otherGenderProfiles = profilesWithGender
-        .filter(({ gender, profile }) => gender && gender !== userGender && profile.uid !== user?.uid)
-        .map(({ profile }) => profile);
+      console.log("사용자 정보 포함 프로필:", profilesWithUserInfo.map(({ profile, gender, nickname }) => ({
+        profileName: profile.displayName,
+        nickname: nickname,
+        uid: profile.uid,
+        gender
+      })));
+      
+      const otherGenderProfiles = profilesWithUserInfo
+        .filter(({ gender, profile }) => {
+          const isOtherGender = gender && gender !== userGender;
+          const isNotSelf = profile.uid !== user?.uid;
+          console.log(`프로필 ${profile.uid}: isOtherGender=${isOtherGender}, isNotSelf=${isNotSelf}`);
+          return isOtherGender && isNotSelf;
+        })
+        .map(({ profile, nickname }) => ({ ...profile, nickname }));
+      
+      console.log("최종 이성 프로필 수:", otherGenderProfiles.length);
+      console.log("최종 이성 프로필 목록:", otherGenderProfiles.map(p => ({ 
+        profileName: p.displayName, 
+        nickname: p.nickname,
+        uid: p.uid 
+      })));
       
       setProfiles(otherGenderProfiles);
     } catch (error) {
       console.error("프로필 로드 실패:", error);
+      alert("프로필을 불러오는데 실패했습니다. 콘솔을 확인해주세요.");
     }
   };
 
@@ -299,85 +357,97 @@ export default function RotationPage() {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 1순위 */}
-          <div>
-            <label className="block mb-2 font-semibold text-gray-800">1순위</label>
-            <select
-              value={selections.first}
-              onChange={(e) => setSelections({ ...selections, first: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
-            >
-              <option value="">없음</option>
-              {profiles.map((profile) => (
-                <option key={profile.uid} value={profile.uid}>
-                  {profile.displayName}
-                </option>
-              ))}
-            </select>
+        {profiles.length === 0 ? (
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 mb-6">
+            <p className="text-yellow-800 font-semibold mb-2">투표할 이성이 없습니다.</p>
+            <p className="text-yellow-700 text-sm">
+              승인된 이성 참가자가 없거나, 프로필이 아직 생성되지 않았을 수 있습니다.
+            </p>
+            <p className="text-yellow-600 text-xs mt-2">
+              콘솔을 확인하여 디버깅 정보를 확인해주세요.
+            </p>
           </div>
-
-          {/* 2순위 */}
-          <div>
-            <label className="block mb-2 font-semibold text-gray-800">2순위</label>
-            <select
-              value={selections.second}
-              onChange={(e) => setSelections({ ...selections, second: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
-            >
-              <option value="">없음</option>
-              {profiles
-                .filter((p) => p.uid !== selections.first || selections.first === "")
-                .map((profile) => (
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 1순위 */}
+            <div>
+              <label className="block mb-2 font-semibold text-gray-800">1순위</label>
+              <select
+                value={selections.first}
+                onChange={(e) => setSelections({ ...selections, first: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              >
+                <option value="">없음</option>
+                {profiles.map((profile) => (
                   <option key={profile.uid} value={profile.uid}>
-                    {profile.displayName}
+                    {profile.nickname || profile.displayName || "이름 없음"}
                   </option>
                 ))}
-            </select>
-          </div>
+              </select>
+            </div>
 
-          {/* 3순위 */}
-          <div>
-            <label className="block mb-2 font-semibold text-gray-800">3순위</label>
-            <select
-              value={selections.third}
-              onChange={(e) => setSelections({ ...selections, third: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+            {/* 2순위 */}
+            <div>
+              <label className="block mb-2 font-semibold text-gray-800">2순위</label>
+              <select
+                value={selections.second}
+                onChange={(e) => setSelections({ ...selections, second: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              >
+                <option value="">없음</option>
+                {profiles
+                  .filter((p) => p.uid !== selections.first || selections.first === "")
+                  .map((profile) => (
+                    <option key={profile.uid} value={profile.uid}>
+                      {profile.nickname || profile.displayName || "이름 없음"}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* 3순위 */}
+            <div>
+              <label className="block mb-2 font-semibold text-gray-800">3순위</label>
+              <select
+                value={selections.third}
+                onChange={(e) => setSelections({ ...selections, third: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+              >
+                <option value="">없음</option>
+                {profiles
+                  .filter((p) => 
+                    (selections.first === "" || p.uid !== selections.first) && 
+                    (selections.second === "" || p.uid !== selections.second)
+                  )
+                  .map((profile) => (
+                    <option key={profile.uid} value={profile.uid}>
+                      {profile.nickname || profile.displayName || "이름 없음"}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* 하고 싶은 말 */}
+            <div>
+              <label className="block mb-2 font-semibold text-gray-800">하고 싶은 말</label>
+              <textarea
+                value={selections.message}
+                onChange={(e) => setSelections({ ...selections, message: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
+                rows={3}
+                placeholder="메시지를 입력하세요 (선택사항)"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary text-white px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
             >
-              <option value="">없음</option>
-              {profiles
-                .filter((p) => 
-                  (selections.first === "" || p.uid !== selections.first) && 
-                  (selections.second === "" || p.uid !== selections.second)
-                )
-                .map((profile) => (
-                  <option key={profile.uid} value={profile.uid}>
-                    {profile.displayName}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* 하고 싶은 말 */}
-          <div>
-            <label className="block mb-2 font-semibold text-gray-800">하고 싶은 말</label>
-            <textarea
-              value={selections.message}
-              onChange={(e) => setSelections({ ...selections, message: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
-              rows={3}
-              placeholder="메시지를 입력하세요 (선택사항)"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-white px-6 py-4 rounded-lg font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
-          >
-            {loading ? "제출 중..." : "제출하기"}
-          </button>
-        </form>
+              {loading ? "제출 중..." : "제출하기"}
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

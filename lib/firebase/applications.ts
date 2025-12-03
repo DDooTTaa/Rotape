@@ -100,6 +100,39 @@ export async function updateApplicationStatus(docId: string, status: Application
   await updateDoc(applicationRef, { status });
 }
 
+// 닉네임 할당 함수
+export async function assignNickname(docId: string, eventId: string, userGender: "M" | "F"): Promise<string> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  
+  // 같은 이벤트의 입금 완료된 사용자들의 닉네임 목록 가져오기
+  const eventApplications = await getApplicationsByEventId(eventId);
+  const paidApplications = eventApplications.filter(app => app.status === "paid" && app.nickname);
+  const usedNicknames = new Set(paidApplications.map(app => app.nickname).filter(Boolean) as string[]);
+  
+  // 성별별 닉네임 풀
+  const femaleNicknames = ["영아", "일영", "이슬", "삼순", "사린", "오연", "윤아", "철아"];
+  const maleNicknames = ["영석", "일우", "이정", "삼식", "사철", "오룡", "윤경", "철수"];
+  
+  const nicknamePool = userGender === "F" ? femaleNicknames : maleNicknames;
+  
+  // 사용 가능한 닉네임 찾기
+  const availableNicknames = nicknamePool.filter(nickname => !usedNicknames.has(nickname));
+  
+  if (availableNicknames.length === 0) {
+    throw new Error("사용 가능한 닉네임이 없습니다.");
+  }
+  
+  // 랜덤하게 선택
+  const randomIndex = Math.floor(Math.random() * availableNicknames.length);
+  const selectedNickname = availableNicknames[randomIndex];
+  
+  // 닉네임 할당
+  const applicationRef = doc(db, applicationsCollection, docId);
+  await updateDoc(applicationRef, { nickname: selectedNickname });
+  
+  return selectedNickname;
+}
+
 // 하위 호환성을 위한 함수 (uid만 사용하는 경우)
 export async function updateApplicationStatusByUid(uid: string, status: ApplicationStatus, eventId?: string): Promise<void> {
   const docId = eventId ? `${uid}_${eventId}` : uid;

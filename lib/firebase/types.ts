@@ -27,6 +27,7 @@ export interface Application {
   photos: string[];
   phone?: string; // 전화번호
   status: ApplicationStatus;
+  nickname?: string; // 닉네임 (입금 완료 시 할당)
   createdAt: Date;
 }
 

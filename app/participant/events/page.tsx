@@ -611,7 +611,7 @@ export default function EventsPage() {
                         approved: "승인됨",
                         pending: "심사 중",
                         rejected: "다음 기회에",
-                        paid: "입금 완료",
+                        paid: "승인됨",
                       };
                       const statusClassMap: Record<Application["status"], string> = {
                         approved: "bg-green-100 text-green-800",
@@ -628,7 +628,7 @@ export default function EventsPage() {
                           <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                             <div>
                               <p className="text-lg font-semibold text-gray-900">
-                                {user?.name || "이름 미등록"}
+                                {application.nickname || user?.name || "이름 미등록"}
                               </p>
                               <p className="text-sm text-gray-500">
                                 {user?.gender === "M" ? "남성" : user?.gender === "F" ? "여성" : "성별 미등록"}

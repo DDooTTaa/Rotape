@@ -28,7 +28,7 @@ export default function MyEventsPage() {
   const [loading, setLoading] = useState(true);
   const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState<{ user: UserData; eventId: string } | null>(null);
+  const [selectedParticipant, setSelectedParticipant] = useState<{ user: UserData; application: Application & { docId: string }; eventId: string } | null>(null);
   const [messageContent, setMessageContent] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [sentMessageCounts, setSentMessageCounts] = useState<Record<string, number>>({});
@@ -278,7 +278,7 @@ export default function MyEventsPage() {
                 approved: "승인됨",
                 pending: "심사 중",
                 rejected: "거절됨",
-                paid: "입금 완료",
+                paid: "승인됨",
               };
               const statusClassMap: Record<Application["status"], string> = {
                 approved: "bg-green-100 text-green-800",
@@ -331,10 +331,10 @@ export default function MyEventsPage() {
                             className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2"
                           >
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                              {participant.user.name.charAt(0)}
+                              {(participant.application.nickname || participant.user.name).charAt(0)}
                             </div>
                             <span className="text-sm font-medium text-gray-800">
-                              {participant.user.name}
+                              {participant.application.nickname || participant.user.name}
                             </span>
                             <button
                               onClick={() => {
@@ -345,6 +345,7 @@ export default function MyEventsPage() {
                                 }
                                 setSelectedParticipant({
                                   user: participant.user,
+                                  application: participant.application,
                                   eventId: event.eventId,
                                 });
                                 setMessageModalOpen(true);
@@ -393,7 +394,7 @@ export default function MyEventsPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-xl font-bold text-gray-800">
-                  {selectedParticipant.user.name}에게 쪽지 보내기
+                  {(selectedParticipant.application?.nickname || selectedParticipant.user.name)}에게 쪽지 보내기
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
                   남은 쪽지: {3 - (sentMessageCounts[selectedParticipant.eventId] || 0)}/3

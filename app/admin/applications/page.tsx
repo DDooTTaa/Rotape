@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
-import { getAllApplications, updateApplicationStatus } from "@/lib/firebase/applications";
+import { getAllApplications, updateApplicationStatus, assignNickname } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
 import { Application, User } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
@@ -114,6 +114,24 @@ export default function ApplicationsPage() {
     if (!confirm("입금 완료로 변경하시겠습니까?")) return;
     try {
       const docId = app.docId || app.uid;
+      
+      // eventId가 있어야 닉네임 할당 가능
+      if (app.eventId) {
+        // 사용자 성별 확인
+        const userData = await getUser(app.uid);
+        if (!userData?.gender) {
+          alert("사용자 성별 정보가 없어 닉네임을 할당할 수 없습니다.");
+          return;
+        }
+        
+        // 닉네임이 없으면 할당
+        if (!app.nickname) {
+          const nickname = await assignNickname(docId, app.eventId, userData.gender);
+          console.log(`닉네임 할당 완료: ${nickname}`);
+        }
+      }
+      
+      // 상태를 paid로 변경
       await updateApplicationStatus(docId, "paid");
       await loadApplications();
       alert("입금 완료로 변경되었습니다.");
