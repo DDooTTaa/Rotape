@@ -18,7 +18,7 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
-    status: "all" as "all" | "pending" | "approved" | "rejected",
+    status: "all" as "all" | "pending" | "approved" | "rejected" | "paid",
     gender: "all" as "all" | "M" | "F",
   });
   const [selectedApp, setSelectedApp] = useState<(Application & { user?: User }) | null>(null);
@@ -110,6 +110,19 @@ export default function ApplicationsPage() {
     }
   };
 
+  const handlePaid = async (app: Application & { docId?: string }) => {
+    if (!confirm("입금 완료로 변경하시겠습니까?")) return;
+    try {
+      const docId = app.docId || app.uid;
+      await updateApplicationStatus(docId, "paid");
+      await loadApplications();
+      alert("입금 완료로 변경되었습니다.");
+    } catch (error: any) {
+      console.error("입금 완료 변경 실패:", error);
+      alert(`입금 완료 변경에 실패했습니다: ${error?.message || error}`);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -144,6 +157,7 @@ export default function ApplicationsPage() {
               <option value="all">전체 상태</option>
               <option value="pending">심사 중</option>
               <option value="approved">승인됨</option>
+              <option value="paid">입금 완료</option>
               <option value="rejected">거절됨</option>
             </select>
             <select
@@ -180,7 +194,12 @@ export default function ApplicationsPage() {
                     {app.user?.gender === "M" ? "남성" : "여성"} | {app.user?.age}세 | {app.job}
                   </p>
                   <p className="text-sm text-gray-600 group-hover:text-white mt-1 transition">
-                    상태: {app.status === "pending" ? "심사 중" : app.status === "approved" ? "승인됨" : "거절됨"}
+                    상태: {
+                      app.status === "pending" ? "심사 중" : 
+                      app.status === "approved" ? "승인됨" : 
+                      app.status === "paid" ? "입금 완료" : 
+                      "거절됨"
+                    }
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -194,6 +213,28 @@ export default function ApplicationsPage() {
                         className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                       >
                         승인
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReject(app);
+                        }}
+                        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                      >
+                        거절
+                      </button>
+                    </>
+                  )}
+                  {app.status === "approved" && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePaid(app);
+                        }}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                      >
+                        입금 완료
                       </button>
                       <button
                         onClick={(e) => {
@@ -312,6 +353,28 @@ export default function ApplicationsPage() {
                       className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
                     >
                       승인
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleReject(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      거절
+                    </button>
+                  </>
+                )}
+                {selectedApp.status === "approved" && (
+                  <>
+                    <button
+                      onClick={() => {
+                        handlePaid(selectedApp);
+                        setSelectedApp(null);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      입금 완료
                     </button>
                     <button
                       onClick={() => {

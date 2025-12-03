@@ -66,12 +66,12 @@ export default function Home() {
       const newSlide = Math.round(container.scrollLeft / slideWidth);
       if (newSlide !== currentSlide) {
         setCurrentSlide(newSlide);
-      }
-    };
-
+        }
+      };
+      
     container.addEventListener('scroll', handleScroll);
-
-    return () => {
+      
+      return () => {
       container.removeEventListener('scroll', handleScroll);
     };
   }, [currentSlide]);
@@ -241,7 +241,7 @@ export default function Home() {
                   <Link
                     href="/participant/auth"
                     className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
-                  >
+                >
                     지금 바로 시작하기
                   </Link>
                 </div>

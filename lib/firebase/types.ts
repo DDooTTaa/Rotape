@@ -1,6 +1,6 @@
 export type Gender = "M" | "F";
 
-export type ApplicationStatus = "pending" | "approved" | "rejected";
+export type ApplicationStatus = "pending" | "approved" | "rejected" | "paid";
 
 export interface User {
   uid: string;
