@@ -44,6 +44,35 @@ body {
   }
 }
 
+/* 모바일 스크롤 안내 애니메이션 */
+@keyframes scroll-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(10px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes scroll-fade {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.scroll-indicator {
+  animation: scroll-bounce 2s ease-in-out infinite;
+}
+
+.scroll-text {
+  animation: scroll-fade 2s ease-in-out infinite;
+}
+
 /* 고급스러운 카드 스타일 */
 @layer components {
   .card-elegant {

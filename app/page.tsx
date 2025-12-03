@@ -14,6 +14,7 @@ export default function Home() {
   const isScrolling = useRef(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   // 가로 스크롤 처리 (데스크톱만)
   useEffect(() => {
@@ -59,8 +60,16 @@ export default function Home() {
     if (!container) return;
 
     const handleScroll = () => {
-      // 모바일에서는 가로 스크롤 추적 비활성화
-      if (window.innerWidth < 768) return;
+      // 모바일에서 세로 스크롤 감지
+      if (window.innerWidth < 768) {
+        // 첫 페이지에서 벗어나면 스크롤 인디케이터 숨기기
+        if (container.scrollTop > 50) {
+          setShowScrollIndicator(false);
+        } else {
+          setShowScrollIndicator(true);
+        }
+        return;
+      }
       
       const slideWidth = window.innerWidth;
       const newSlide = Math.round(container.scrollLeft / slideWidth);
@@ -138,6 +147,26 @@ export default function Home() {
                   로그인하고 시작하기
           </Link>
               </div>
+              
+              {/* 모바일 스크롤 안내 애니메이션 */}
+              {showScrollIndicator && (
+                <div className="md:hidden absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-20 transition-opacity duration-300">
+                  <p className="text-xs text-gray-500 font-medium scroll-text">아래로 스크롤</p>
+                  <svg 
+                    className="w-6 h-6 text-primary scroll-indicator" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+                    />
+                  </svg>
+                </div>
+              )}
             </section>
 
             {/* 두 번째 페이지: 우리만의 메리트 */}
