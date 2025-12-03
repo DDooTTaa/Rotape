@@ -7,6 +7,7 @@ import { getEvent } from "@/lib/firebase/events";
 import { getApplicationsByEventId, updateApplicationStatus, assignNickname } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
 import { getAllLikesForEvent } from "@/lib/firebase/matching";
+import { sendSMS } from "@/lib/firebase/sms";
 import { Event, Application, User, Like } from "@/lib/firebase/types";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -103,6 +104,21 @@ export default function EventDetailPage() {
     try {
       const docId = app.docId || app.uid;
       await updateApplicationStatus(docId, "approved");
+      
+      // SMS 전송 (전화번호가 있는 경우)
+      try {
+        const userData = await getUser(app.uid);
+        const phoneNumber = userData?.phone || app.phone;
+        if (phoneNumber && event) {
+          const message = `[Rotape] ${event.title} 지원이 승인되었습니다. 입금 안내를 확인해주세요.`;
+          await sendSMS(phoneNumber, message);
+          console.log("승인 SMS 전송 완료");
+        }
+      } catch (smsError) {
+        console.error("SMS 전송 실패 (승인):", smsError);
+        // SMS 실패해도 승인은 진행
+      }
+      
       await loadData();
       alert("승인되었습니다.");
     } catch (error: any) {
@@ -137,13 +153,28 @@ export default function EventDetailPage() {
       }
       
       // 닉네임이 없으면 할당
+      let assignedNickname = app.nickname;
       if (!app.nickname && eventId) {
-        const nickname = await assignNickname(docId, eventId, userData.gender);
-        console.log(`닉네임 할당 완료: ${nickname}`);
+        assignedNickname = await assignNickname(docId, eventId, userData.gender);
+        console.log(`닉네임 할당 완료: ${assignedNickname}`);
       }
       
       // 상태를 paid로 변경
       await updateApplicationStatus(docId, "paid");
+      
+      // SMS 전송 (전화번호가 있는 경우)
+      try {
+        const phoneNumber = userData?.phone || app.phone;
+        if (phoneNumber && event) {
+          const message = `[Rotape] ${event.title} 입금이 확인되었습니다.${assignedNickname ? ` 당신의 닉네임은 "${assignedNickname}"입니다.` : ''} 행사 당일 참석해주세요!`;
+          await sendSMS(phoneNumber, message);
+          console.log("입금 완료 SMS 전송 완료");
+        }
+      } catch (smsError) {
+        console.error("SMS 전송 실패 (입금 완료):", smsError);
+        // SMS 실패해도 입금 완료는 진행
+      }
+      
       await loadData();
       alert("입금 완료로 변경되었습니다.");
     } catch (error: any) {
@@ -452,6 +483,17 @@ export default function EventDetailPage() {
                             거절
                           </button>
                         </>
+                      )}
+                      {app.status === "rejected" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(app);
+                          }}
+                          className="bg-gradient-to-r from-green-600 to-green-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                        >
+                          다시 승인
+                        </button>
                       )}
                     </div>
                   </div>
