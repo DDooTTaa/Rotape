@@ -129,7 +129,7 @@ export async function assignNickname(docId: string, eventId: string, userGender:
       // 트랜잭션 내에서 읽을 문서 참조 목록 생성
       const docRefs: ReturnType<typeof doc>[] = [];
       eventApplicationsSnapshot.docs.forEach((docSnap) => {
-        docRefs.push(doc(db, applicationsCollection, docSnap.id));
+        docRefs.push(doc(db!, applicationsCollection, docSnap.id));
       });
       
       return await runTransaction(db, async (transaction) => {
