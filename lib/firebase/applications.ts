@@ -160,22 +160,22 @@ export async function assignNickname(docId: string, eventId: string, userGender:
             }
           }
         });
-        
-        // 사용 가능한 닉네임 찾기
-        const availableNicknames = nicknamePool.filter(nickname => !usedNicknames.has(nickname));
-        
-        if (availableNicknames.length === 0) {
-          throw new Error("사용 가능한 닉네임이 없습니다.");
-        }
-        
-        // 랜덤하게 선택
-        const randomIndex = Math.floor(Math.random() * availableNicknames.length);
-        const selectedNickname = availableNicknames[randomIndex];
-        
+  
+  // 사용 가능한 닉네임 찾기
+  const availableNicknames = nicknamePool.filter(nickname => !usedNicknames.has(nickname));
+  
+  if (availableNicknames.length === 0) {
+    throw new Error("사용 가능한 닉네임이 없습니다.");
+  }
+  
+  // 랜덤하게 선택
+  const randomIndex = Math.floor(Math.random() * availableNicknames.length);
+  const selectedNickname = availableNicknames[randomIndex];
+  
         // 트랜잭션 내에서 닉네임 할당
         transaction.update(applicationRef, { nickname: selectedNickname });
-        
-        return selectedNickname;
+  
+  return selectedNickname;
       });
     } catch (error: any) {
       // 트랜잭션 충돌 시 재시도

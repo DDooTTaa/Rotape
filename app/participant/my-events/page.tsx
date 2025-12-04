@@ -102,13 +102,13 @@ export default function MyEventsPage() {
             try {
               const event = await getEvent(app.eventId!);
               if (event) {
-                // 행사 참가자 목록 가져오기 (승인된 사람만)
+                // 행사 참가자 목록 가져오기 (입금 완료된 사람만)
                 const allApplications = await getApplicationsByEventId(app.eventId!);
-                const approvedApplications = allApplications.filter(a => a.status === "approved");
+                const paidApplications = allApplications.filter(a => a.status === "paid");
                 
                 // 참가자 정보 가져오기
                 const participants = await Promise.all(
-                  approvedApplications
+                  paidApplications
                     .filter(a => a.uid !== user.uid) // 본인 제외
                     .map(async (participantApp) => {
                       try {
@@ -124,13 +124,14 @@ export default function MyEventsPage() {
                     })
                 );
                 
-                // 이성만 필터링
+                // 이성만 필터링 (Application의 gender 또는 User의 gender 사용)
                 const otherGenderParticipants = participants
-                  .filter((p): p is { user: UserData; application: Application & { docId: string } } => 
-                    p !== null && 
-                    p.user?.gender && 
-                    p.user.gender !== currentUserData?.gender
-                  );
+                  .filter((p): p is { user: UserData; application: Application & { docId: string } } => {
+                    if (p === null) return false;
+                    const participantGender = p.application.gender || p.user?.gender;
+                    const currentGender = currentUserData?.gender;
+                    return !!participantGender && participantGender !== currentGender;
+                  });
                 
                 return { 
                   ...event, 
@@ -380,17 +381,24 @@ export default function MyEventsPage() {
                     </div>
                   )}
 
-                  {/* 투표한 경우에만 결과 보기 버튼 표시 */}
-                  {hasVoted[event.eventId] && (
-                    <div className="flex gap-2 mt-4">
+                  {/* 투표 여부에 따라 버튼 표시 */}
+                  <div className="flex gap-2 mt-4">
+                    {hasVoted[event.eventId] ? (
                       <Link
                         href={`/participant/results?eventId=${event.eventId}`}
                         className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-2 rounded-lg font-semibold text-center hover:opacity-90 transition"
                       >
                         내가 투표한 결과 보기
                       </Link>
-                    </div>
-                  )}
+                    ) : (
+                      <Link
+                        href={`/participant/rotation?eventId=${event.eventId}`}
+                        className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-2 rounded-lg font-semibold text-center hover:opacity-90 transition"
+                      >
+                        투표하기
+                      </Link>
+                    )}
+                  </div>
                 </div>
               );
             })}

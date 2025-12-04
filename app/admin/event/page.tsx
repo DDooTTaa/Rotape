@@ -5,7 +5,6 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { createEvent, getAllEvents } from "@/lib/firebase/events";
 import { getApplicationsByStatus } from "@/lib/firebase/applications";
-import { createProfile } from "@/lib/firebase/profiles";
 import { generateQRCode, dataURLtoBlob } from "@/lib/utils/qrcode";
 import { uploadQRCode } from "@/lib/firebase/storage";
 import { Event, Application } from "@/lib/firebase/types";
@@ -102,25 +101,7 @@ export default function EventPage() {
         return true; // 임시
       }).slice(0, 10);
 
-      const selectedApps = [...maleApps, ...femaleApps];
-
-      // 각 승인된 지원자에 대해 프로필 생성 및 QR 코드 생성
-      for (const app of selectedApps) {
-        const qrData = `${eventId}_${app.uid}`;
-        const qrCodeDataURL = await generateQRCode(qrData);
-        const qrCodeBlob = dataURLtoBlob(qrCodeDataURL);
-        const qrCodeUrl = await uploadQRCode(eventId, app.uid, qrCodeBlob);
-
-        await createProfile(app.uid, {
-          eventId,
-          displayName: "", // user 데이터에서 가져와야 함
-          intro: app.intro,
-          job: app.job,
-          loveLanguage: app.loveLanguage,
-          photos: app.photos,
-          qrCode: qrCodeUrl,
-        });
-      }
+      // 프로필 생성 로직 제거 - 이제 applications만 사용
 
       alert("행사가 생성되었습니다.");
       // 행사 리스트 페이지로 이동

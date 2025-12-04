@@ -192,48 +192,68 @@ export default function RotationPage() {
     try {
       console.log("프로필 로드 시작:", { eventId, userGender, userId: user.uid });
 
-      // 승인된 지원서만 가져오기
+      // 입금 완료된 지원서만 가져오기
       const applications = await getApplicationsByEventId(eventId);
       console.log("전체 지원서 수:", applications.length);
 
-      const approvedApplications = applications.filter(app => app.status === "approved" || app.status === "paid");
-      console.log("승인된 지원서 수:", approvedApplications.length);
-      console.log("승인된 지원서 UIDs:", approvedApplications.map(app => app.uid));
+      const paidApplications = applications.filter(app => app.status === "paid");
+      console.log("입금 완료된 지원서 수:", paidApplications.length);
+      console.log("입금 완료된 지원서 UIDs:", paidApplications.map(app => app.uid));
 
-      // 승인된 사용자의 프로필 가져오기
+      // 프로필 가져오기 (있으면 사용, 없으면 Application 기반으로 생성)
       const profilesData = await getProfilesByEvent(eventId);
       console.log("전체 프로필 수:", profilesData.length);
       console.log("전체 프로필 UIDs:", profilesData.map(p => p.uid));
 
-      const approvedUids = new Set(approvedApplications.map(app => app.uid));
-      const approvedProfiles = profilesData.filter(p => approvedUids.has(p.uid));
-      console.log("승인된 프로필 수:", approvedProfiles.length);
-      console.log("승인된 프로필 UIDs:", approvedProfiles.map(p => p.uid));
+      const paidUids = new Set(paidApplications.map(app => app.uid));
+      const paidProfiles = profilesData.filter(p => paidUids.has(p.uid));
+      console.log("입금 완료된 프로필 수:", paidProfiles.length);
 
-      // 이성 프로필만 필터링하고 Application에서 닉네임 가져오기
+      // 프로필이 없는 Application은 Application 정보로 Profile 생성
       const profilesWithUserInfo = await Promise.all(
-        approvedProfiles.map(async (p) => {
-          try {
-            const profileUser = await getUser(p.uid);
-            // Application에서 닉네임 찾기
-            const userApplication = approvedApplications.find(app => app.uid === p.uid);
-            const nickname = userApplication?.nickname;
-
-            console.log(`프로필 ${p.uid}의 정보:`, {
-              nickname: nickname,
-              name: profileUser?.name,
-              gender: profileUser?.gender
-            });
-
-            return {
-              profile: p,
-              gender: profileUser?.gender,
-              nickname: nickname || profileUser?.name
-            };
-          } catch (error) {
-            console.error(`사용자 ${p.uid} 정보 가져오기 실패:`, error);
-            return { profile: p, gender: null, nickname: undefined };
+        paidApplications.map(async (app) => {
+          // 프로필이 있으면 사용, 없으면 Application 기반으로 생성
+          let profile = paidProfiles.find(p => p.uid === app.uid);
+          
+          if (!profile) {
+            // Application 정보로 Profile 생성
+            profile = {
+              uid: app.uid,
+              eventId: app.eventId || eventId,
+              displayName: app.nickname || "",
+              intro: app.intro || "",
+              job: app.job || "",
+              loveLanguage: app.loveLanguage || [],
+              photos: app.photos || [],
+              qrCode: "", // QR 코드는 없어도 됨
+            } as Profile;
           }
+
+          const nickname = app.nickname || profile.displayName;
+          let gender = app.gender;
+
+          // Application에 gender가 없으면 User에서 가져오기
+          if (!gender) {
+            try {
+              const profileUser = await getUser(app.uid);
+              gender = profileUser?.gender || undefined;
+            } catch (error) {
+              console.error(`사용자 ${app.uid} 정보 가져오기 실패:`, error);
+              gender = undefined;
+            }
+          }
+
+          console.log(`프로필 ${app.uid}의 정보:`, {
+            nickname: nickname,
+            gender: gender,
+            hasProfile: !!paidProfiles.find(p => p.uid === app.uid)
+          });
+
+          return {
+            profile: profile,
+            gender: gender || undefined,
+            nickname: nickname || profile.displayName
+          };
         })
       );
 
@@ -248,7 +268,7 @@ export default function RotationPage() {
         .filter(({ gender, profile }) => {
           const isOtherGender = gender && gender !== userGender;
           const isNotSelf = profile.uid !== user?.uid;
-          console.log(`프로필 ${profile.uid}: isOtherGender=${isOtherGender}, isNotSelf=${isNotSelf}`);
+          console.log(`프로필 ${profile.uid}: gender=${gender}, userGender=${userGender}, isOtherGender=${isOtherGender}, isNotSelf=${isNotSelf}`);
           return isOtherGender && isNotSelf;
         })
         .map(({ profile, nickname }) => ({ ...profile, nickname }));
@@ -355,7 +375,7 @@ export default function RotationPage() {
       </div>
     );
   }
-
+  console.log(profiles); 
   return (
     <div className="min-h-screen bg-white text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-2xl mx-auto">

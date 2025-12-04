@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getRoundsByEvent, createRound, endRound } from "@/lib/firebase/rounds";
-import { getProfilesByEvent } from "@/lib/firebase/profiles";
-import { Round, Profile } from "@/lib/firebase/types";
+import { getApplicationsByEventId } from "@/lib/firebase/applications";
+import { getUser } from "@/lib/firebase/users";
+import { Round, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,7 @@ export default function RotationPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();
   const [rounds, setRounds] = useState<Round[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [applications, setApplications] = useState<(Application & { displayName?: string })[]>([]);
   const [currentRound, setCurrentRound] = useState(1);
   const [eventId, setEventId] = useState("current-event-id");
   const [loading, setLoading] = useState(false);
@@ -24,8 +25,28 @@ export default function RotationPage() {
       const roundsData = await getRoundsByEvent(eventId);
       setRounds(roundsData);
 
-      const profilesData = await getProfilesByEvent(eventId);
-      setProfiles(profilesData);
+      const applicationsData = await getApplicationsByEventId(eventId);
+      const paidApplications = applicationsData.filter(app => app.status === "paid");
+      
+      // 각 지원서에 displayName 추가
+      const applicationsWithDisplayName = await Promise.all(
+        paidApplications.map(async (app) => {
+          try {
+            const userData = await getUser(app.uid);
+            return {
+              ...app,
+              displayName: app.nickname || userData?.name || "",
+            };
+          } catch {
+            return {
+              ...app,
+              displayName: app.nickname || "",
+            };
+          }
+        })
+      );
+      
+      setApplications(applicationsWithDisplayName);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     }
@@ -43,7 +64,7 @@ export default function RotationPage() {
       await createRound({
         eventId,
         roundNumber: currentRound,
-        participants: profiles.map(p => p.uid),
+        participants: applications.map(app => app.uid),
         startTime: new Date(),
       });
       await loadData();
@@ -104,32 +125,25 @@ export default function RotationPage() {
           <h2 className="text-2xl font-semibold mb-4 text-primary">참가자 배정</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h3 className="font-semibold mb-2">남성 (10명)</h3>
+              <h3 className="font-semibold mb-2">남성</h3>
               <div className="space-y-2">
-                {profiles
-                  .filter((p) => {
-                    // 실제로는 user 데이터에서 gender를 확인해야 함
-                    return true; // 임시
-                  })
-                  .slice(0, 10)
-                  .map((profile) => (
-                    <div key={profile.uid} className="bg-white border border-primary/30 rounded p-2">
-                      {profile.displayName}
+                {applications
+                  .filter((app) => app.gender === "M")
+                  .map((app) => (
+                    <div key={app.uid} className="bg-white border border-primary/30 rounded p-2">
+                      {app.displayName || app.nickname || "이름 없음"}
                     </div>
                   ))}
               </div>
             </div>
             <div>
-              <h3 className="font-semibold mb-2">여성 (10명)</h3>
+              <h3 className="font-semibold mb-2">여성</h3>
               <div className="space-y-2">
-                {profiles
-                  .filter((p) => {
-                    return true; // 임시
-                  })
-                  .slice(10, 20)
-                  .map((profile) => (
-                    <div key={profile.uid} className="bg-white border border-primary/30 rounded p-2">
-                      {profile.displayName}
+                {applications
+                  .filter((app) => app.gender === "F")
+                  .map((app) => (
+                    <div key={app.uid} className="bg-white border border-primary/30 rounded p-2">
+                      {app.displayName || app.nickname || "이름 없음"}
                     </div>
                   ))}
               </div>

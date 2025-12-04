@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getLike } from "@/lib/firebase/matching";
-import { getProfile } from "@/lib/firebase/profiles";
 import { getEvent } from "@/lib/firebase/events";
 import { getApplication } from "@/lib/firebase/applications";
-import { Like, Profile, Event } from "@/lib/firebase/types";
+import { getUser } from "@/lib/firebase/users";
+import { Like, Application, Event } from "@/lib/firebase/types";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -15,9 +15,10 @@ export const dynamic = 'force-dynamic';
 
 interface VoteResult {
   rank: number;
-  profile: Profile | null;
+  application: Application | null;
   uid: string;
   nickname?: string;
+  displayName?: string;
 }
 
 export default function ResultsPage() {
@@ -57,63 +58,66 @@ export default function ResultsPage() {
       
       setLike(userLike);
       
-      // 각 순위에 선택한 사람의 프로필 및 닉네임 가져오기
+      // 각 순위에 선택한 사람의 지원서 및 닉네임 가져오기
       const results: VoteResult[] = [];
       
       // 1순위
       if (userLike.first) {
         try {
-          const [profile, application] = await Promise.all([
-            getProfile(userLike.first).catch(() => null),
+          const [application, userData] = await Promise.all([
             getApplication(userLike.first, eventId).catch(() => null),
+            getUser(userLike.first).catch(() => null),
           ]);
           results.push({ 
             rank: 1, 
-            profile, 
+            application, 
             uid: userLike.first,
             nickname: application?.nickname,
+            displayName: application?.nickname || userData?.name || "",
           });
         } catch (error) {
-          console.error("1순위 프로필 로드 실패:", error);
-          results.push({ rank: 1, profile: null, uid: userLike.first });
+          console.error("1순위 지원서 로드 실패:", error);
+          results.push({ rank: 1, application: null, uid: userLike.first });
         }
       }
       
       // 2순위
       if (userLike.second) {
         try {
-          const [profile, application] = await Promise.all([
-            getProfile(userLike.second).catch(() => null),
+          const [application, userData] = await Promise.all([
             getApplication(userLike.second, eventId).catch(() => null),
+            getUser(userLike.second).catch(() => null),
           ]);
           results.push({ 
             rank: 2, 
-            profile, 
+            application, 
             uid: userLike.second,
             nickname: application?.nickname,
+            displayName: application?.nickname || userData?.name || "",
           });
         } catch (error) {
-          console.error("2순위 프로필 로드 실패:", error);
-          results.push({ rank: 2, profile: null, uid: userLike.second });
+          console.error("2순위 지원서 로드 실패:", error);
+          results.push({ rank: 2, application: null, uid: userLike.second });
         }
       }
       
       // 3순위
       if (userLike.third) {
         try {
-          const [profile, application] = await Promise.all([
-            getProfile(userLike.third).catch(() => null),
+          const [application, userData] = await Promise.all([
             getApplication(userLike.third, eventId).catch(() => null),
+            getUser(userLike.third).catch(() => null),
           ]);
           results.push({ 
             rank: 3, 
-            profile, 
+            application, 
             uid: userLike.third,
             nickname: application?.nickname,
+            displayName: application?.nickname || userData?.name || "",
           });
         } catch (error) {
-          console.error("3순위 프로필 로드 실패:", error);
-          results.push({ rank: 3, profile: null, uid: userLike.third });
+          console.error("3순위 지원서 로드 실패:", error);
+          results.push({ rank: 3, application: null, uid: userLike.third });
         }
       }
       
@@ -177,13 +181,13 @@ export default function ResultsPage() {
                 <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-r from-primary to-[#0d4a1a] flex items-center justify-center text-white font-bold text-xl">
                   {result.rank}
                 </div>
-                {result.profile ? (
+                {result.application ? (
                   <div className="flex-1">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-xl font-semibold text-gray-800">
-                            {result.profile.displayName}
+                            {result.displayName || result.nickname || "이름 없음"}
                           </h3>
                           {result.nickname && (
                             <span className="px-2 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium">
@@ -191,16 +195,16 @@ export default function ResultsPage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-600 mb-1">직업: {result.profile.job}</p>
+                        <p className="text-gray-600 mb-1">직업: {result.application.job}</p>
                         <p className="text-gray-700 text-sm line-clamp-2">
-                          {result.profile.intro}
+                          {result.application.intro}
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="flex-1">
-                    <p className="text-gray-500">프로필 정보를 불러올 수 없습니다.</p>
+                    <p className="text-gray-500">지원서 정보를 불러올 수 없습니다.</p>
                   </div>
                 )}
               </div>

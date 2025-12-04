@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getAllLikesForEvent, calculateMatches, createMatch } from "@/lib/firebase/matching";
-import { getProfile } from "@/lib/firebase/profiles";
-import { Like, Match, Profile } from "@/lib/firebase/types";
+import { Like, Match } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
 export const dynamic = 'force-dynamic';

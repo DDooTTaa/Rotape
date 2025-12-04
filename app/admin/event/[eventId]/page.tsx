@@ -301,11 +301,37 @@ export default function EventDetailPage() {
               <p>
                 <span className="font-semibold">일시:</span>{" "}
                 {(() => {
-                  const startDate = event.date instanceof Date 
+                  const eventDate = event.date instanceof Date 
                     ? event.date 
                     : new Date(event.date);
+                  
+                  // 시작 시간 계산 (schedule.break 사용)
+                  let startTime: Date | null = null;
+                  if (event.schedule?.break) {
+                    const timeStr = event.schedule.break.trim();
+                    const [hours, minutes] = timeStr.split(':').map(Number);
+                    if (!isNaN(hours) && !isNaN(minutes)) {
+                      startTime = new Date(eventDate);
+                      startTime.setHours(hours, minutes || 0, 0, 0);
+                    }
+                  }
+                  
                   const endTime = calculateEventEndTime(event);
-                  const startStr = startDate.toLocaleString("ko-KR");
+                  
+                  if (startTime) {
+                    const startStr = startTime.toLocaleString("ko-KR");
+                    if (endTime) {
+                      const endStr = endTime.toLocaleString("ko-KR", { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      });
+                      return `${startStr} ~ ${endStr}`;
+                    }
+                    return startStr;
+                  }
+                  
+                  // schedule.break가 없으면 기존대로 event.date 사용
+                  const startStr = eventDate.toLocaleString("ko-KR");
                   if (endTime) {
                     const endStr = endTime.toLocaleString("ko-KR", { 
                       hour: '2-digit', 

@@ -245,6 +245,7 @@ function ApplicationFormContent() {
           user.uid,
           {
             age: calculateAge(formData.birthYear),
+            gender: formData.gender,
             height: parseInt(formData.height),
             job: formData.job,
             intro: formData.intro,
