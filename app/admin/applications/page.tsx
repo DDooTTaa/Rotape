@@ -297,6 +297,17 @@ export default function ApplicationsPage() {
                       </button>
                     </>
                   )}
+                  {app.status === "paid" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReject(app);
+                      }}
+                      className="bg-gradient-to-r from-red-600 to-red-700 text-white px-5 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      거절
+                    </button>
+                  )}
                   {app.status === "rejected" && (
                     <button
                       onClick={(e) => {
@@ -447,6 +458,17 @@ export default function ApplicationsPage() {
                       거절
                     </button>
                   </>
+                )}
+                {selectedApp.status === "paid" && (
+                  <button
+                    onClick={() => {
+                      handleReject(selectedApp);
+                      setSelectedApp(null);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    거절
+                  </button>
                 )}
                 <button
                   onClick={() => setSelectedApp(null)}

@@ -7,6 +7,7 @@ import { getUserApplications, getApplicationsByEventId } from "@/lib/firebase/ap
 import { getEvent } from "@/lib/firebase/events";
 import { getUser } from "@/lib/firebase/users";
 import { sendMessage, getSentMessageCountByEvent } from "@/lib/firebase/messages";
+import { getLike } from "@/lib/firebase/matching";
 import { Event, Application, User as UserData } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -32,6 +33,7 @@ export default function MyEventsPage() {
   const [messageContent, setMessageContent] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [sentMessageCounts, setSentMessageCounts] = useState<Record<string, number>>({});
+  const [hasVoted, setHasVoted] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (user) {
@@ -144,20 +146,15 @@ export default function MyEventsPage() {
           })
       );
       
-      // null 제거 및 모든 행사 표시 (끝난 모임 + 진행중인 모임 모두)
+      // null 제거 및 입금 완료 상태이고 끝난 모임만 표시
       const allEvents = eventsWithApplications
-        .filter((item): item is EventWithParticipants => item !== null)
+        .filter((item): item is EventWithParticipants => {
+          if (item === null) return false;
+          // 입금 완료 상태이고 행사가 끝난 모임만 표시
+          return item.application.status === "paid" && isEventEnded(item);
+        })
         .sort((a, b) => {
-          // 진행중인 행사가 먼저 오고, 그 다음 최근 행사 순으로 정렬
-          const aEnded = isEventEnded(a);
-          const bEnded = isEventEnded(b);
-          
-          if (aEnded !== bEnded) {
-            // 진행중인 행사(false)가 먼저
-            return aEnded ? 1 : -1;
-          }
-          
-          // 같은 상태면 날짜순 정렬
+          // 최근 행사 순으로 정렬
           const dateA = a.date instanceof Date ? a.date : new Date(a.date);
           const dateB = b.date instanceof Date ? b.date : new Date(b.date);
           return dateB.getTime() - dateA.getTime();
@@ -165,20 +162,31 @@ export default function MyEventsPage() {
       
       setEvents(allEvents);
       
-      // 각 모임에서 보낸 쪽지 개수 조회
+      // 각 모임에서 보낸 쪽지 개수 조회 및 투표 여부 확인
       const counts: Record<string, number> = {};
+      const voted: Record<string, boolean> = {};
       await Promise.all(
         allEvents.map(async (event) => {
           try {
             const count = await getSentMessageCountByEvent(event.eventId, user.uid);
             counts[event.eventId] = count;
+            
+            // 투표 여부 확인
+            try {
+              const like = await getLike(user.uid, event.eventId);
+              voted[event.eventId] = !!like;
+            } catch (error) {
+              voted[event.eventId] = false;
+            }
           } catch (error) {
             console.error("쪽지 개수 조회 실패:", error);
             counts[event.eventId] = 0;
+            voted[event.eventId] = false;
           }
         })
       );
       setSentMessageCounts(counts);
+      setHasVoted(voted);
     } catch (error) {
       console.error("데이터 로드 실패:", error);
     } finally {
@@ -372,14 +380,17 @@ export default function MyEventsPage() {
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/participant/results?eventId=${event.eventId}`}
-                      className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-2 rounded-lg font-semibold text-center hover:opacity-90 transition"
-                    >
-                      결과 보기
-                    </Link>
-                  </div>
+                  {/* 투표한 경우에만 결과 보기 버튼 표시 */}
+                  {hasVoted[event.eventId] && (
+                    <div className="flex gap-2 mt-4">
+                      <Link
+                        href={`/participant/results?eventId=${event.eventId}`}
+                        className="flex-1 bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-2 rounded-lg font-semibold text-center hover:opacity-90 transition"
+                      >
+                        내가 투표한 결과 보기
+                      </Link>
+                    </div>
+                  )}
                 </div>
               );
             })}

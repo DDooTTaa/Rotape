@@ -36,6 +36,15 @@ export async function sendSMS(options: SendSMSOptions): Promise<SendSMSResponse>
 
     const data = await response.json();
 
+    // 문자 발송 기능이 비활성화된 경우
+    if (data.data?.disabled) {
+      console.log('문자 발송 기능이 비활성화되어 있습니다.');
+      return {
+        success: true,
+        data: data.data,
+      };
+    }
+
     if (!response.ok) {
       return {
         success: false,

@@ -3,45 +3,123 @@
 import { useState, useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
-import { getMatchesForEvent } from "@/lib/firebase/matching";
+import { getLike } from "@/lib/firebase/matching";
 import { getProfile } from "@/lib/firebase/profiles";
-import { Match, Profile } from "@/lib/firebase/types";
+import { getEvent } from "@/lib/firebase/events";
+import { getApplication } from "@/lib/firebase/applications";
+import { Like, Profile, Event } from "@/lib/firebase/types";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
+
+interface VoteResult {
+  rank: number;
+  profile: Profile | null;
+  uid: string;
+  nickname?: string;
+}
 
 export default function ResultsPage() {
   const [user] = useAuthState(auth!);
   const router = useRouter();
-  const [match, setMatch] = useState<Match | null>(null);
-  const [matchedProfile, setMatchedProfile] = useState<Profile | null>(null);
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("eventId");
+  
+  const [like, setLike] = useState<Like | null>(null);
+  const [voteResults, setVoteResults] = useState<VoteResult[]>([]);
+  const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadResults();
+    if (user && eventId) {
+      loadVoteResults();
     }
-  }, [user]);
+  }, [user, eventId]);
 
-  const loadResults = async () => {
-    if (!user) return;
+  const loadVoteResults = async () => {
+    if (!user || !eventId) return;
+    
     try {
-      // 실제 eventId를 가져와야 함
-      const eventId = "current-event-id";
-      const matches = await getMatchesForEvent(eventId);
-      const userMatch = matches.find(
-        (m) => m.userA === user.uid || m.userB === user.uid
-      );
-
-      if (userMatch) {
-        setMatch(userMatch);
-        const otherUid = userMatch.userA === user.uid ? userMatch.userB : userMatch.userA;
-        const profile = await getProfile(otherUid);
-        setMatchedProfile(profile);
+      setLoading(true);
+      
+      // 행사 정보 가져오기
+      const eventData = await getEvent(eventId);
+      setEvent(eventData);
+      
+      // 사용자의 투표 내용 가져오기
+      const userLike = await getLike(user.uid, eventId);
+      
+      if (!userLike) {
+        setLoading(false);
+        return;
       }
+      
+      setLike(userLike);
+      
+      // 각 순위에 선택한 사람의 프로필 및 닉네임 가져오기
+      const results: VoteResult[] = [];
+      
+      // 1순위
+      if (userLike.first) {
+        try {
+          const [profile, application] = await Promise.all([
+            getProfile(userLike.first).catch(() => null),
+            getApplication(userLike.first, eventId).catch(() => null),
+          ]);
+          results.push({ 
+            rank: 1, 
+            profile, 
+            uid: userLike.first,
+            nickname: application?.nickname,
+          });
+        } catch (error) {
+          console.error("1순위 프로필 로드 실패:", error);
+          results.push({ rank: 1, profile: null, uid: userLike.first });
+        }
+      }
+      
+      // 2순위
+      if (userLike.second) {
+        try {
+          const [profile, application] = await Promise.all([
+            getProfile(userLike.second).catch(() => null),
+            getApplication(userLike.second, eventId).catch(() => null),
+          ]);
+          results.push({ 
+            rank: 2, 
+            profile, 
+            uid: userLike.second,
+            nickname: application?.nickname,
+          });
+        } catch (error) {
+          console.error("2순위 프로필 로드 실패:", error);
+          results.push({ rank: 2, profile: null, uid: userLike.second });
+        }
+      }
+      
+      // 3순위
+      if (userLike.third) {
+        try {
+          const [profile, application] = await Promise.all([
+            getProfile(userLike.third).catch(() => null),
+            getApplication(userLike.third, eventId).catch(() => null),
+          ]);
+          results.push({ 
+            rank: 3, 
+            profile, 
+            uid: userLike.third,
+            nickname: application?.nickname,
+          });
+        } catch (error) {
+          console.error("3순위 프로필 로드 실패:", error);
+          results.push({ rank: 3, profile: null, uid: userLike.third });
+        }
+      }
+      
+      setVoteResults(results);
     } catch (error) {
-      console.error("결과 로드 실패:", error);
+      console.error("투표 결과 로드 실패:", error);
     } finally {
       setLoading(false);
     }
@@ -56,70 +134,96 @@ export default function ResultsPage() {
     );
   }
 
-  if (!match || !matchedProfile) {
+  if (!like) {
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <h1 className="text-3xl font-bold mb-4">매칭 결과</h1>
+          <h1 className="text-3xl font-bold mb-4">투표 결과</h1>
           <p className="text-gray-700 mb-6">
-            아쉽게도 이번에는 매칭되지 않았습니다.
+            아직 투표하지 않았습니다.
           </p>
-          <p className="text-sm text-gray-600">
-            다음 행사에 다시 참가해주세요!
-          </p>
+          <button
+            onClick={() => router.push("/participant/my-events")}
+            className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          >
+            내 모임으로 돌아가기
+          </button>
         </div>
       </div>
     );
   }
 
+  console.log(voteResults);
+
   return (
     <div className="min-h-screen bg-white text-gray-800 pt-4 pb-24 md:py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold">매칭 결과</h1>
-        </div>
-
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">매칭된 이성</h2>
-          {matchedProfile.photos[0] && (
-            <div className="mb-4">
-              <Image
-                src={matchedProfile.photos[0]}
-                alt="Profile"
-                width={200}
-                height={200}
-                className="rounded-lg mx-auto"
-              />
-            </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">
+            내가 투표한 결과
+          </h1>
+          {event && (
+            <p className="text-gray-600 mt-2">{event.title}</p>
           )}
-          <p className="text-xl font-semibold mb-2 text-gray-800">{matchedProfile.displayName}</p>
-          <p className="mb-2 text-gray-800">직업: {matchedProfile.job}</p>
-          <p className="mb-4 text-gray-800">소개: {matchedProfile.intro}</p>
+        </div>
+        {/* 투표한 순위별 결과 */}
+        <div className="space-y-4 mb-6">
+          {voteResults.map((result) => (
+            <div
+              key={result.rank}
+              className="card-elegant card-hover p-6"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-r from-primary to-[#0d4a1a] flex items-center justify-center text-white font-bold text-xl">
+                  {result.rank}
+                </div>
+                {result.profile ? (
+                  <div className="flex-1">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-semibold text-gray-800">
+                            {result.profile.displayName}
+                          </h3>
+                          {result.nickname && (
+                            <span className="px-2 py-1 bg-primary/10 text-primary rounded-md text-sm font-medium">
+                              {result.nickname}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-gray-600 mb-1">직업: {result.profile.job}</p>
+                        <p className="text-gray-700 text-sm line-clamp-2">
+                          {result.profile.intro}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <p className="text-gray-500">프로필 정보를 불러올 수 없습니다.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">서로에게 남긴 메시지</h2>
-          <p className="text-gray-700">메시지가 여기에 표시됩니다.</p>
-        </div>
-
-        <div className="bg-gray-100 border-2 border-primary rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-primary">채팅방</h2>
-          <p className="text-gray-700 mb-4">
-            24시간 동안 유지되는 채팅방이 생성되었습니다.
-          </p>
-          <button className="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition">
-            채팅하기
-          </button>
-        </div>
-
-        <div className="text-center">
-          <p className="text-gray-700 mb-4">행사가 종료되었습니다.</p>
-          <a
-            href="#"
-            className="text-primary underline hover:opacity-90"
+        {/* 투표 메시지 */}
+        {like.message && (
+          <div className="card-elegant p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-primary">남긴 메시지</h2>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-gray-800 whitespace-pre-wrap">{like.message}</p>
+            </div>
+          </div>
+        )}
+        <div className="flex justify-center">
+          <button
+            onClick={() => router.push("/participant/my-events")}
+            className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
           >
-            후기 설문 작성하기
-          </a>
+            내 모임으로 돌아가기
+          </button>
         </div>
       </div>
     </div>

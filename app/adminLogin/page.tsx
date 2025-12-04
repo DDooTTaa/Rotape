@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
 
   // 운영자 키 (환경 변수 또는 하드코딩)
-  const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "1532";
+  const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "153215";
   // 운영자 이메일 (환경 변수 또는 기본값)
   const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@rotape.com";
 

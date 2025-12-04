@@ -8,7 +8,7 @@ import { getProfilesByEvent } from "@/lib/firebase/profiles";
 import { submitLike, getLike } from "@/lib/firebase/matching";
 import { getUser } from "@/lib/firebase/users";
 import { getEvent } from "@/lib/firebase/events";
-import { getApplicationsByEventId } from "@/lib/firebase/applications";
+import { getApplicationsByEventId, getApplication } from "@/lib/firebase/applications";
 import { Profile, Event } from "@/lib/firebase/types";
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,9 @@ export default function RotationPage() {
   const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
   const [isEventEnded, setIsEventEnded] = useState(false);
-  
+  const [isPaid, setIsPaid] = useState(false);
+  const [canVote, setCanVote] = useState(false);
+
   const [selections, setSelections] = useState({
     first: "",
     second: "",
@@ -48,10 +50,10 @@ export default function RotationPage() {
   }, [user, eventId]);
 
   useEffect(() => {
-    if (user && eventId && userGender) {
+    if (user && eventId && userGender && canVote) {
       loadProfiles();
     }
-  }, [user, eventId, userGender]);
+  }, [user, eventId, userGender, canVote]);
 
   // 종료 시간이 지났는지 실시간으로 확인
   useEffect(() => {
@@ -60,10 +62,10 @@ export default function RotationPage() {
     const checkEventEndTime = () => {
       const now = new Date();
       let eventEnded = false;
-      
+
       // 종료 시간 계산
       let endTime: Date | null = null;
-      
+
       // endTime 필드가 있으면 사용
       if (event.endTime) {
         endTime = event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
@@ -72,13 +74,13 @@ export default function RotationPage() {
         const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
         const timeStr = event.schedule.part2.trim();
         const [hours, minutes] = timeStr.split(':').map(Number);
-        
+
         if (!isNaN(hours) && !isNaN(minutes)) {
           endTime = new Date(eventDate);
           endTime.setHours(hours, minutes || 0, 0, 0);
         }
       }
-      
+
       // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
       if (endTime) {
         eventEnded = now.getTime() >= endTime.getTime();
@@ -89,8 +91,10 @@ export default function RotationPage() {
         const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
       }
-      
+
       setIsEventEnded(eventEnded);
+      // 입금 완료 상태이고 행사가 끝난 경우만 투표 가능
+      setCanVote(isPaid && eventEnded);
     };
 
     // 즉시 확인
@@ -100,21 +104,26 @@ export default function RotationPage() {
     const interval = setInterval(checkEventEndTime, 60000);
 
     return () => clearInterval(interval);
-  }, [event]);
+  }, [event, isPaid]);
 
   const loadEventData = async () => {
-    if (!eventId) return;
+    if (!eventId || !user) return;
     try {
       const eventData = await getEvent(eventId);
       setEvent(eventData);
-      
+
+      // 사용자의 지원서 상태 확인
+      const userApplication = await getApplication(user.uid, eventId);
+      const paid = userApplication?.status === "paid";
+      setIsPaid(paid);
+
       if (eventData) {
         const now = new Date();
         let eventEnded = false;
-        
+
         // 종료 시간 계산
         let endTime: Date | null = null;
-        
+
         // endTime 필드가 있으면 사용
         if (eventData.endTime) {
           endTime = eventData.endTime instanceof Date ? eventData.endTime : new Date(eventData.endTime);
@@ -123,13 +132,13 @@ export default function RotationPage() {
           const eventDate = eventData.date instanceof Date ? eventData.date : new Date(eventData.date);
           const timeStr = eventData.schedule.part2.trim();
           const [hours, minutes] = timeStr.split(':').map(Number);
-          
+
           if (!isNaN(hours) && !isNaN(minutes)) {
             endTime = new Date(eventDate);
             endTime.setHours(hours, minutes || 0, 0, 0);
           }
         }
-        
+
         // 종료 시간이 있으면 종료 시간 기준으로 판단, 없으면 날짜만 비교
         if (endTime) {
           eventEnded = now.getTime() >= endTime.getTime();
@@ -140,8 +149,10 @@ export default function RotationPage() {
           const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           eventEnded = eventDateOnly.getTime() < todayOnly.getTime();
         }
-        
+
         setIsEventEnded(eventEnded);
+        // 입금 완료 상태이고 행사가 끝난 경우만 투표 가능
+        setCanVote(paid && eventEnded);
       }
     } catch (error) {
       console.error("행사 정보 로드 실패:", error);
@@ -177,28 +188,28 @@ export default function RotationPage() {
       console.log("loadProfiles 조건 불만족:", { user: !!user, eventId, userGender });
       return;
     }
-    
+
     try {
       console.log("프로필 로드 시작:", { eventId, userGender, userId: user.uid });
-      
+
       // 승인된 지원서만 가져오기
       const applications = await getApplicationsByEventId(eventId);
       console.log("전체 지원서 수:", applications.length);
-      
+
       const approvedApplications = applications.filter(app => app.status === "approved" || app.status === "paid");
       console.log("승인된 지원서 수:", approvedApplications.length);
       console.log("승인된 지원서 UIDs:", approvedApplications.map(app => app.uid));
-      
+
       // 승인된 사용자의 프로필 가져오기
       const profilesData = await getProfilesByEvent(eventId);
       console.log("전체 프로필 수:", profilesData.length);
       console.log("전체 프로필 UIDs:", profilesData.map(p => p.uid));
-      
+
       const approvedUids = new Set(approvedApplications.map(app => app.uid));
       const approvedProfiles = profilesData.filter(p => approvedUids.has(p.uid));
       console.log("승인된 프로필 수:", approvedProfiles.length);
       console.log("승인된 프로필 UIDs:", approvedProfiles.map(p => p.uid));
-      
+
       // 이성 프로필만 필터링하고 Application에서 닉네임 가져오기
       const profilesWithUserInfo = await Promise.all(
         approvedProfiles.map(async (p) => {
@@ -207,17 +218,17 @@ export default function RotationPage() {
             // Application에서 닉네임 찾기
             const userApplication = approvedApplications.find(app => app.uid === p.uid);
             const nickname = userApplication?.nickname;
-            
-            console.log(`프로필 ${p.uid}의 정보:`, { 
-              nickname: nickname, 
-              name: profileUser?.name, 
-              gender: profileUser?.gender 
+
+            console.log(`프로필 ${p.uid}의 정보:`, {
+              nickname: nickname,
+              name: profileUser?.name,
+              gender: profileUser?.gender
             });
-            
-            return { 
-              profile: p, 
+
+            return {
+              profile: p,
               gender: profileUser?.gender,
-              nickname: nickname || profileUser?.name 
+              nickname: nickname || profileUser?.name
             };
           } catch (error) {
             console.error(`사용자 ${p.uid} 정보 가져오기 실패:`, error);
@@ -225,14 +236,14 @@ export default function RotationPage() {
           }
         })
       );
-      
+
       console.log("사용자 정보 포함 프로필:", profilesWithUserInfo.map(({ profile, gender, nickname }) => ({
         profileName: profile.displayName,
         nickname: nickname,
         uid: profile.uid,
         gender
       })));
-      
+
       const otherGenderProfiles = profilesWithUserInfo
         .filter(({ gender, profile }) => {
           const isOtherGender = gender && gender !== userGender;
@@ -241,14 +252,14 @@ export default function RotationPage() {
           return isOtherGender && isNotSelf;
         })
         .map(({ profile, nickname }) => ({ ...profile, nickname }));
-      
+
       console.log("최종 이성 프로필 수:", otherGenderProfiles.length);
-      console.log("최종 이성 프로필 목록:", otherGenderProfiles.map(p => ({ 
-        profileName: p.displayName, 
+      console.log("최종 이성 프로필 목록:", otherGenderProfiles.map(p => ({
+        profileName: p.displayName,
         nickname: p.nickname,
-        uid: p.uid 
+        uid: p.uid
       })));
-      
+
       setProfiles(otherGenderProfiles);
     } catch (error) {
       console.error("프로필 로드 실패:", error);
@@ -294,7 +305,7 @@ export default function RotationPage() {
             <div className="text-6xl mb-4 text-primary">✓</div>
             <h1 className="text-3xl font-bold mb-4">제출 완료</h1>
             <p className="text-gray-700 mb-6">
-              선택이 완료되었습니다. 다음 라운드를 준비해주세요.
+              선택이 완료되었습니다.
             </p>
             <button
               onClick={() => router.push("/participant/events")}
@@ -308,16 +319,30 @@ export default function RotationPage() {
     );
   }
 
-  // 행사가 종료되지 않았으면 안내 메시지 표시
-  if (!isEventEnded) {
+  // 입금 완료 상태가 아니거나 행사가 종료되지 않았으면 안내 메시지 표시
+  if (!canVote) {
+    let message = "";
+    let title = "";
+    
+    if (!isPaid) {
+      title = "투표할 수 없습니다.";
+      message = "행사가 종료된 모임만 투표할 수 있습니다.";
+    } else if (!isEventEnded) {
+      title = "아직 투표 시간이 아닙니다";
+      message = "행사가 종료된 후에 투표할 수 있습니다.";
+    } else {
+      title = "투표할 수 없습니다";
+      message = "행사가 종료된 모임만 투표할 수 있습니다.";
+    }
+    
     return (
       <div className="min-h-screen bg-white text-gray-800 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="mb-8">
             <div className="text-6xl mb-4 text-primary">⏰</div>
-            <h1 className="text-3xl font-bold mb-4">아직 투표 시간이 아닙니다</h1>
+            <h1 className="text-3xl font-bold mb-4">{title}</h1>
             <p className="text-gray-700 mb-6">
-              행사가 종료된 후에 투표할 수 있습니다.
+              {message}
             </p>
             <button
               onClick={() => router.push("/participant/events")}
@@ -337,7 +362,7 @@ export default function RotationPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold">1, 2, 3순위 선택하기</h1>
           <p className="text-gray-600 mt-2">행사가 종료되었습니다. 이성 중에서 Top 1, 2, 3을 선택해주세요.</p>
-          
+
           {/* 모임 상세 정보 */}
           {event && (
             <div className="mt-6 bg-gradient-to-r from-primary/10 to-[#0d4a1a]/10 border-2 border-primary/30 rounded-lg p-4">
@@ -415,8 +440,8 @@ export default function RotationPage() {
               >
                 <option value="">없음</option>
                 {profiles
-                  .filter((p) => 
-                    (selections.first === "" || p.uid !== selections.first) && 
+                  .filter((p) =>
+                    (selections.first === "" || p.uid !== selections.first) &&
                     (selections.second === "" || p.uid !== selections.second)
                   )
                   .map((profile) => (
@@ -425,18 +450,6 @@ export default function RotationPage() {
                     </option>
                   ))}
               </select>
-            </div>
-
-            {/* 하고 싶은 말 */}
-            <div>
-              <label className="block mb-2 font-semibold text-gray-800">하고 싶은 말</label>
-              <textarea
-                value={selections.message}
-                onChange={(e) => setSelections({ ...selections, message: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-800 border-2 border-primary/30 focus:border-primary"
-                rows={3}
-                placeholder="메시지를 입력하세요 (선택사항)"
-              />
             </div>
 
             <button

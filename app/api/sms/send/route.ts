@@ -4,9 +4,20 @@ import { SolapiMessageService } from 'solapi';
 // 환경 변수에서 API 키 가져오기
 const apiKey = process.env.SOLAPI_API_KEY || '';
 const apiSecret = process.env.SOLAPI_API_SECRET || '';
+// 문자 발송 기능 활성화 여부 (기본값: false, 비활성화)
+const smsEnabled = false;
 
 export async function POST(request: NextRequest) {
   try {
+    // 문자 발송 기능이 비활성화되어 있으면 바로 반환
+    if (!smsEnabled) {
+      console.log('문자 발송 기능이 비활성화되어 있습니다. (SOLAPI_ENABLED=false)');
+      return NextResponse.json({
+        success: true,
+        data: { disabled: true, message: '문자 발송 기능이 비활성화되어 있습니다.' },
+      });
+    }
+
     // 요청 본문 파싱
     const body = await request.json();
     const { to, text, from } = body;

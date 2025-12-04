@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "./config";
 import { Message } from "./types";
 import { getUser } from "./users";
@@ -29,17 +29,46 @@ export async function sendMessage(
 ): Promise<string> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
   
-  const messageId = `${Date.now()}_${senderId}_${receiverId}`;
+  // receiverId와 senderId 정규화 (공백 제거)
+  const normalizedSenderId = senderId.trim();
+  const normalizedReceiverId = receiverId.trim();
+  
+  // 디버깅: 전달된 값 확인
+  console.log("쪽지 보내기:", {
+    eventId,
+    senderId: normalizedSenderId,
+    receiverId: normalizedReceiverId,
+    content: content.substring(0, 50) + "...",
+  });
+  
+  const messageId = `${Date.now()}_${normalizedSenderId}_${normalizedReceiverId}`;
   const messageRef = doc(db, messagesCollection, messageId);
   
-  await setDoc(messageRef, {
+  const messageData = {
     eventId,
-    senderId,
-    receiverId,
+    senderId: normalizedSenderId,
+    receiverId: normalizedReceiverId,
     content,
     read: false,
-    createdAt: new Date(),
+    createdAt: Timestamp.now(), // Firestore Timestamp 사용
+  };
+  
+  console.log("저장할 쪽지 데이터:", {
+    ...messageData,
+    createdAt: messageData.createdAt.toDate(), // 로그용으로 Date 변환
   });
+  
+  await setDoc(messageRef, messageData);
+  
+  console.log("쪽지 저장 완료, messageId:", messageId);
+  
+  // 저장된 데이터 확인
+  const savedDoc = await getDoc(messageRef);
+  if (savedDoc.exists()) {
+    console.log("저장 확인됨:", savedDoc.data());
+  } else {
+    console.error("저장 실패: 문서가 존재하지 않습니다.");
+  }
   
   return messageId;
 }
@@ -64,19 +93,49 @@ export async function getMessage(messageId: string): Promise<Message | null> {
 // 받은 쪽지 목록 조회
 export async function getReceivedMessages(receiverId: string): Promise<Message[]> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  
+  console.log("받은 쪽지 조회, receiverId:", receiverId, "타입:", typeof receiverId);
+  
+  // receiverId 정규화 (공백 제거, trim)
+  const normalizedReceiverId = receiverId.trim();
+  
   const q = query(
     collection(db, messagesCollection),
-    where("receiverId", "==", receiverId)
+    where("receiverId", "==", normalizedReceiverId)
   );
   const querySnapshot = await getDocs(q);
+  
+  console.log(`조회된 쪽지 개수: ${querySnapshot.size}`);
+  
+  // 모든 쪽지도 가져와서 디버깅 (임시)
+  const allMessagesSnapshot = await getDocs(collection(db, messagesCollection));
+  console.log(`전체 쪽지 개수: ${allMessagesSnapshot.size}`);
+  allMessagesSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    console.log("전체 쪽지:", {
+      messageId: doc.id,
+      senderId: data.senderId,
+      receiverId: data.receiverId,
+      receiverIdType: typeof data.receiverId,
+      matches: data.receiverId === normalizedReceiverId,
+    });
+  });
+  
   const messages = querySnapshot.docs.map(doc => {
     const data = doc.data();
+    console.log("받은 쪽지 데이터:", {
+      messageId: doc.id,
+      senderId: data.senderId,
+      receiverId: data.receiverId,
+      content: data.content?.substring(0, 30) + "...",
+    });
     return {
       messageId: doc.id,
       ...data,
       createdAt: convertTimestampToDate(data.createdAt),
     } as Message;
   });
+  
   // 클라이언트 측에서 정렬 (인덱스 문제 방지)
   return messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
