@@ -150,7 +150,7 @@ export default function Home() {
               
               {/* 모바일 스크롤 안내 애니메이션 */}
               {showScrollIndicator && (
-                <div className="md:hidden absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-20 transition-opacity duration-300">
+                <div className="md:hidden absolute bottom-20 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-20 transition-opacity duration-300">
                   <p className="text-xs text-gray-500 font-medium scroll-text">아래로 스크롤</p>
                   <svg 
                     className="w-6 h-6 text-primary scroll-indicator" 
