@@ -32,12 +32,18 @@ NEXT_PUBLIC_ADMIN_KEY=admin1234
 
 # 운영자 이메일 (선택사항, 기본값: admin@rotape.com)
 NEXT_PUBLIC_ADMIN_EMAIL=admin@rotape.com
+
+# SOLAPI 문자 발송 서비스 (선택사항)
+SOLAPI_API_KEY=your_solapi_api_key
+SOLAPI_API_SECRET=your_solapi_api_secret
+SOLAPI_DEFAULT_FROM=01089811131  # 기본 발신번호 (선택사항)
 ```
 
 **참고**: 
 - 운영자 키는 기본값이 `admin1234`입니다. 프로덕션 환경에서는 반드시 변경하세요.
 - 운영자 모드를 선택하면 운영자 키만으로 로그인할 수 있습니다 (소셜 로그인 불필요).
 - Firebase Console에서 "이메일/비밀번호" 로그인을 활성화해야 합니다.
+- SOLAPI 문자 발송 기능을 사용하려면 SOLAPI 계정을 생성하고 API 키를 발급받아야 합니다.
 
 ## 설치 및 실행
 

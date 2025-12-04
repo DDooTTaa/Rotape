@@ -53,6 +53,9 @@
    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id (선택사항)
    NEXT_PUBLIC_ADMIN_KEY=your_admin_key
    NEXT_PUBLIC_ADMIN_EMAIL=admin@rotape.com (선택사항)
+   SOLAPI_API_KEY=your_solapi_api_key (선택사항)
+   SOLAPI_API_SECRET=your_solapi_api_secret (선택사항)
+   SOLAPI_DEFAULT_FROM=01089811131 (선택사항)
    ```
 
    **중요**: 

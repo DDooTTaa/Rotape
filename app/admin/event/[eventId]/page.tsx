@@ -10,6 +10,7 @@ import { getAllLikesForEvent } from "@/lib/firebase/matching";
 import { Event, Application, User, Like } from "@/lib/firebase/types";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { sendSMS } from "@/lib/utils/sms";
 
 export const dynamic = 'force-dynamic';
 
@@ -98,11 +99,41 @@ export default function EventDetailPage() {
     setFilteredApplications(filtered);
   };
 
-  const handleApprove = async (app: Application & { docId?: string }) => {
+  const handleApprove = async (app: Application & { user?: User; docId?: string }) => {
     if (!confirm("이 지원자를 승인하시겠습니까?")) return;
     try {
       const docId = app.docId || app.uid;
       await updateApplicationStatus(docId, "approved");
+      
+      console.log(app);
+      
+      // 승인 완료 후 문자 발송
+      try {
+        // 전화번호 가져오기 (Application 또는 User에서)
+        const phoneNumber = app.phone || app.user?.phone;
+        
+        if (phoneNumber) {
+          const userName = app.user?.name || "고객";
+          const smsResult = await sendSMS({
+            to: phoneNumber,
+            text: `[Rotape] 안녕하세요 ${userName}님! 모임 참가 신청이 승인되었습니다. 입금 안내는 별도로 전달드리겠습니다. 감사합니다.`,
+          });
+          
+          if (!smsResult.success) {
+            console.error("문자 발송 실패:", smsResult.error);
+            // 문자 발송 실패해도 승인은 완료되었으므로 경고만 표시
+            alert(`승인되었습니다. 다만 문자 발송에 실패했습니다: ${smsResult.error}`);
+            await loadData();
+            return;
+          }
+        } else {
+          console.warn("전화번호가 없어 문자를 발송할 수 없습니다.");
+        }
+      } catch (smsError: any) {
+        console.error("문자 발송 중 오류:", smsError);
+        // 문자 발송 실패해도 승인은 완료되었으므로 경고만 표시
+        alert(`승인되었습니다. 다만 문자 발송 중 오류가 발생했습니다: ${smsError?.message || smsError}`);
+      }
       
       await loadData();
       alert("승인되었습니다.");
