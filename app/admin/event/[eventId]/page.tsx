@@ -116,7 +116,7 @@ export default function EventDetailPage() {
           const userName = app.user?.name || "고객";
           const smsResult = await sendSMS({
             to: phoneNumber,
-            text: `[Rotape] 안녕하세요 ${userName}님! 모임 참가 신청이 승인되었습니다. 입금 안내는 별도로 전달드리겠습니다. 감사합니다.`,
+            text: `[Rotape] 안녕하세요 ${userName}님!\n\n모임 참가 신청이 승인되었습니다.\n입금 안내는 별도로 전달드리겠습니다.\n\n감사합니다.`,
           });
           
           if (!smsResult.success) {
