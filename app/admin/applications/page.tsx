@@ -5,7 +5,6 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { getAllApplications, updateApplicationStatus, assignNickname } from "@/lib/firebase/applications";
 import { getUser } from "@/lib/firebase/users";
-import { sendSMS } from "@/lib/firebase/sms";
 import { Application, User } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 
@@ -91,22 +90,6 @@ export default function ApplicationsPage() {
       const docId = app.docId || app.uid; // docId가 있으면 사용, 없으면 uid 사용
       await updateApplicationStatus(docId, "approved");
       
-      // SMS 전송 (전화번호가 있는 경우)
-      try {
-        const userData = await getUser(app.uid);
-        const phoneNumber = userData?.phone || app.phone;
-        if (phoneNumber) {
-          const { getEvent } = await import("@/lib/firebase/events");
-          const event = app.eventId ? await getEvent(app.eventId) : null;
-          const message = `[Rotape] ${event?.title || "행사"} 지원이 승인되었습니다. 입금 안내를 확인해주세요.`;
-          await sendSMS(phoneNumber, message);
-          console.log("승인 SMS 전송 완료");
-        }
-      } catch (smsError) {
-        console.error("SMS 전송 실패 (승인):", smsError);
-        // SMS 실패해도 승인은 진행
-      }
-      
       await loadApplications();
       alert("승인되었습니다.");
     } catch (error: any) {
@@ -152,28 +135,6 @@ export default function ApplicationsPage() {
       
       // 상태를 paid로 변경
       await updateApplicationStatus(docId, "paid");
-      
-      // SMS 전송 (전화번호가 있는 경우)
-      try {
-        const phoneNumber = userData?.phone || app.phone;
-        if (phoneNumber) {
-          const { getEvent } = await import("@/lib/firebase/events");
-          const { getApplication } = await import("@/lib/firebase/applications");
-          const event = app.eventId ? await getEvent(app.eventId) : null;
-          // 닉네임 가져오기 (할당된 경우)
-          let nickname = app.nickname;
-          if (!nickname && app.eventId) {
-            const updatedApp = await getApplication(app.uid, app.eventId);
-            nickname = updatedApp?.nickname;
-          }
-          const message = `[Rotape] ${event?.title || "행사"} 입금이 확인되었습니다.${nickname ? ` 당신의 닉네임은 "${nickname}"입니다.` : ''} 행사 당일 참석해주세요!`;
-          await sendSMS(phoneNumber, message);
-          console.log("입금 완료 SMS 전송 완료");
-        }
-      } catch (smsError) {
-        console.error("SMS 전송 실패 (입금 완료):", smsError);
-        // SMS 실패해도 입금 완료는 진행
-      }
       
       await loadApplications();
       alert("입금 완료로 변경되었습니다.");

@@ -32,11 +32,6 @@ NEXT_PUBLIC_ADMIN_KEY=admin1234
 
 # 운영자 이메일 (선택사항, 기본값: admin@rotape.com)
 NEXT_PUBLIC_ADMIN_EMAIL=admin@rotape.com
-
-# SMS 전송 (Twilio)
-TWILIO_ACCOUNT_SID=your_twilio_account_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-TWILIO_PHONE_NUMBER=your_twilio_phone_number
 ```
 
 **참고**: 

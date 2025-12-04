@@ -9,6 +9,7 @@ import { getUser } from "@/lib/firebase/users";
 import { Event, Application, User as UserData } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import InfoModal from "@/components/InfoModal";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,7 @@ export default function EventsPage() {
   >([]);
   const [currentParticipantIndex, setCurrentParticipantIndex] = useState(0);
   const [userGender, setUserGender] = useState<"M" | "F" | null>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // 행사 종료 시간 계산 함수
   const calculateEventEndTime = (event: Event): Date | null => {
@@ -94,6 +96,15 @@ export default function EventsPage() {
   useEffect(() => {
     if (user) {
       loadData();
+      
+      // 브라우저 첫 로그인 확인
+      const hasSeenInfoModal = localStorage.getItem('rotape_first_login_info_seen');
+      if (!hasSeenInfoModal) {
+        // 약간의 지연 후 모달 표시 (페이지 로드 완료 후)
+        setTimeout(() => {
+          setShowInfoModal(true);
+        }, 500);
+      }
     }
   }, [user]);
 
@@ -691,6 +702,15 @@ export default function EventsPage() {
           </div>
         </div>
       )}
+
+      <InfoModal 
+        isOpen={showInfoModal} 
+        onClose={() => {
+          setShowInfoModal(false);
+          // 첫 로그인 정보 모달을 봤다는 플래그 저장
+          localStorage.setItem('rotape_first_login_info_seen', 'true');
+        }} 
+      />
     </div>
   );
 }

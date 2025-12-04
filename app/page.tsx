@@ -137,12 +137,12 @@ export default function Home() {
                     className="h-auto w-auto max-w-[200px] md:max-w-[240px]"
                   />
         </div>
-                <p className="text-gray-700 text-xl md:text-4xl font-medium mb-8 md:mb-10 px-2" style={{ fontFamily: "'Nanum Pen Script', cursive" }}>
+                <p className="text-gray-700 text-2xl md:text-4xl font-medium mb-8 md:mb-10 px-2 title-glow" style={{ fontFamily: "'Nanum Pen Script', cursive" }}>
                   한 컷의 테이프처럼 영원할 당신의 인연
                 </p>
           <Link
                   href="/participant/auth"
-                  className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
+                  className="btn-pulse btn-gradient-animated inline-block text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
           >
                   로그인하고 시작하기
           </Link>
@@ -172,12 +172,17 @@ export default function Home() {
             {/* 두 번째 페이지: 우리만의 메리트 */}
             <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5">
               <div className="w-full max-w-7xl">
-                <h2 className="text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
-                  우리의 가치
+                <h2 className="title-glow text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
+                  Values.
                 </h2>
                 <div className="space-y-8 md:space-y-12">
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">1</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         Rotation Dating
@@ -189,7 +194,11 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">2</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         Love Language
@@ -201,14 +210,18 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">3</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         Special Experience
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
-                        한번의 만남을 넘어<br />
-                        영화 테이프처럼 영원히 기억될 만남
+                        한번의 만남을 넘어 영화 테이프처럼 <br />
+                        영원히 기억될 만남을 만들어 보세요. 저희가 도와드릴게요!
                       </p>
                     </div>
                   </div>
@@ -219,43 +232,59 @@ export default function Home() {
             {/* 세 번째 페이지: 재미 요소 */}
             <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8 bg-gradient-to-br from-primary/5 to-[#0d4a1a]/5">
               <div className="w-full max-w-7xl">
-                <h2 className="text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
-                  따끈따끈한 기능
+                <h2 className="title-glow text-3xl md:text-6xl font-bold mb-8 md:mb-12 text-center bg-gradient-to-r from-primary via-[#0d4a1a] to-primary bg-clip-text text-transparent px-2">
+                  Features.
                 </h2>
                 <div className="space-y-8 md:space-y-12">
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">1</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         분위기.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
-                        편안한 환경 속에서 즐겁게 <br />
-                        대화해 보세요.
+                        프리미엄 다과와 음료와 함께 <br />
+                        편안한 환경 속에서 즐겁게 대화해 보세요.
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">2</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         쪽지.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
-                        궁금한 이성에게<br />
-                        쪽지를 보내보세요. 저희가 도와드릴게요.
+                        궁금한 이성에게 쪽지를 보내보세요.<br />
+                        전화번호 교환 없이 가능해요.
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="text-5xl md:text-7xl font-black text-primary flex-shrink-0">3</div>
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                      <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="9" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16 3.13a4 4 0 010 7.75" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
                         매칭.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
-                        영화 테이프처럼 소중한 순간들을<br />
-                        하나씩 담아가는 특별한 경험
+                       서로에게 호감이 있다면 그 마음을<br />
+                      이어갈 수 있도록 도와드릴게요.
                       </p>
                     </div>
                   </div>
@@ -267,21 +296,20 @@ export default function Home() {
             <section className="w-full md:w-screen flex-shrink-0 min-h-screen md:h-screen flex items-center justify-center snap-center relative z-10 px-4 md:px-16 py-12 md:py-8">
               <div className="w-full max-w-5xl text-center">
                 <div className="space-y-4 md:space-y-6 lg:space-y-8">
-                  <p className="text-2xl md:text-5xl font-bold text-gray-800 leading-relaxed px-2">
+                  <p className="title-glow text-2xl md:text-5xl font-bold text-gray-800 leading-relaxed px-2">
                     수많은 순간 속<br />
                     <span className="text-primary">한 컷의 인연</span>을<br />
                     테이프처럼
                   </p>
                   <p className="text-lg md:text-3xl text-gray-600 mt-4 md:mt-6 leading-relaxed px-2">
-                    영화 테이프가 여러 순간을 담아낼 수 있듯이<br />
-                    여러 사람과의 만남을 통해<br />
-                    <span className="font-bold text-primary">인연</span>을 찾을 수 있도록 도와 드릴게요!
+                    영화 테이프가 여러 순간을 담듯<br />
+                    이번 만남을 통해 <span className="font-bold text-primary">인연</span>을 찾으세요.
                   </p>
                 </div>
                 <div className="mt-8 md:mt-12">
                   <Link
                     href="/participant/auth"
-                    className="inline-block bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
+                    className="btn-pulse btn-gradient-animated inline-block text-white px-8 py-4 md:px-14 md:py-6 rounded-xl md:rounded-2xl font-bold text-base md:text-xl hover:opacity-90 transition-all duration-300 shadow-xl md:shadow-2xl transform hover:-translate-y-1 md:hover:-translate-y-2"
                 >
                     지금 바로 시작하기
                   </Link>

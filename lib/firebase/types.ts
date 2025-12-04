@@ -94,7 +94,7 @@ export interface Feedback {
 export interface Notification {
   id: string;
   uid: string;
-  type: "sms" | "web";
+  type: "web";
   message: string;
   createdAt: Date;
 }
