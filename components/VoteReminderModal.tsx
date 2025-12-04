@@ -62,9 +62,9 @@ export default function VoteReminderModal() {
         // 사용자의 모든 지원서 가져오기
         const applications = await getUserApplications(user.uid);
         
-        // eventId가 있고 승인된 지원서만 필터링
+        // eventId가 있고 입금 완료된 지원서만 필터링
         const approvedApplications = applications.filter(
-          app => app.eventId && (app.status === "approved" || app.status === "paid")
+          app => app.eventId && app.status === "paid"
         );
 
         // 각 행사에 대해 종료 여부와 투표 여부 확인
