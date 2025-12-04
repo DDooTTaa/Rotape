@@ -307,7 +307,7 @@ body.landing-page {
 .icon-animated-bounce:hover,
 .icon-animated-pulse:hover,
 .icon-animated-float:hover {
-  animation-duration: 0.5s;
+  animation-duration: 1s;
   transform: scale(1.2);
 }
 
