@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDoc, updateDoc, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, query, where, getDocs, Timestamp, runTransaction } from "firebase/firestore";
 import { db } from "./config";
 import { Application, ApplicationStatus } from "./types";
 
@@ -100,37 +100,99 @@ export async function updateApplicationStatus(docId: string, status: Application
   await updateDoc(applicationRef, { status });
 }
 
-// 닉네임 할당 함수
+// 닉네임 할당 함수 (트랜잭션 사용으로 중복 방지)
 export async function assignNickname(docId: string, eventId: string, userGender: "M" | "F"): Promise<string> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
-  
-  // 같은 이벤트의 입금 완료된 사용자들의 닉네임 목록 가져오기
-  const eventApplications = await getApplicationsByEventId(eventId);
-  const paidApplications = eventApplications.filter(app => app.status === "paid" && app.nickname);
-  const usedNicknames = new Set(paidApplications.map(app => app.nickname).filter(Boolean) as string[]);
   
   // 성별별 닉네임 풀
   const femaleNicknames = ["영아", "일영", "이슬", "삼순", "사린", "오연", "윤아", "철아"];
   const maleNicknames = ["영석", "일우", "이정", "삼식", "사철", "오룡", "윤경", "철수"];
-  
   const nicknamePool = userGender === "F" ? femaleNicknames : maleNicknames;
   
-  // 사용 가능한 닉네임 찾기
-  const availableNicknames = nicknamePool.filter(nickname => !usedNicknames.has(nickname));
+  const applicationRef = doc(db, applicationsCollection, docId);
   
-  if (availableNicknames.length === 0) {
-    throw new Error("사용 가능한 닉네임이 없습니다.");
+  // 트랜잭션으로 원자적 처리하여 중복 방지
+  // 최대 5번 재시도 (동시성 충돌 시)
+  let retries = 0;
+  const maxRetries = 5;
+  
+  while (retries < maxRetries) {
+    try {
+      // 트랜잭션 전에 같은 이벤트의 모든 지원서 문서 ID 목록 가져오기
+      // (트랜잭션 내에서는 쿼리를 직접 실행할 수 없으므로)
+      const eventApplicationsQuery = query(
+        collection(db, applicationsCollection),
+        where("eventId", "==", eventId)
+      );
+      const eventApplicationsSnapshot = await getDocs(eventApplicationsQuery);
+      
+      // 트랜잭션 내에서 읽을 문서 참조 목록 생성
+      const docRefs: ReturnType<typeof doc>[] = [];
+      eventApplicationsSnapshot.docs.forEach((docSnap) => {
+        docRefs.push(doc(db, applicationsCollection, docSnap.id));
+      });
+      
+      return await runTransaction(db, async (transaction) => {
+        // 현재 문서 읽기
+        const appSnap = await transaction.get(applicationRef);
+        if (!appSnap.exists()) {
+          throw new Error(`문서를 찾을 수 없습니다: ${docId}`);
+        }
+        
+        const currentData = appSnap.data() as Application;
+        
+        // 이미 닉네임이 있으면 그대로 반환
+        if (currentData.nickname) {
+          return currentData.nickname;
+        }
+        
+        // 트랜잭션 내에서 모든 문서 읽기 (최신 상태 확인)
+        const allDocs = await Promise.all(docRefs.map(ref => transaction.get(ref)));
+        
+        // 사용된 닉네임 목록 생성
+        const usedNicknames = new Set<string>();
+        allDocs.forEach((docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data() as Application;
+            // 현재 문서가 아니고, 입금 완료 상태이며, 닉네임이 있는 경우
+            if (docSnap.id !== docId && data.status === "paid" && data.nickname) {
+              usedNicknames.add(data.nickname);
+            }
+          }
+        });
+        
+        // 사용 가능한 닉네임 찾기
+        const availableNicknames = nicknamePool.filter(nickname => !usedNicknames.has(nickname));
+        
+        if (availableNicknames.length === 0) {
+          throw new Error("사용 가능한 닉네임이 없습니다.");
+        }
+        
+        // 랜덤하게 선택
+        const randomIndex = Math.floor(Math.random() * availableNicknames.length);
+        const selectedNickname = availableNicknames[randomIndex];
+        
+        // 트랜잭션 내에서 닉네임 할당
+        transaction.update(applicationRef, { nickname: selectedNickname });
+        
+        return selectedNickname;
+      });
+    } catch (error: any) {
+      // 트랜잭션 충돌 시 재시도
+      if (error.code === 'failed-precondition' || error.code === 'aborted') {
+        retries++;
+        if (retries >= maxRetries) {
+          throw new Error("닉네임 할당에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        }
+        // 짧은 지연 후 재시도
+        await new Promise(resolve => setTimeout(resolve, 100 * retries));
+        continue;
+      }
+      throw error;
+    }
   }
   
-  // 랜덤하게 선택
-  const randomIndex = Math.floor(Math.random() * availableNicknames.length);
-  const selectedNickname = availableNicknames[randomIndex];
-  
-  // 닉네임 할당
-  const applicationRef = doc(db, applicationsCollection, docId);
-  await updateDoc(applicationRef, { nickname: selectedNickname });
-  
-  return selectedNickname;
+  throw new Error("닉네임 할당에 실패했습니다.");
 }
 
 // 하위 호환성을 위한 함수 (uid만 사용하는 경우)

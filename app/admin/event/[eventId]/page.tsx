@@ -300,7 +300,21 @@ export default function EventDetailPage() {
             <div className="mt-4 space-y-2 text-gray-700">
               <p>
                 <span className="font-semibold">일시:</span>{" "}
-                {new Date(event.date).toLocaleString("ko-KR")}
+                {(() => {
+                  const startDate = event.date instanceof Date 
+                    ? event.date 
+                    : new Date(event.date);
+                  const endTime = calculateEventEndTime(event);
+                  const startStr = startDate.toLocaleString("ko-KR");
+                  if (endTime) {
+                    const endStr = endTime.toLocaleString("ko-KR", { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    });
+                    return `${startStr} ~ ${endStr}`;
+                  }
+                  return startStr;
+                })()}
               </p>
               <p>
                 <span className="font-semibold">장소:</span> {event.location}

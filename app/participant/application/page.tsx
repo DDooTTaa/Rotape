@@ -322,7 +322,11 @@ function ApplicationFormContent() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 이름 */}
           <div>
-            <label className="block mb-2 font-semibold">이름</label>
+            <label className="block mb-2 font-semibold">이름
+            <span className="ml-2 text-sm font-normal text-gray-600">
+              *다른 사람에게 본명은 보이지 않아요. 저희가 나중에 닉네임을 전달해 드릴게요!
+              </span>
+            </label>
             <input
               type="text"
               required
@@ -416,7 +420,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">
               직업
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+                *이성에게 보여질 부분이예요. 자신에 대해 솔직하게 알려주세요!
               </span>
             </label>
             <input
@@ -434,7 +438,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">
               전화번호
               <span className="ml-2 text-sm font-normal text-gray-600">
-                *매칭에 성공하면 번호가 상대에게 전달돼요! (번호가 공개되길 원하지 않으면 따로 문의 주세요!)
+                *매칭 성공 시 번호가 상대에게 전달돼요. (매칭에 성공해도 번호가 공개되길 원하지 않으면 따로 연락주세요!)
               </span>
             </label>
             <input
@@ -458,6 +462,9 @@ function ApplicationFormContent() {
           <div>
             <label className="block mb-2 font-semibold">
               사진 업로드 (2장 이상)
+              <span className="ml-2 text-sm font-normal text-gray-600">
+                *사진은 심사용이고, 다른 사람에게 공개되지 않으니 걱정 마세요.
+              </span>
             </label>
             <div className="grid grid-cols-3 gap-4">
               {[0, 1, 2].map((index) => (
@@ -503,7 +510,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">
               나는 어떤 사람인지 한 줄로 소개해주세요.
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+                *이성에게 보여질 부분이예요. 자신에 대해 솔직하게 알려주세요!
               </span>
             </label>
             <textarea
@@ -521,7 +528,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">
               어떤 사람을 만나고 싶은지 한 줄로 알려주세요.
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+                *이성에게 보여질 부분이예요. 자신에 대해 솔직하게 알려주세요!
               </span>
             </label>
             <textarea
@@ -539,7 +546,7 @@ function ApplicationFormContent() {
             <label className="block mb-2 font-semibold">
               어떤 연애가 하고 싶은가요?
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+                *이성에게 보여질 부분이예요. 자신에 대해 솔직하게 알려주세요!
               </span>
             </label>
             <textarea
@@ -557,7 +564,7 @@ function ApplicationFormContent() {
             <label className="block mb-3 font-semibold">
               연애에서 뭐가 제일 중요한가요?
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (소개팅할 사람에게 보여지는 부분입니다. 자신에 대해 솔직하게 알려주세요!)
+                *이성에게 보여질 부분이예요. 자신에 대해 솔직하게 알려주세요!
               </span>
             </label>
             <div className="flex flex-wrap gap-3">

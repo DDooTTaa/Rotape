@@ -9,6 +9,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import TimePickerPopup from "@/components/TimePickerPopup";
 import CalendarPopup from "@/components/CalendarPopup";
+import AddressInput from "@/components/AddressInput";
 
 export const dynamic = 'force-dynamic';
 
@@ -172,13 +173,12 @@ export default function EditEventPage() {
           {/* 행사 장소 */}
           <div>
             <label className="block mb-2 font-semibold">행사 장소</label>
-            <input
-              type="text"
-              required
+            <AddressInput
               value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="예: 서울시 강남구 테헤란로 123"
-              className="input-elegant"
+              onChange={(address) => setFormData({ ...formData, location: address })}
+              placeholder="주소를 검색하세요"
+              className="w-full"
+              required
             />
           </div>
 

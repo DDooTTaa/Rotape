@@ -25,9 +25,9 @@ export default function EventsPage() {
       string,
       {
         totalApplicants: number;
-        approvedApplicants: number;
-        approvedMale: number;
-        approvedFemale: number;
+        paidApplicants: number;
+        paidMale: number;
+        paidFemale: number;
       }
     >
   >({});
@@ -163,14 +163,14 @@ export default function EventsPage() {
         try {
           const apps = await getApplicationsByEventId(event.eventId);
           const totalApplicants = apps.length;
-          const approvedApps = apps.filter((app) => app.status === "approved");
+          const paidApps = apps.filter((app) => app.status === "paid");
 
-          let approvedMale = 0;
-          let approvedFemale = 0;
+          let paidMale = 0;
+          let paidFemale = 0;
 
-          if (approvedApps.length > 0) {
+          if (paidApps.length > 0) {
             const genders = await Promise.all(
-              approvedApps.map(async (app) => {
+              paidApps.map(async (app) => {
                 try {
                   const userData = await getUser(app.uid);
                   return userData?.gender || null;
@@ -183,9 +183,9 @@ export default function EventsPage() {
 
             genders.forEach((gender) => {
               if (gender === "M") {
-                approvedMale += 1;
+                paidMale += 1;
               } else if (gender === "F") {
-                approvedFemale += 1;
+                paidFemale += 1;
               }
             });
           }
@@ -194,9 +194,9 @@ export default function EventsPage() {
             event.eventId,
             {
               totalApplicants,
-              approvedApplicants: approvedApps.length,
-              approvedMale,
-              approvedFemale,
+              paidApplicants: paidApps.length,
+              paidMale,
+              paidFemale,
             },
           ] as const;
         } catch (error) {
@@ -205,9 +205,9 @@ export default function EventsPage() {
             event.eventId,
             {
               totalApplicants: 0,
-              approvedApplicants: 0,
-              approvedMale: 0,
-              approvedFemale: 0,
+              paidApplicants: 0,
+              paidMale: 0,
+              paidFemale: 0,
             },
           ] as const;
         }
@@ -249,7 +249,7 @@ export default function EventsPage() {
       // 오늘 진행중인 행사인 경우 승인된 사람만 필터링
       const isActive = isEventActive(eventData);
       const filteredApps = isActive 
-        ? apps.filter(app => app.status === "approved")
+        ? apps.filter(app => app.status === "paid")
         : apps;
       
       const applicantsWithUser = await Promise.all(
@@ -340,7 +340,7 @@ export default function EventsPage() {
                     </span>
                   );
                 }
-                if (status === "approved") {
+                if (status === "paid") {
                   return (
                     <span className="bg-gradient-to-r from-green-100 to-green-50 text-green-800 px-4 py-2 rounded-full text-xs font-semibold shadow-md">
                       승인됨
@@ -357,7 +357,7 @@ export default function EventsPage() {
                 return null;
               };
 
-              const isActive = isEventActive(event) && status === "approved";
+              const isActive = isEventActive(event) && status === "paid";
 
               return (
                 <div
@@ -436,7 +436,7 @@ export default function EventsPage() {
                               남자
                             </span>
                             <span className="text-blue-700 font-semibold">
-                              {stats.approvedMale}/{maleQuota}
+                              {stats.paidMale}/{maleQuota}
                             </span>
                           </div>
                           <div className="flex items-center justify-between bg-white/70 border border-pink-100 rounded-xl px-3 py-2">
@@ -447,7 +447,7 @@ export default function EventsPage() {
                               여자
                             </span>
                             <span className="text-pink-600 font-semibold">
-                              {stats.approvedFemale}/{femaleQuota}
+                              {stats.paidFemale}/{femaleQuota}
                             </span>
                           </div>
                         </div>

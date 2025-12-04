@@ -109,3 +109,17 @@ export interface Message {
   createdAt: Date;
 }
 
+export interface VoteResult {
+  eventId: string;
+  voteCounts: {
+    [uid: string]: {
+      first: number; // 1순위로 선택된 횟수
+      second: number; // 2순위로 선택된 횟수
+      third: number; // 3순위로 선택된 횟수
+      totalScore: number; // 총 점수 (1순위=3점, 2순위=2점, 3순위=1점)
+    };
+  };
+  totalVotes: number; // 총 투표 수
+  updatedAt: Date;
+}
+

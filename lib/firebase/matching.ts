@@ -1,9 +1,10 @@
-import { collection, doc, setDoc, getDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { db } from "./config";
-import { Like, Match } from "./types";
+import { Like, Match, VoteResult } from "./types";
 
 const likesCollection = "likes";
 const matchesCollection = "matches";
+const voteResultsCollection = "voteResults";
 
 export async function submitLike(uid: string, eventId: string, likeData: Omit<Like, "uid" | "eventId" | "createdAt">): Promise<void> {
   if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
@@ -14,6 +15,9 @@ export async function submitLike(uid: string, eventId: string, likeData: Omit<Li
     eventId,
     createdAt: new Date(),
   });
+  
+  // 투표 결과 업데이트
+  await updateVoteResult(eventId);
 }
 
 export async function getLike(uid: string, eventId: string): Promise<Like | null> {
@@ -106,5 +110,70 @@ export function calculateMatches(likes: Like[]): Match[] {
   }
 
   return matches;
+}
+
+// 이벤트별 투표 결과 업데이트
+export async function updateVoteResult(eventId: string): Promise<void> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  
+  // 해당 이벤트의 모든 투표 가져오기
+  const likes = await getAllLikesForEvent(eventId);
+  
+  // 투표 결과 집계
+  const voteCounts: VoteResult["voteCounts"] = {};
+  
+  for (const like of likes) {
+    // 1순위 투표
+    if (like.first) {
+      if (!voteCounts[like.first]) {
+        voteCounts[like.first] = { first: 0, second: 0, third: 0, totalScore: 0 };
+      }
+      voteCounts[like.first].first += 1;
+      voteCounts[like.first].totalScore += 3;
+    }
+    
+    // 2순위 투표
+    if (like.second) {
+      if (!voteCounts[like.second]) {
+        voteCounts[like.second] = { first: 0, second: 0, third: 0, totalScore: 0 };
+      }
+      voteCounts[like.second].second += 1;
+      voteCounts[like.second].totalScore += 2;
+    }
+    
+    // 3순위 투표
+    if (like.third) {
+      if (!voteCounts[like.third]) {
+        voteCounts[like.third] = { first: 0, second: 0, third: 0, totalScore: 0 };
+      }
+      voteCounts[like.third].third += 1;
+      voteCounts[like.third].totalScore += 1;
+    }
+  }
+  
+  // 투표 결과 저장
+  const voteResultRef = doc(db, voteResultsCollection, eventId);
+  await setDoc(voteResultRef, {
+    eventId,
+    voteCounts,
+    totalVotes: likes.length,
+    updatedAt: Timestamp.now(),
+  }, { merge: false });
+}
+
+// 이벤트별 투표 결과 가져오기
+export async function getVoteResult(eventId: string): Promise<VoteResult | null> {
+  if (!db) throw new Error("Firestore가 초기화되지 않았습니다.");
+  const voteResultRef = doc(db, voteResultsCollection, eventId);
+  const voteResultSnap = await getDoc(voteResultRef);
+  
+  if (voteResultSnap.exists()) {
+    const data = voteResultSnap.data();
+    return {
+      ...data,
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+    } as VoteResult;
+  }
+  return null;
 }
 

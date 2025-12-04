@@ -22,9 +22,9 @@ export default function AdminPage() {
       string,
       {
         totalApplicants: number;
-        approvedApplicants: number;
-        approvedMale: number;
-        approvedFemale: number;
+        paidApplicants: number;
+        paidMale: number;
+        paidFemale: number;
       }
     >
   >({});
@@ -129,14 +129,14 @@ export default function AdminPage() {
         try {
           const apps = await getApplicationsByEventId(event.eventId);
           const totalApplicants = apps.length;
-          const approvedApps = apps.filter((app) => app.status === "approved");
+          const paidApps = apps.filter((app) => app.status === "paid");
 
-          let approvedMale = 0;
-          let approvedFemale = 0;
+          let paidMale = 0;
+          let paidFemale = 0;
 
-          if (approvedApps.length > 0) {
+          if (paidApps.length > 0) {
             const genders = await Promise.all(
-              approvedApps.map(async (app) => {
+              paidApps.map(async (app) => {
                 try {
                   const userData = await getUser(app.uid);
                   return userData?.gender || null;
@@ -149,9 +149,9 @@ export default function AdminPage() {
 
             genders.forEach((gender) => {
               if (gender === "M") {
-                approvedMale += 1;
+                paidMale += 1;
               } else if (gender === "F") {
-                approvedFemale += 1;
+                paidFemale += 1;
               }
             });
           }
@@ -160,9 +160,9 @@ export default function AdminPage() {
             event.eventId,
             {
               totalApplicants,
-              approvedApplicants: approvedApps.length,
-              approvedMale,
-              approvedFemale,
+              paidApplicants: paidApps.length,
+              paidMale,
+              paidFemale,
             },
           ] as const;
         } catch (error) {
@@ -171,9 +171,9 @@ export default function AdminPage() {
             event.eventId,
             {
               totalApplicants: 0,
-              approvedApplicants: 0,
-              approvedMale: 0,
-              approvedFemale: 0,
+              paidApplicants: 0,
+              paidMale: 0,
+              paidFemale: 0,
             },
           ] as const;
         }
@@ -284,9 +284,21 @@ export default function AdminPage() {
                         <div className="flex flex-wrap gap-4 text-sm text-gray-700">
                           <span>
                             <span className="font-semibold">일시:</span>{" "}
-                            {event.date instanceof Date 
-                              ? event.date.toLocaleString("ko-KR")
-                              : new Date(event.date).toLocaleString("ko-KR")}
+                            {(() => {
+                              const startDate = event.date instanceof Date 
+                                ? event.date 
+                                : new Date(event.date);
+                              const endTime = calculateEventEndTime(event);
+                              const startStr = startDate.toLocaleString("ko-KR");
+                              if (endTime) {
+                                const endStr = endTime.toLocaleString("ko-KR", { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                });
+                                return `${startStr} ~ ${endStr}`;
+                              }
+                              return startStr;
+                            })()}
                           </span>
                           <span>
                             <span className="font-semibold">장소:</span> {event.location}
@@ -307,7 +319,7 @@ export default function AdminPage() {
                                     남자
                                   </span>
                                   <span className="text-blue-700 font-semibold text-base">
-                                    {stats.approvedMale}/{maleQuota}
+                                    {stats.paidMale}/{maleQuota}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between bg-white/70 border border-pink-100 rounded-xl px-3 py-2">
@@ -318,7 +330,7 @@ export default function AdminPage() {
                                     여자
                                   </span>
                                   <span className="text-pink-600 font-semibold text-base">
-                                    {stats.approvedFemale}/{femaleQuota}
+                                    {stats.paidFemale}/{femaleQuota}
                                   </span>
                                 </div>
                               </div>
@@ -335,7 +347,7 @@ export default function AdminPage() {
                                     <path d="M9 12l2 2 4-4" />
                                     <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
-                                  승인 {stats.approvedApplicants}명
+                                  입금완료 {stats.paidApplicants}명
                                 </span>
                               </div>
                             </div>

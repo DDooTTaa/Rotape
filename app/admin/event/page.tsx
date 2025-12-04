@@ -12,6 +12,7 @@ import { Event, Application } from "@/lib/firebase/types";
 import { useRouter } from "next/navigation";
 import TimePickerPopup from "@/components/TimePickerPopup";
 import CalendarPopup from "@/components/CalendarPopup";
+import AddressInput from "@/components/AddressInput";
 
 export const dynamic = 'force-dynamic';
 
@@ -154,12 +155,12 @@ export default function EventPage() {
 
           <div>
             <label className="block mb-2 font-semibold">행사 장소</label>
-            <input
-              type="text"
-              required
+            <AddressInput
               value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-100 text-foreground border-2 border-primary/30 focus:border-primary"
+              onChange={(address) => setFormData({ ...formData, location: address })}
+              placeholder="주소를 검색하세요"
+              className="w-full"
+              required
             />
           </div>
 
