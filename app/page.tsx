@@ -177,7 +177,7 @@ export default function Home() {
                 </h2>
                 <div className="space-y-8 md:space-y-12">
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-rotate">
                       <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -194,7 +194,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-pulse">
                       <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                       </svg>
@@ -210,7 +210,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-bounce">
                       <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
@@ -237,7 +237,7 @@ export default function Home() {
                 </h2>
                 <div className="space-y-8 md:space-y-12">
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-rotate">
                       <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
                         <circle cx="12" cy="12" r="3"/>
@@ -245,7 +245,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
-                        분위기.
+                        Mood.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
                         프리미엄 다과와 음료와 함께 <br />
@@ -254,14 +254,14 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-float">
                       <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
-                        쪽지.
+                        Message.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
                         궁금한 이성에게 쪽지를 보내보세요.<br />
@@ -270,7 +270,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-10">
-                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg">
+                    <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-r from-primary to-[#0d4a1a] rounded-full flex items-center justify-center p-3 md:p-4 shadow-lg icon-animated-bounce">
                       <svg className="w-full h-full text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" strokeLinecap="round" strokeLinejoin="round"/>
                         <circle cx="9" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -280,7 +280,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <p className="text-2xl md:text-5xl font-bold text-gray-800 mb-2 md:mb-3">
-                        매칭.
+                        Matching.
                       </p>
                       <p className="text-lg md:text-2xl text-gray-600 leading-relaxed">
                        서로에게 호감이 있다면 그 마음을<br />

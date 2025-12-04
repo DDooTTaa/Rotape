@@ -241,6 +241,76 @@ body.landing-page {
   overflow-y: hidden;
 }
 
+/* 랜딩 페이지 아이콘 애니메이션 */
+@keyframes icon-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+@keyframes icon-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+@keyframes icon-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-8px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(-8px) rotate(-5deg);
+  }
+}
+
+.icon-animated-rotate {
+  animation: icon-rotate 4s ease-in-out infinite;
+}
+
+.icon-animated-bounce {
+  animation: icon-bounce 2s ease-in-out infinite;
+}
+
+.icon-animated-pulse {
+  animation: icon-pulse 2.5s ease-in-out infinite;
+}
+
+.icon-animated-float {
+  animation: icon-float 3s ease-in-out infinite;
+}
+
+/* 아이콘 호버 효과 */
+.icon-animated-rotate:hover,
+.icon-animated-bounce:hover,
+.icon-animated-pulse:hover,
+.icon-animated-float:hover {
+  animation-duration: 0.5s;
+  transform: scale(1.2);
+}
+
 /* 버튼 펄스 애니메이션 */
 @keyframes pulse-white-green {
   0% {
