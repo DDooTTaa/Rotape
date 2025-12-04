@@ -85,7 +85,7 @@ export default function ApplicationsPage() {
     setFilteredApplications(filtered);
   };
 
-  const handleApprove = async (app: Application & { docId?: string }) => {
+  const handleApprove = async (app: Application & { user?: User; docId?: string }) => {
     if (!confirm("이 지원자를 승인하시겠습니까?")) return;
     try {
       const docId = app.docId || app.uid; // docId가 있으면 사용, 없으면 uid 사용
