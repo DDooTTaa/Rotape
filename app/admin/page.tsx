@@ -17,6 +17,8 @@ export default function AdminPage() {
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
   const [eventStats, setEventStats] = useState<
     Record<
       string,
@@ -76,10 +78,34 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (user) {
-      loadEvents();
-    }
-  }, [user]);
+    const verifyAdmin = async () => {
+      if (!user) {
+        setAuthChecking(false);
+        setLoading(false);
+        router.replace("/adminLogin");
+        return;
+      }
+
+      try {
+        const userData = await getUser(user.uid);
+        if (userData?.isAdmin) {
+          setAuthorized(true);
+          await loadEvents();
+        } else {
+          alert("관리자만 접근 가능합니다.");
+          router.replace("/adminLogin");
+        }
+      } catch (error) {
+        console.error("관리자 권한 확인 실패:", error);
+        alert("접근 권한 확인 중 문제가 발생했습니다. 다시 로그인 해주세요.");
+        router.replace("/adminLogin");
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+
+    verifyAdmin();
+  }, [user, router]);
 
   const loadEvents = async () => {
     try {
@@ -188,7 +214,7 @@ export default function AdminPage() {
     return getEventStatus(event) === 'active';
   };
 
-  if (loading) {
+  if (authChecking || loading || !authorized) {
     return (
       <div className="min-h-screen text-foreground flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

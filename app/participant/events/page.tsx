@@ -50,20 +50,20 @@ export default function EventsPage() {
     if (event.endTime) {
       return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
     }
-    
+
     // schedule.part2에서 종료 시간 추출 (예: "17:00")
     if (event.schedule?.part2) {
       const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
       const timeStr = event.schedule.part2.trim();
       const [hours, minutes] = timeStr.split(':').map(Number);
-      
+
       if (!isNaN(hours) && !isNaN(minutes)) {
         const endTime = new Date(eventDate);
         endTime.setHours(hours, minutes || 0, 0, 0);
         return endTime;
       }
     }
-    
+
     return null;
   };
 
@@ -71,11 +71,11 @@ export default function EventsPage() {
   const isEventEnded = (event: Event): boolean => {
     const now = new Date();
     const endTime = calculateEventEndTime(event);
-    
+
     if (endTime) {
       return now.getTime() >= endTime.getTime();
     }
-    
+
     // 종료 시간이 없으면 날짜만 비교
     const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
     const eventDateOnly = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
@@ -93,10 +93,55 @@ export default function EventsPage() {
     return eventDateOnly.getTime() === todayOnly.getTime();
   };
 
+  const getEventStartDateTime = (event: Event): Date => {
+    const baseDate = event.date instanceof Date ? new Date(event.date) : new Date(event.date);
+    if (event.schedule?.break) {
+      const [hours, minutes] = event.schedule.break.trim().split(":").map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        baseDate.setHours(hours, minutes || 0, 0, 0);
+      }
+    }
+    return baseDate;
+  };
+
+  const getEventEndDateTime = (event: Event): Date | null => {
+    const baseDate = event.date instanceof Date ? new Date(event.date) : new Date(event.date);
+    if (event.schedule?.part2) {
+      const [hours, minutes] = event.schedule.part2.trim().split(":").map(Number);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const endDate = new Date(baseDate);
+        endDate.setHours(hours, minutes || 0, 0, 0);
+        return endDate;
+      }
+    }
+    if (event.endTime) {
+      return event.endTime instanceof Date ? event.endTime : new Date(event.endTime);
+    }
+    return null;
+  };
+
+  const formatEndTimeOnly = (date: Date) =>
+    date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+  const handleCopyLocation = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+    location: string
+  ) => {
+    e.stopPropagation();
+    const sanitizedLocation = location.split("|")[0]?.trim() || location;
+    try {
+      await navigator.clipboard.writeText(sanitizedLocation);
+      alert("장소가 복사되었습니다.");
+    } catch (error) {
+      console.error("장소 복사 실패:", error);
+      alert("복사에 실패했어요. 다시 시도해 주세요.");
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadData();
-      
+
       // 브라우저 첫 로그인 확인
       const hasSeenInfoModal = localStorage.getItem('rotape_first_login_info_seen');
       if (!hasSeenInfoModal) {
@@ -127,7 +172,7 @@ export default function EventsPage() {
     if (!user) return;
     try {
       const eventsData = await getAllEvents();
-      
+
       // 각 행사에 대한 지원서 상태 확인 (필터링 전에 먼저 확인)
       const apps: Record<string, Application | null> = {};
       for (const event of eventsData) {
@@ -143,11 +188,11 @@ export default function EventsPage() {
       // 필터링: 종료되지 않은 행사만 표시
       const filteredEvents = eventsData.filter((event) => {
         const isEnded = isEventEnded(event);
-        
+
         // 종료된 행사는 표시하지 않음
         return !isEnded;
       });
-      
+
       setEvents(filteredEvents);
       loadEventStats(filteredEvents);
     } catch (error) {
@@ -233,25 +278,25 @@ export default function EventsPage() {
     setParticipantsModalOpen(true);
     setParticipantsLoading(true);
     setCurrentParticipantIndex(0);
-    
+
     try {
       // 현재 사용자 정보 가져오기
       if (!user) {
         alert("로그인이 필요합니다.");
         return;
       }
-      
+
       const currentUserData = await getUser(user.uid);
       setUserGender(currentUserData?.gender || null);
-      
+
       const apps = await getApplicationsByEventId(eventData.eventId);
-      
+
       // 오늘 진행중인 행사인 경우 승인된 사람만 필터링
       const isActive = isEventActive(eventData);
-      const filteredApps = isActive 
+      const filteredApps = isActive
         ? apps.filter(app => app.status === "paid")
         : apps;
-      
+
       const applicantsWithUser = await Promise.all(
         filteredApps.map(async (app) => {
           try {
@@ -268,8 +313,8 @@ export default function EventsPage() {
       let finalParticipants = applicantsWithUser;
       if (isActive && currentUserData?.gender) {
         finalParticipants = applicantsWithUser.filter(
-          ({ user: participantUser }) => 
-            participantUser?.gender && 
+          ({ user: participantUser }) =>
+            participantUser?.gender &&
             participantUser.gender !== currentUserData.gender
         );
       } else {
@@ -314,7 +359,7 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen text-gray-800 pt-4 pb-24 md:py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="w-full max-w-3xl lg:max-w-4xl mx-auto">
         <div className="mb-10">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent">진행중인 모임</h1>
         </div>
@@ -324,16 +369,19 @@ export default function EventsPage() {
             <p className="text-gray-600 text-lg">현재 진행 중인 행사가 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-10">
             {events.map((event) => {
               const application = applications[event.eventId];
               const status = application?.status;
               const stats = eventStats[event.eventId];
               const maleQuota = Math.floor(event.maxParticipants / 2);
               const femaleQuota = event.maxParticipants - maleQuota;
+              const mapSrc = event.location
+                ? `https://maps.google.com/maps?q=${encodeURIComponent(event.location)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+                : null;
 
               const renderStatusBadge = () => {
-                if (status === "pending") {
+                if (status === "pending" || status === "approved") {
                   return (
                     <span className="bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 px-4 py-2 rounded-full text-xs font-semibold shadow-md">
                       심사 중
@@ -362,16 +410,16 @@ export default function EventsPage() {
               return (
                 <div
                   key={event.eventId}
-                  className={`card-elegant card-hover p-6 ${isActive ? 'event-active cursor-pointer' : ''}`}
+                  className={`card-elegant card-hover p-6 md:p-10 w-full min-h-[70vh] flex flex-col justify-between ${isActive ? 'event-active cursor-pointer' : ''}`}
                   onClick={() => {
                     if (isActive) {
                       handleViewParticipants(event);
                     }
                   }}
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-6">
                     <h2
-                      className="flex-1 min-w-0 pr-3 text-xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent"
+                      className="flex-1 min-w-0 pr-3 text-2xl md:text-3xl font-semibold bg-gradient-to-r from-primary to-[#0d4a1a] bg-clip-text text-transparent"
                       style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -395,7 +443,7 @@ export default function EventsPage() {
                             <button
                               onClick={() => handleApply(event.eventId)}
                               disabled={applyingEventId === event.eventId}
-                              className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none whitespace-nowrap"
+                              className="bg-gradient-to-r from-primary to-[#0d4a1a] text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:transform-none whitespace-nowrap"
                             >
                               {applyingEventId === event.eventId ? "신청 중..." : "신청하기"}
                             </button>
@@ -409,47 +457,76 @@ export default function EventsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="space-y-2 mb-3 text-sm">
+                  <div className="space-y-3 text-base">
                     <p className="text-gray-700">
                       <span className="font-semibold">일시:</span>{" "}
-                      {event.date instanceof Date 
-                        ? event.date.toLocaleString("ko-KR")
-                        : new Date(event.date).toLocaleString("ko-KR")}
-                    </p>
-                    <p className="text-gray-700">
-                      <span className="font-semibold">장소:</span> {event.location}
+                      {getEventStartDateTime(event).toLocaleString("ko-KR")}
+                      {getEventEndDateTime(event) && (
+                        <>
+                          {" "}-{" "}
+                          {formatEndTimeOnly(getEventEndDateTime(event)!)}
+                        </>
+                      )}
                     </p>
                     <p className="text-gray-700">
                       <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명 (남 {maleQuota} / 여 {femaleQuota})
                     </p>
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <span className="font-semibold">장소:</span>
+                      <span className="truncate">{event.location}</span>
+                      {event.location && (
+                        <button
+                          onClick={(e) => handleCopyLocation(e, event.location)}
+                          className="ml-1 p-2 text-gray-600 hover:text-primary rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
+                          aria-label="장소 복사"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path d="M9 3.75A1.75 1.75 0 0110.75 2h7.5C19.216 2 20 2.784 20 3.75v7.5A1.75 1.75 0 0118.25 13h-7.5A1.75 1.75 0 019 11.25v-7.5z" />
+                            <path d="M4 8.75A1.75 1.75 0 015.75 7h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 0113.25 18h-7.5A1.75 1.75 0 014 16.25v-7.5z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {mapSrc && (
+                    <div className="mt-4">
+                      <div className="w-full aspect-[16/9] overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                        <iframe
+                          title={`${event.title} 위치`}
+                          src={mapSrc}
+                          className="w-full h-full"
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                      <div className="mt-3">
+                        <a
+                          href="https://naver.me/xQe2IoST"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/10 transition"
+                        >
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-[4px] bg-[#2DB400] text-white text-[10px] font-black leading-none">
+                            N
+                          </span>
+                          네이버 지도 바로가기
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
-                  <div className="mt-4 text-sm text-gray-600">
+                  <div className="mt-6 text-base text-gray-600">
                     {stats ? (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="flex items-center justify-between bg-white/70 border border-blue-100 rounded-xl px-3 py-2">
-                            <span className="inline-flex items-center gap-1 font-semibold text-gray-800">
-                              <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-3.31 0-6 2.69-6 6h2a4 4 0 018 0h2c0-3.31-2.69-6-6-6z" />
-                              </svg>
-                              남자
-                            </span>
-                            <span className="text-blue-700 font-semibold">
-                              {stats.paidMale}/{maleQuota}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between bg-white/70 border border-pink-100 rounded-xl px-3 py-2">
-                            <span className="inline-flex items-center gap-1 font-semibold text-gray-800">
-                              <svg className="w-4 h-4 text-pink-500" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                              </svg>
-                              여자
-                            </span>
-                            <span className="text-pink-600 font-semibold">
-                              {stats.paidFemale}/{femaleQuota}
-                            </span>
-                          </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <span className="font-semibold">현재 지원자 수</span>
+                          <span>{stats.totalApplicants}명</span>
                         </div>
                       </div>
                     ) : (
@@ -476,9 +553,13 @@ export default function EventsPage() {
                 </h2>
                 {selectedEvent && (
                   <p className="text-sm text-gray-500 mt-1">
-                    {selectedEvent.date instanceof Date
-                      ? selectedEvent.date.toLocaleString("ko-KR")
-                      : new Date(selectedEvent.date).toLocaleString("ko-KR")}{" "}
+                    {getEventStartDateTime(selectedEvent).toLocaleString("ko-KR")}
+                    {getEventEndDateTime(selectedEvent) && (
+                      <>
+                        {" "}-{" "}
+                        {formatEndTimeOnly(getEventEndDateTime(selectedEvent)!)}
+                      </>
+                    )}{" "}
                     · {selectedEvent.location}
                   </p>
                 )}
@@ -501,8 +582,8 @@ export default function EventsPage() {
               </div>
             ) : eventParticipants.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
-                {isEventActive(selectedEvent!) 
-                  ? "이성 참가자가 없습니다." 
+                {isEventActive(selectedEvent!)
+                  ? "이성 참가자가 없습니다."
                   : "아직 지원자가 없습니다."}
               </div>
             ) : (
@@ -538,6 +619,10 @@ export default function EventsPage() {
                                 <span className="font-semibold text-gray-800">이상형:</span>{" "}
                                 <span className="text-gray-700">{application.idealType || "미입력"}</span>
                               </p>
+                              <p>
+                                <span className="font-semibold text-gray-800">어떤 연애를 하고 싶은가요?:</span>{" "}
+                                <span className="text-gray-700">{application.loveStyle || "미입력"}</span>
+                              </p>
                               {application.loveLanguage?.length > 0 && (
                                 <div>
                                   <span className="font-semibold text-gray-800">더 중요한 가치:</span>
@@ -565,7 +650,7 @@ export default function EventsPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setCurrentParticipantIndex((prev) => 
+                          setCurrentParticipantIndex((prev) =>
                             prev > 0 ? prev - 1 : eventParticipants.length - 1
                           );
                         }}
@@ -574,7 +659,7 @@ export default function EventsPage() {
                       >
                         ← 이전
                       </button>
-                      
+
                       {/* 인디케이터 */}
                       <div className="flex gap-2">
                         {eventParticipants.map((_, index) => (
@@ -585,11 +670,10 @@ export default function EventsPage() {
                               e.stopPropagation();
                               setCurrentParticipantIndex(index);
                             }}
-                            className={`h-2 rounded-full transition ${
-                              index === currentParticipantIndex
-                                ? "bg-primary w-8"
-                                : "bg-gray-300 w-2 hover:bg-gray-400"
-                            }`}
+                            className={`h-2 rounded-full transition ${index === currentParticipantIndex
+                              ? "bg-primary w-8"
+                              : "bg-gray-300 w-2 hover:bg-gray-400"
+                              }`}
                           />
                         ))}
                       </div>
@@ -598,7 +682,7 @@ export default function EventsPage() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setCurrentParticipantIndex((prev) => 
+                          setCurrentParticipantIndex((prev) =>
                             prev < eventParticipants.length - 1 ? prev + 1 : 0
                           );
                         }}
@@ -703,13 +787,13 @@ export default function EventsPage() {
         </div>
       )}
 
-      <InfoModal 
-        isOpen={showInfoModal} 
+      <InfoModal
+        isOpen={showInfoModal}
         onClose={() => {
           setShowInfoModal(false);
           // 첫 로그인 정보 모달을 봤다는 플래그 저장
           localStorage.setItem('rotape_first_login_info_seen', 'true');
-        }} 
+        }}
       />
     </div>
   );

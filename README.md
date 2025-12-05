@@ -27,9 +27,6 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-# 운영자 이메일 (선택사항, 기본값: admin@rotape.com)
-NEXT_PUBLIC_ADMIN_EMAIL=admin@rotape.com
-
 # SOLAPI 문자 발송 서비스 (선택사항)
 SOLAPI_ENABLED=false  # 문자 발송 기능 활성화 여부 (true/false, 기본값: false)
 SOLAPI_API_KEY=your_solapi_api_key
