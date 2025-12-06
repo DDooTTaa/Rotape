@@ -410,7 +410,7 @@ export default function EventsPage() {
               return (
                 <div
                   key={event.eventId}
-                  className={`card-elegant card-hover p-6 md:p-10 w-full min-h-[70vh] flex flex-col justify-between ${isActive ? 'event-active cursor-pointer' : ''}`}
+                  className={`card-elegant card-hover p-6 md:p-10 w-full min-h-[50vh] md:min-h-[70vh] flex flex-col justify-between ${isActive ? 'event-active cursor-pointer' : ''}`}
                   onClick={() => {
                     if (isActive) {
                       handleViewParticipants(event);
@@ -460,7 +460,7 @@ export default function EventsPage() {
                   <div className="space-y-3 text-base">
                     <p className="text-gray-700">
                       <span className="font-semibold">일시:</span>{" "}
-                      {getEventStartDateTime(event).toLocaleString("ko-KR")}
+                      {getEventStartDateTime(event).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       {getEventEndDateTime(event) && (
                         <>
                           {" "}-{" "}
@@ -471,13 +471,23 @@ export default function EventsPage() {
                     <p className="text-gray-700">
                       <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명 (남 {maleQuota} / 여 {femaleQuota})
                     </p>
-                    <div className="text-gray-700 flex items-center gap-2">
-                      <span className="font-semibold">장소:</span>
-                      <span className="truncate">{event.location}</span>
+                    <div className="text-gray-700 flex items-start gap-2">
+                      <span className="font-semibold" style={{ whiteSpace: "nowrap" }}>장소:</span>
+                      <div className="flex-1">
+                        {event.location && event.location.includes('|') ? (
+                          event.location.split('|').map((part, index) => (
+                            <div key={index} className={index > 0 ? "mt-1" : ""}>
+                              {part.trim()}
+                            </div>
+                          ))
+                        ) : (
+                          <span>{event.location}</span>
+                        )}
+                      </div>
                       {event.location && (
                         <button
                           onClick={(e) => handleCopyLocation(e, event.location)}
-                          className="ml-1 p-2 text-gray-600 hover:text-primary rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition"
+                          className="ml-1 p-2 text-gray-600 hover:text-primary rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 transition flex-shrink-0"
                           aria-label="장소 복사"
                         >
                           <svg
@@ -522,7 +532,7 @@ export default function EventsPage() {
                 <p className="text-xs font-semibold text-primary tracking-widest uppercase">
                   오늘 진행 예정
                 </p>
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2">
+                <h2 className="text-[1.4rem] md:text-3xl font-bold text-gray-900 mt-2">
                   {selectedEvent?.title}
                 </h2>
                 {selectedEvent && (
