@@ -505,34 +505,8 @@ export default function EventsPage() {
                           referrerPolicy="no-referrer-when-downgrade"
                         />
                       </div>
-                      <div className="mt-3">
-                        <a
-                          href="https://naver.me/xQe2IoST"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary text-primary font-semibold hover:bg-primary/10 transition"
-                        >
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-[4px] bg-[#2DB400] text-white text-[10px] font-black leading-none">
-                            N
-                          </span>
-                          네이버 지도 바로가기
-                        </a>
-                      </div>
                     </div>
                   )}
-
-                  <div className="mt-6 text-base text-gray-600">
-                    {stats ? (
-                      <div className="space-y-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                          <span className="font-semibold">현재 지원자 수</span>
-                          <span>{stats.totalApplicants}명</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">통계를 불러오는 중...</span>
-                    )}
-                  </div>
                 </div>
               );
             })}

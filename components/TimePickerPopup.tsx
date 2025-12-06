@@ -120,7 +120,7 @@ export default function TimePickerPopup({ value, onChange, placeholder = "예: 1
               <div className="flex flex-col items-center">
                 <label className="text-sm font-semibold text-gray-600 mb-2">분</label>
                 <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                  {[0, 15, 30, 45].map((m) => (
+                  {[0, 15, 30, 40, 45].map((m) => (
                     <button
                       type="button"
                       key={m}
