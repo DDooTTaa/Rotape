@@ -460,7 +460,7 @@ export default function EventsPage() {
                   <div className="space-y-3 text-base">
                     <p className="text-gray-700">
                       <span className="font-semibold">일시:</span>{" "}
-                      {getEventStartDateTime(event).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      12월 20일(토) {getEventStartDateTime(event).toLocaleString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       {getEventEndDateTime(event) && (
                         <>
                           {" "}-{" "}
@@ -469,7 +469,10 @@ export default function EventsPage() {
                       )}
                     </p>
                     <p className="text-gray-700">
-                      <span className="font-semibold">최대 인원:</span> {event.maxParticipants}명 (남 {maleQuota} / 여 {femaleQuota})
+                      <span className="font-semibold">모집 기간:</span> 12월 6일(토) ~ 12월 10일(수)
+                    </p>
+                    <p className="text-gray-700">
+                      <span className="font-semibold">인원:</span> {event.maxParticipants}명 (남 {maleQuota} / 여 {femaleQuota})
                     </p>
                     <div className="text-gray-700 flex items-start gap-2">
                       <span className="font-semibold" style={{ whiteSpace: "nowrap" }}>장소:</span>
