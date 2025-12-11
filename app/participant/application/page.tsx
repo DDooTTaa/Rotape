@@ -12,7 +12,7 @@ import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
-const loveLanguages = ["행동", "선물", "인정하는 말", "시간", "스킨십"];
+const loveLanguages = ["행동", "선물", "인정하는 말", "함께있는 시간", "스킨십"];
 
 function ApplicationFormContent() {
   const router = useRouter();
@@ -178,8 +178,8 @@ function ApplicationFormContent() {
     const existingPhotoUrls = photoPreviews.filter(url => url && !url.startsWith('data:') && url.startsWith('http'));
     const totalPhotos = uploadedPhotos.length + existingPhotoUrls.length;
 
-    if (totalPhotos < 2) {
-      alert("사진을 최소 2장 이상 업로드해주세요.");
+    if (totalPhotos < 1) {
+      alert("사진을 최소 1장 이상 업로드해주세요.");
       return;
     }
 
@@ -462,7 +462,7 @@ function ApplicationFormContent() {
           {/* 사진 업로드 */}
           <div>
             <label className="block mb-2 font-semibold">
-              사진 업로드 (2장 이상)
+              사진 업로드 (1장 이상)
               <span className="ml-2 text-sm font-normal text-gray-600">
                 *사진은 심사용이고, 다른 사람에게 공개되지 않으니 걱정 마세요.
               </span>
