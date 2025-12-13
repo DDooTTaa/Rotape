@@ -468,9 +468,9 @@ export default function EventsPage() {
                         </>
                       )}
                     </p>
-                    <p className="text-gray-700">
+                    {/* <p className="text-gray-700">
                       <span className="font-semibold">모집 기간:</span> 12월 6일(토) ~ 12월 10일(수)
-                    </p>
+                    </p> */}
                     <p className="text-gray-700">
                       <span className="font-semibold">인원:</span> {event.maxParticipants}명 (남 {maleQuota} / 여 {femaleQuota})
                     </p>
